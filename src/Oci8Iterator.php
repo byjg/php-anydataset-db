@@ -4,6 +4,7 @@ namespace ByJG\AnyDataset\Db;
 
 use ByJG\AnyDataset\Core\Exception\IteratorException;
 use ByJG\AnyDataset\Core\GenericIterator;
+use ByJG\AnyDataset\Core\Row;
 
 class Oci8Iterator extends GenericIterator
 {

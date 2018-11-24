@@ -11,17 +11,24 @@ class PdoLiteral extends DbPdoDriver
     /**
      * PdoLiteral constructor.
      *
-     * @param \ByJG\Util\Uri $connString
-     * @param null $preOptions
-     * @param null $postOptions
-     * @throws \ByJG\AnyDataset\Core\Exception\NotAvailableException
+     * @param string $pdoConnStr
+     * @param string $username
+     * @param string $password
+     * @param array $preOptions
+     * @param array $postOptions
      */
-    public function __construct(Uri $connString, $preOptions = null, $postOptions = null)
+    public function __construct($pdoConnStr, $username = "", $password = "", $preOptions = null, $postOptions = null)
     {
-        $postOptions = [
-            PDO::ATTR_EMULATE_PREPARES => true
-        ];
+        if (empty($postOptions)) {
+            $postOptions = [
+                PDO::ATTR_EMULATE_PREPARES => true
+            ];
+        }
 
-        parent::__construct($connString, $preOptions, $postOptions);
+        $parts = explode(":", $pdoConnStr);
+
+        $this->connectionUri = new Uri($parts[0] . "://$username:$password@literal");
+
+        $this->createPdoInstance($pdoConnStr, $preOptions, $postOptions);
     }
 }

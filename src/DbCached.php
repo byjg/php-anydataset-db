@@ -42,6 +42,7 @@ class DbCached implements DbDriverInterface
      * @param null $params
      * @return GenericIterator
      * @throws InvalidArgumentException
+     * @throws \ByJG\Serializer\Exception\InvalidArgumentException
      */
     public function getIterator($sql, $params = null)
     {

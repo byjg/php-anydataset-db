@@ -1,7 +1,7 @@
-# AnyDataset
+# Database Relational AnyDataset
 
 [![Opensource ByJG](https://img.shields.io/badge/opensource-byjg.com-brightgreen.svg)](http://opensource.byjg.com)
-[![Build Status](https://travis-ci.org/byjg/anydataset-array.svg?branch=master)](https://travis-ci.org/byjg/anydataset-array)
+[![Build Status](https://travis-ci.org/byjg/anydataset-db.svg?branch=master)](https://travis-ci.org/byjg/anydataset-db)
 
 ## Description
 
@@ -40,8 +40,6 @@ $conn = \ByJG\AnyDataset\Db\Factory::getDbRelationalInstance("mysql://root:passw
 ## Examples
 
 ### Basic Query
-
-### Querying Relational Databases
 
 ```php
 <?php
@@ -239,15 +237,14 @@ Just type:
 composer require "byjg/anydataset=4.0.*"
 ```
 
-#### Running Unit tests
+## Running Unit tests
 
-Running the Unit tests
 
 ```bash
 vendor/bin/phpunit
 ```
 
-#### Running database tests
+## Running database tests
 
 Run integration tests require you to have the databases up and running.
 

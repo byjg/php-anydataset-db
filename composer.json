@@ -18,7 +18,7 @@
     "php": ">=5.6.0",
     "ext-pdo": "*",
     "byjg/anydataset": "4.0.*",
-    "byjg/anydataset-array": "dev-master",
+    "byjg/anydataset-array": "4.0.*",
     "psr/cache": "1.0.*",
     "byjg/uri": "1.0.*"
   },
@@ -30,6 +30,7 @@
     "ext-curl": "*",
     "ext-pdo_mysql": "*",
     "ext-pdo_pgsql": "*",
+    "ext-oci8": "*",
     "byjg/cache-engine": "4.0.*"
   },
   "license": "MIT"

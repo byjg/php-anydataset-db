@@ -125,7 +125,7 @@ class DbOci8Driver implements DbDriverInterface
     public function getIterator($sql, $params = null)
     {
         $cur = $this->getOci8Cursor($sql, $params);
-        return Oci8Iterator($cur);
+        return new Oci8Iterator($cur);
     }
 
     /**
