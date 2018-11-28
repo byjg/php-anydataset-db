@@ -3,7 +3,7 @@ title: Anydataset-db
 
 project:
   version: 4.0.0
-  download_url: https://github.com/radareorg/cutter/releases
+  download_url: https://github.com/byjg/anydata-set/releases
 
 license:
   software: MIT
