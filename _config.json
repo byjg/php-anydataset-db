@@ -37,7 +37,7 @@ disqus: false
 description: >-
   Lorem Ipsum
 
-remote-theme: allejo/jekyll-docs-theme
+remote_theme: allejo/jekyll-docs-theme
 
 plugins:
   - jekyll-remote-theme
