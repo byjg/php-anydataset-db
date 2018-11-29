@@ -1,4 +1,4 @@
-# Database Relational AnyDataset
+# AnyDataset-DB
 
 [![Opensource ByJG](https://img.shields.io/badge/opensource-byjg.com-brightgreen.svg)](http://opensource.byjg.com)
 [![Build Status](https://travis-ci.org/byjg/anydataset-db.svg?branch=master)](https://travis-ci.org/byjg/anydataset-db)
