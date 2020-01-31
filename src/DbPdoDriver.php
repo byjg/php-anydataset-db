@@ -17,6 +17,11 @@ abstract class DbPdoDriver implements DbDriverInterface
      */
     protected $instance = null;
 
+    /**
+     * @var PDOStatement[]
+     */
+    protected $stmtCache = [];
+
     protected $supportMultRowset = false;
 
     /**
@@ -111,7 +116,11 @@ abstract class DbPdoDriver implements DbDriverInterface
     {
         list($sql, $array) = SqlBind::parseSQL($this->connectionUri, $sql, $array);
 
-        $stmt = $this->instance->prepare($sql);
+        if (!isset($this->stmtCache[$sql])) {
+            $this->stmtCache[$sql] = $this->instance->prepare($sql);
+        }
+
+        $stmt = $this->stmtCache[$sql];
 
         if (!empty($array)) {
             foreach ($array as $key => $value) {
