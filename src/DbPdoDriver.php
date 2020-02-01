@@ -22,6 +22,8 @@ abstract class DbPdoDriver implements DbDriverInterface
      */
     protected $stmtCache = [];
 
+    protected $maxStmtCache = 10;
+
     protected $supportMultRowset = false;
 
     /**
@@ -104,6 +106,7 @@ abstract class DbPdoDriver implements DbDriverInterface
     public function __destruct()
     {
         $this->instance = null;
+        $this->stmtCache = null;
     }
 
     /**
@@ -118,6 +121,9 @@ abstract class DbPdoDriver implements DbDriverInterface
 
         if (!isset($this->stmtCache[$sql])) {
             $this->stmtCache[$sql] = $this->instance->prepare($sql);
+            if (count($this->stmtCache) > $this->getMaxStmtCache()) { //Kill old cache to get waste memory
+                array_shift($this->stmtCache);
+            }
         }
 
         $stmt = $this->stmtCache[$sql];
@@ -253,5 +259,21 @@ abstract class DbPdoDriver implements DbDriverInterface
     public function setSupportMultRowset($multipleRowSet)
     {
         $this->supportMultRowset = $multipleRowSet;
+    }
+
+    /**
+     * @return int
+     */
+    public function getMaxStmtCache()
+    {
+        return $this->maxStmtCache;
+    }
+
+    /**
+     * @param int $maxStmtCache
+     */
+    public function setMaxStmtCache($maxStmtCache)
+    {
+        $this->maxStmtCache = $maxStmtCache;
     }
 }
