@@ -34,10 +34,10 @@ abstract class DbPdoDriver implements DbDriverInterface
     /**
      * DbPdoDriver constructor.
      *
-     * @param \ByJG\Util\Uri $connUri
+     * @param Uri $connUri
      * @param null $preOptions
      * @param null $postOptions
-     * @throws \ByJG\AnyDataset\Core\Exception\NotAvailableException
+     * @throws NotAvailableException
      */
     public function __construct(Uri $connUri, $preOptions = null, $postOptions = null)
     {
@@ -105,8 +105,8 @@ abstract class DbPdoDriver implements DbDriverInterface
     
     public function __destruct()
     {
-        $this->instance = null;
         $this->stmtCache = null;
+        $this->instance = null;
     }
 
     /**
