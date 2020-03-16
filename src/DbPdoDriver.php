@@ -17,6 +17,13 @@ abstract class DbPdoDriver implements DbDriverInterface
      */
     protected $instance = null;
 
+    /**
+     * @var PDOStatement[]
+     */
+    protected $stmtCache = [];
+
+    protected $maxStmtCache = 10;
+
     protected $supportMultRowset = false;
 
     /**
@@ -27,10 +34,10 @@ abstract class DbPdoDriver implements DbDriverInterface
     /**
      * DbPdoDriver constructor.
      *
-     * @param \ByJG\Util\Uri $connUri
+     * @param Uri $connUri
      * @param null $preOptions
      * @param null $postOptions
-     * @throws \ByJG\AnyDataset\Core\Exception\NotAvailableException
+     * @throws NotAvailableException
      */
     public function __construct(Uri $connUri, $preOptions = null, $postOptions = null)
     {
@@ -98,6 +105,7 @@ abstract class DbPdoDriver implements DbDriverInterface
     
     public function __destruct()
     {
+        $this->stmtCache = null;
         $this->instance = null;
     }
 
@@ -111,7 +119,14 @@ abstract class DbPdoDriver implements DbDriverInterface
     {
         list($sql, $array) = SqlBind::parseSQL($this->connectionUri, $sql, $array);
 
-        $stmt = $this->instance->prepare($sql);
+        if ($this->getMaxStmtCache() > 0 && !isset($this->stmtCache[$sql])) {
+            $this->stmtCache[$sql] = $this->instance->prepare($sql);
+            if (count($this->stmtCache) > $this->getMaxStmtCache()) { //Kill old cache to get waste memory
+                array_shift($this->stmtCache);
+            }
+        }
+
+        $stmt = $this->stmtCache[$sql];
 
         if (!empty($array)) {
             foreach ($array as $key => $value) {
@@ -244,5 +259,21 @@ abstract class DbPdoDriver implements DbDriverInterface
     public function setSupportMultRowset($multipleRowSet)
     {
         $this->supportMultRowset = $multipleRowSet;
+    }
+
+    /**
+     * @return int
+     */
+    public function getMaxStmtCache()
+    {
+        return $this->maxStmtCache;
+    }
+
+    /**
+     * @param int $maxStmtCache
+     */
+    public function setMaxStmtCache($maxStmtCache)
+    {
+        $this->maxStmtCache = $maxStmtCache;
     }
 }
