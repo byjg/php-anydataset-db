@@ -24,6 +24,8 @@ abstract class DbPdoDriver implements DbDriverInterface
 
     protected $maxStmtCache = 10;
 
+    protected $useStmtCache = false;
+
     protected $supportMultRowset = false;
 
     /**
@@ -49,6 +51,10 @@ abstract class DbPdoDriver implements DbDriverInterface
 
         if (!extension_loaded('pdo_' . strtolower($connUri->getScheme()))) {
             throw new NotAvailableException("Extension 'pdo_" . strtolower($connUri->getScheme()) . "' is not loaded");
+        }
+
+        if ($connUri->getQueryPart("cache") == "true") {
+            $this->useStmtCache = true;
         }
 
         $strcnn = $this->createPboConnStr($connUri);
@@ -119,14 +125,18 @@ abstract class DbPdoDriver implements DbDriverInterface
     {
         list($sql, $array) = SqlBind::parseSQL($this->connectionUri, $sql, $array);
 
-        if ($this->getMaxStmtCache() > 0 && !isset($this->stmtCache[$sql])) {
-            $this->stmtCache[$sql] = $this->instance->prepare($sql);
-            if (count($this->stmtCache) > $this->getMaxStmtCache()) { //Kill old cache to get waste memory
-                array_shift($this->stmtCache);
+        if ($this->useStmtCache) {
+            if ($this->getMaxStmtCache() > 0 && !isset($this->stmtCache[$sql])) {
+                $this->stmtCache[$sql] = $this->instance->prepare($sql);
+                if (count($this->stmtCache) > $this->getMaxStmtCache()) { //Kill old cache to get waste memory
+                    array_shift($this->stmtCache);
+                }
             }
-        }
 
-        $stmt = $this->stmtCache[$sql];
+            $stmt = $this->stmtCache[$sql];
+        } else {
+            $stmt = $this->instance->prepare($sql);
+        }
 
         if (!empty($array)) {
             foreach ($array as $key => $value) {
