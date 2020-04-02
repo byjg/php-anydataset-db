@@ -13,40 +13,40 @@ class Factory
      */
     public static function getDbRelationalInstance($connectionString, $schemesAlternative = null)
     {
-        $prefix = '\\ByJG\\AnyDataset\\Db\\';
-
-        return self::getInstance(
-            $connectionString,
-            array_merge(
-                [
-                    "oci8" => $prefix . "DbOci8Driver",
-                    "dblib" => $prefix . "PdoDblib",
-                    "mysql" => $prefix . "PdoMysql",
-                    "pgsql" => $prefix . "PdoPgsql",
-                    "oci" => $prefix . "PdoOci",
-                    "odbc" => $prefix . "PdoOdbc",
-                    "sqlite" => $prefix . "PdoSqlite",
-                ],
-                (array)$schemesAlternative
-            ),
-            DbDriverInterface::class
-        );
+        return self::getDbInstance(new Uri($connectionString), $schemesAlternative);
     }
 
 
-    protected static function getInstance($connectionString, $validSchemes, $typeOf)
+    /**
+     * @param $connectionUri Uri
+     * @param $schemesAlternative
+     * @return mixed
+     */
+    public static function getDbInstance($connectionUri, $schemesAlternative = null)
     {
-        $connectionUri = new Uri($connectionString);
-
         $scheme = $connectionUri->getScheme();
+
+        $prefix = '\\ByJG\\AnyDataset\\Db\\';
+        $validSchemes =  array_merge(
+            [
+                "oci8" => $prefix . "DbOci8Driver",
+                "dblib" => $prefix . "PdoDblib",
+                "mysql" => $prefix . "PdoMysql",
+                "pgsql" => $prefix . "PdoPgsql",
+                "oci" => $prefix . "PdoOci",
+                "odbc" => $prefix . "PdoOdbc",
+                "sqlite" => $prefix . "PdoSqlite",
+            ],
+            (array)$schemesAlternative
+        );
 
         $class = isset($validSchemes[$scheme]) ? $validSchemes[$scheme] : PdoLiteral::class;
 
         $instance = new $class($connectionUri);
 
-        if (!is_a($instance, $typeOf)) {
+        if (!($instance instanceof DbDriverInterface)) {
             throw new \InvalidArgumentException(
-                "The class '$typeOf' is not a instance of DbDriverInterface"
+                "The class '$class' is not a instance of DbDriverInterface"
             );
         }
 
