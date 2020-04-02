@@ -22,6 +22,7 @@ and open the template in the editor.
     <testsuites>
         <testsuite name="Test Suite">
             <directory>./tests</directory>
+            <file>./testsdb/PdoSqliteTest.php</file>
         </testsuite>
     </testsuites>
     

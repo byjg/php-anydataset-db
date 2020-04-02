@@ -1,5 +1,6 @@
 language: php
 php:
+  - "7.3"
   - "7.2"
   - "7.1"
   - "7.0"
@@ -18,12 +19,9 @@ services:
 before_install:
   - sudo service mysql stop || echo "mysql not stopped"
   - sudo service postgresql stop || echo "postgresql not stopped"
-  - npm install
-  - node_modules/.bin/usdocker --refresh
-#  - node_modules/.bin/usdocker mssql up
-  - node_modules/.bin/usdocker --no-link postgres up
-  - node_modules/.bin/usdocker --no-link mysql up
-
+  #  - docker run --name mssql-container --rm -e ACCEPT_EULA=Y -e SA_PASSWORD=Pa55word -p 1433:1433 -d mcr.microsoft.com/mssql/server
+  - docker run --name postgres-container --rm -e POSTGRES_USER=postgres -e POSTGRES_PASSWORD=password -p 5432:5432 -d postgres:9-alpine
+  - docker run --name mysql-container --rm  -e MYSQL_ROOT_PASSWORD=password -p 3306:3306 -d mysql:5.7
 
 install:
   - php -i
@@ -31,7 +29,6 @@ install:
 
 script: 
   - vendor/bin/phpunit
-  - vendor/bin/phpunit testsdb/PdoSqliteTest.php
   - vendor/bin/phpunit testsdb/PdoMySqlTest.php
   - vendor/bin/phpunit testsdb/PdoPostgresTest.php
 #  - vendor/bin/phpunit testsdb/PdoDblibTest.php
