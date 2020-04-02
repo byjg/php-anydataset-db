@@ -33,4 +33,27 @@ class PdoSqliteTest extends BasePdo
     {
         $this->markTestSkipped('SqlLite does not have this method');
     }
+
+
+    public function testStatementCache()
+    {
+        $this->assertEquals("true", $this->dbDriver->getUri()->getQueryPart("stmtcache"));
+        $this->assertEquals(2, $this->dbDriver->getCountStmtCache()); // because of createDatabase() and populateData()
+
+        $i = 3;
+        while ($i<=10) {
+            $it = $this->dbDriver->getIterator("select $i as name");
+            $this->assertEquals($i, $this->dbDriver->getCountStmtCache()); // because of createDatabase() and populateData()
+            $this->assertEquals([["name" => $i]], $it->toArray());
+            $i++;
+        }
+
+        $it = $this->dbDriver->getIterator("select 20 as name");
+        $this->assertEquals(10, $this->dbDriver->getCountStmtCache()); // because of createDatabase() and populateData()
+        $this->assertEquals([["name" => 20]], $it->toArray());
+
+        $it = $this->dbDriver->getIterator("select 30 as name");
+        $this->assertEquals(10, $this->dbDriver->getCountStmtCache()); // because of createDatabase() and populateData()
+        $this->assertEquals([["name" => 30]], $it->toArray());
+    }
 }
