@@ -3,6 +3,7 @@
 namespace TestsDb\AnyDataset;
 
 use ByJG\AnyDataset\Db\Factory;
+use ByJG\Util\Uri;
 
 require_once 'BasePdo.php';
 
@@ -11,7 +12,10 @@ class PdoSqliteTest extends BasePdo
 
     protected function createInstance()
     {
-        $this->dbDriver = Factory::getDbRelationalInstance('sqlite:///tmp/test.db');
+        $uri = Uri::getInstanceFromString("sqlite:///tmp/test.db")
+            ->withQueryKeyValue("stmtcache", "true");
+
+        $this->dbDriver = Factory::getDbInstance($uri);
     }
 
     protected function createDatabase()

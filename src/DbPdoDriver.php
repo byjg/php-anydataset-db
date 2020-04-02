@@ -53,7 +53,7 @@ abstract class DbPdoDriver implements DbDriverInterface
             throw new NotAvailableException("Extension 'pdo_" . strtolower($connUri->getScheme()) . "' is not loaded");
         }
 
-        if ($connUri->getQueryPart("cache") == "true") {
+        if ($connUri->getQueryPart("stmtcache") == "true") {
             $this->useStmtCache = true;
         }
 
@@ -128,7 +128,7 @@ abstract class DbPdoDriver implements DbDriverInterface
         if ($this->useStmtCache) {
             if ($this->getMaxStmtCache() > 0 && !isset($this->stmtCache[$sql])) {
                 $this->stmtCache[$sql] = $this->instance->prepare($sql);
-                if (count($this->stmtCache) > $this->getMaxStmtCache()) { //Kill old cache to get waste memory
+                if ($this->getCountStmtCache() > $this->getMaxStmtCache()) { //Kill old cache to get waste memory
                     array_shift($this->stmtCache);
                 }
             }
@@ -277,6 +277,11 @@ abstract class DbPdoDriver implements DbDriverInterface
     public function getMaxStmtCache()
     {
         return $this->maxStmtCache;
+    }
+
+    public function getCountStmtCache()
+    {
+        return count($this->stmtCache);
     }
 
     /**

@@ -40,6 +40,13 @@ abstract class BasePdo extends TestCase
                 $param
             );
         }
+
+        if ($this->dbDriver->getUri()->getQueryPart("stmtcache") == "true") {
+            // One cache for CREATE TABLE... and another for INSERT INTO...
+            $this->assertEquals(2, $this->dbDriver->getCountStmtCache());
+        } else {
+            $this->assertEquals(0, $this->dbDriver->getCountStmtCache());
+        }
     }
 
     abstract protected function createDatabase();
