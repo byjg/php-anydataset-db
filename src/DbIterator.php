@@ -55,9 +55,7 @@ class DbIterator extends GenericIterator
         $rowArray = $this->statement->fetch(PDO::FETCH_ASSOC);
         if (!empty($rowArray)) {
             foreach ($rowArray as $key => $value) {
-                if (is_null($value)) {
-                    $rowArray[$key] = "";
-                } elseif (is_object($value)) {
+                if (is_object($value)) {
                     $rowArray[$key] = "[OBJECT]";
                 } else {
                     $rowArray[$key] = $value;

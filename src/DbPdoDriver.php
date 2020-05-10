@@ -72,7 +72,7 @@ abstract class DbPdoDriver implements DbDriverInterface
             (array) $preOptions
         );
 
-        $this->connectionUri->withScheme($this->instance->getAttribute(PDO::ATTR_DRIVER_NAME));
+        $this->connectionUri = $this->connectionUri->withScheme($this->instance->getAttribute(PDO::ATTR_DRIVER_NAME));
 
         // Set Specific Attributes
         $this->instance->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
