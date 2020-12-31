@@ -21,6 +21,6 @@ install:
 
 script: 
   - vendor/bin/phpunit
-  - vendor/bin/phpunit testsdb/PdoMySqlTest.php
-  - vendor/bin/phpunit testsdb/PdoPostgresTest.php
-#  - vendor/bin/phpunit testsdb/PdoDblibTest.php
+  - ./wait-for-db.sh mysql && vendor/bin/phpunit testsdb/PdoMySqlTest.php
+  - ./wait-for-db.sh postgres && vendor/bin/phpunit testsdb/PdoPostgresTest.php
+#  - ./wait-for-db.sh mssql && vendor/bin/phpunit testsdb/PdoDblibTest.php
