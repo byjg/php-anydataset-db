@@ -123,8 +123,9 @@ abstract class DbPdoDriver implements DbDriverInterface
      */
     protected function getDBStatement($sql, $array = null)
     {
-        list($sql, $array) = SqlBind::parseSQL($this->connectionUri, $sql, $array);
-
+        if (!empty($array)) {
+            list($sql, $array) = SqlBind::parseSQL($this->connectionUri, $sql, $array);
+        }
         if ($this->useStmtCache) {
             if ($this->getMaxStmtCache() > 0 && !isset($this->stmtCache[$sql])) {
                 $this->stmtCache[$sql] = $this->instance->prepare($sql);
