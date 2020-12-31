@@ -13,8 +13,6 @@ services:
       timeout: 20s
       interval: 10s
       retries: 10
-    networks:
-      - net
 
   postgres:
     container_name: anydataset_db_postgres
@@ -29,8 +27,6 @@ services:
       timeout: 20s
       interval: 10s
       retries: 10
-    networks:
-      - net
 
   mysql:
     container_name: anydataset_db_mysql
@@ -44,10 +40,3 @@ services:
       timeout: 20s
       interval: 10s
       retries: 10
-    networks:
-      - net
-
-networks:
-  net:
-    driver: overlay
-    attachable: true
