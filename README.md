@@ -1,7 +1,7 @@
 # AnyDataset-DB
 
 [![Opensource ByJG](https://img.shields.io/badge/opensource-byjg.com-brightgreen.svg)](http://opensource.byjg.com)
-[![Build Status](https://travis-ci.org/byjg/anydataset-db.svg?branch=master)](https://travis-ci.org/byjg/anydataset-db)
+[![Build Status](https://travis-ci.com/byjg/anydataset-db.svg?branch=master)](https://travis-ci.com/byjg/anydataset-db)
 
 
 Anydataset Database Relational abstraction. Anydataset is an agnostic data source abstraction layer in PHP.
