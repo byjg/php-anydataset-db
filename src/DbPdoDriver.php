@@ -126,6 +126,7 @@ abstract class DbPdoDriver implements DbDriverInterface
         if (!empty($array)) {
             list($sql, $array) = SqlBind::parseSQL($this->connectionUri, $sql, $array);
         }
+        
         if ($this->useStmtCache) {
             if ($this->getMaxStmtCache() > 0 && !isset($this->stmtCache[$sql])) {
                 $this->stmtCache[$sql] = $this->instance->prepare($sql);
