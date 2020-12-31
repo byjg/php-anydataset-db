@@ -1,0 +1,35 @@
+version: '3.0'
+services:
+  mssql:
+    image: mcr.microsoft.com/mssql/server
+    environment:
+      - ACCEPT_EULA=Y
+      - SA_PASSWORD=Pa55word
+    ports:
+      - "1433:1433"
+    networks:
+      - net
+
+  postgres:
+    image: postgres:9-alpine
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=password
+    ports:
+      - "5432:5432"
+    networks:
+      - net
+
+  mysql:
+    image: mysql:5.7
+    environment:
+      - MYSQL_ROOT_PASSWORD=password
+    ports:
+      - "3306:3306"
+    networks:
+      - net
+
+networks:
+  net:
+    driver: overlay
+    attachable: true

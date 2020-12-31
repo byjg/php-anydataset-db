@@ -11,6 +11,10 @@ class PdoMySqlest extends BasePdo
 
     protected function createInstance()
     {
+        $host = getenv('MYSQL_TEST_HOST');
+        if (empty($host)) {
+            $host = "127.0.0.1";
+        }
         $password = getenv('MYSQL_PASSWORD');
         if (empty($password)) {
             $password = 'password';
@@ -19,9 +23,9 @@ class PdoMySqlest extends BasePdo
             $password = "";
         }
 
-        $this->dbDriver = Factory::getDbRelationalInstance("mysql://root:$password@mysql-container");
+        $this->dbDriver = Factory::getDbRelationalInstance("mysql://root:$password@$host");
         $this->dbDriver->execute('CREATE DATABASE IF NOT EXISTS test');
-        $this->dbDriver = Factory::getDbRelationalInstance("mysql://root:$password@mysql-container/test");
+        $this->dbDriver = Factory::getDbRelationalInstance("mysql://root:$password@$host/test");
     }
 
     protected function createDatabase()
