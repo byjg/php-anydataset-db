@@ -181,6 +181,60 @@ abstract class BasePdo extends TestCase
         $this->assertEquals(6, $row[0]["age"]);
     }
 
+    public function testEscapeQuote()
+    {
+        $this->dbDriver->execute(
+            "INSERT INTO Dogs (Breed, Name, Age) VALUES ('Dog', 'Puppy\'s Master', 6);"
+        );
+
+        $iterator = $this->dbDriver->getIterator('select Id, Breed, Name, Age from Dogs where id = 4');
+        $row = $iterator->toArray();
+
+        $this->assertEquals(4, $row[0]["id"]);
+        $this->assertEquals('Dog', $row[0]["breed"]);
+        $this->assertEquals('Puppy\'s Master', $row[0]["name"]);
+        $this->assertEquals(6, $row[0]["age"]);
+    }
+
+    public function testEscapeQuoteWithParam()
+    {
+        $this->dbDriver->execute(
+            "INSERT INTO Dogs (Breed, Name, Age) VALUES (:breed, :name, :age);",
+            [
+                "breed" => 'Dog',
+                "name" => "Puppy's Master",
+                "age" => 6
+            ]
+        );
+
+        $iterator = $this->dbDriver->getIterator('select Id, Breed, Name, Age from Dogs where id = 4');
+        $row = $iterator->toArray();
+
+        $this->assertEquals(4, $row[0]["id"]);
+        $this->assertEquals('Dog', $row[0]["breed"]);
+        $this->assertEquals('Puppy\'s Master', $row[0]["name"]);
+        $this->assertEquals(6, $row[0]["age"]);
+    }
+
+    public function testEscapeQuoteWithMixedParam()
+    {
+        $this->dbDriver->execute(
+            "INSERT INTO Dogs (Breed, Name, Age) VALUES (:breed, 'Puppy\'s Master', :age);",
+            [
+                "breed" => 'Dog',
+                "age" => 6
+            ]
+        );
+
+        $iterator = $this->dbDriver->getIterator('select Id, Breed, Name, Age from Dogs where id = 4');
+        $row = $iterator->toArray();
+
+        $this->assertEquals(4, $row[0]["id"]);
+        $this->assertEquals('Dog', $row[0]["breed"]);
+        $this->assertEquals('Puppy\'s Master', $row[0]["name"]);
+        $this->assertEquals(6, $row[0]["age"]);
+    }
+
     public function testGetBuggyUT8()
     {
         $this->dbDriver->execute(
