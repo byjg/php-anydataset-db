@@ -11,6 +11,8 @@ class PdoMySqlest extends BasePdo
 
     protected function createInstance()
     {
+        $this->escapeQuote = "\'";
+
         $host = getenv('MYSQL_TEST_HOST');
         if (empty($host)) {
             $host = "127.0.0.1";

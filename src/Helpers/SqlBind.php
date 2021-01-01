@@ -40,7 +40,7 @@ class SqlBind
     {
         $paramSubstName = SqlBind::getParamModel($connData);
 
-        $sqlAlter = preg_replace("~'.*?'~", "", $sql);
+        $sqlAlter = preg_replace("~'.*?((\\\\'|'').*?)*'~", "", $sql);
         preg_match_all(
             "/(?<deliStart>\\[\\[|:)(?<param>[\\w\\d]+)(?<deliEnd>\\]\\]|[^\\d\\w]|$)/",
             $sqlAlter,
