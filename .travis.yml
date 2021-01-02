@@ -13,11 +13,10 @@ services:
 before_install:
   - sudo service mysql stop || echo "mysql not stopped"
   - sudo service postgresql stop || echo "postgresql not stopped"
-  - docker-compose up -d mssql postgres mysql
+  - docker-compose up -d postgres mysql
 
 install:
   - php -i
-  - php -m
   - composer install
 
 script: 
