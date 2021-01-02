@@ -132,6 +132,19 @@ abstract class BasePdo extends TestCase
         );
     }
 
+    public function testGetScalar()
+    {
+        $this->assertEquals(
+            1,
+            $this->dbDriver->getScalar('select count(*) from Dogs where Id = :id', ['id' => 2])
+        );
+
+        $this->assertEquals(
+            3,
+            $this->dbDriver->getScalar('select count(*) from Dogs')
+        );
+    }
+
     public function testMultipleRowset()
     {
         if (!$this->dbDriver->isSupportMultRowset()) {

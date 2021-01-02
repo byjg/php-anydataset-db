@@ -277,6 +277,6 @@ export MSSQL_TEST_HOST=localhost     # defaults to localhost
 export MSSQL_PASSWORD=Pa55word            
 export SQLITE_TEST_HOST=/tmp/test.db      # defaults to /tmp/test.db
 ```
-Pa55word
+
 ----
 [Open source ByJG](http://opensource.byjg.com)
