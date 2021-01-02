@@ -9,10 +9,16 @@ require_once 'BasePdo.php';
 
 class PdoSqliteTest extends BasePdo
 {
+    protected $host;
 
     protected function createInstance()
     {
-        $uri = Uri::getInstanceFromString("sqlite:///tmp/test.db")
+        $this->host = getenv('SQLITE_TEST_HOST');
+        if (empty($host)) {
+            $this->host = "/tmp/test.db";
+        }
+
+        $uri = Uri::getInstanceFromString("sqlite://" . $this->host)
             ->withQueryKeyValue("stmtcache", "true");
 
         $this->dbDriver = Factory::getDbInstance($uri);
@@ -26,12 +32,12 @@ class PdoSqliteTest extends BasePdo
 
     public function deleteDatabase()
     {
-        unlink('/tmp/test.db');
+        unlink($this->host);
     }
 
     public function testGetAllFields()
     {
-        $this->markTestSkipped('SqlLite does not have this method');
+        $this->markTestSkipped('Skipped: SqlLite does not support get all fields');
     }
 
 

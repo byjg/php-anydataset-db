@@ -1,7 +1,7 @@
 # AnyDataset-DB
 
 [![Opensource ByJG](https://img.shields.io/badge/opensource-byjg.com-brightgreen.svg)](http://opensource.byjg.com)
-[![Build Status](https://travis-ci.org/byjg/anydataset-db.svg?branch=master)](https://travis-ci.org/byjg/anydataset-db)
+[![Build Status](https://travis-ci.com/byjg/anydataset-db.svg?branch=master)](https://travis-ci.com/byjg/anydataset-db)
 
 
 Anydataset Database Relational abstraction. Anydataset is an agnostic data source abstraction layer in PHP.
@@ -247,18 +247,13 @@ vendor/bin/phpunit
 
 # Running database tests
 
-Run integration tests require you to have the databases up and running.
+Run integration tests require you to have the databases up and running. We provided a basic `docker-compose.yml` and you
+can use to start the databases for test. 
 
-The easiest way to run the tests is:
+**Running the databases**
 
-**Prepare the environment**
-
-```php
-npm i
-node_modules/.bin/usdocker --refresh
-node_modules/.bin/usdocker -v --no-link mssql up
-node_modules/.bin/usdocker -v --no-link mysql up
-node_modules/.bin/usdocker -v --no-link postgres up
+```bash
+docker-compose up -d postgres mysql
 ```
 
 **Run the tests**
@@ -271,11 +266,16 @@ phpunit testsdb/PdoPostgresTest.php
 phpunit testsdb/PdoDblibTest.php 
 ```
 
-Optionally you can set the password for Mysql and PostgresSQL
+Optionally you can set the host and password used by the unit tests  
 
 ```bash
+export MYSQL_TEST_HOST=localhost     # defaults to localhost
 export MYSQL_PASSWORD=newpassword    # use '.' if want have a null password
+export PSQL_TEST_HOST=localhost      # defaults to localhost
 export PSQL_PASSWORD=newpassword     # use '.' if want have a null password
+export MSSQL_TEST_HOST=localhost     # defaults to localhost
+export MSSQL_PASSWORD=Pa55word            
+export SQLITE_TEST_HOST=/tmp/test.db      # defaults to /tmp/test.db
 ```
 
 ----

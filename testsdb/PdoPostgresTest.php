@@ -11,6 +11,10 @@ class PdoPostgresTest extends BasePdo
 
     protected function createInstance()
     {
+        $host = getenv('PSQL_TEST_HOST');
+        if (empty($host)) {
+            $host = "127.0.0.1";
+        }
         $password = getenv('PSQL_PASSWORD');
         if (empty($password)) {
             $password = 'password';
@@ -19,12 +23,12 @@ class PdoPostgresTest extends BasePdo
             $password = "";
         }
 
-        $this->dbDriver = Factory::getDbRelationalInstance("pgsql://postgres:$password@postgres-container");
+        $this->dbDriver = Factory::getDbRelationalInstance("pgsql://postgres:$password@$host");
         $exists = $this->dbDriver->getScalar('select count(1) from pg_catalog.pg_database where datname = \'test\'');
         if ($exists == 0) {
             $this->dbDriver->execute('CREATE DATABASE test');
         }
-        $this->dbDriver = Factory::getDbRelationalInstance("pgsql://postgres:$password@postgres-container/test");
+        $this->dbDriver = Factory::getDbRelationalInstance("pgsql://postgres:$password@$host/test");
     }
 
     protected function createDatabase()

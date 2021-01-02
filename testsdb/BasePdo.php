@@ -15,6 +15,8 @@ abstract class BasePdo extends TestCase
      */
     protected $dbDriver;
 
+    protected $escapeQuote = "''";
+
     /**
      * @throws \Exception
      */
@@ -130,10 +132,23 @@ abstract class BasePdo extends TestCase
         );
     }
 
+    public function testGetScalar()
+    {
+        $this->assertEquals(
+            1,
+            $this->dbDriver->getScalar('select count(*) from Dogs where Id = :id', ['id' => 2])
+        );
+
+        $this->assertEquals(
+            3,
+            $this->dbDriver->getScalar('select count(*) from Dogs')
+        );
+    }
+
     public function testMultipleRowset()
     {
         if (!$this->dbDriver->isSupportMultRowset()) {
-            $this->markTestSkipped('This DbDriver does not have this method');
+            $this->markTestSkipped('Skipped: This DbDriver does not support multiple row set');
             return;
         }
 
@@ -178,6 +193,64 @@ abstract class BasePdo extends TestCase
         $this->assertEquals(4, $row[0]["id"]);
         $this->assertEquals('Dog', $row[0]["breed"]);
         $this->assertEquals('€ Sign Pètit Pannô', $row[0]["name"]);
+        $this->assertEquals(6, $row[0]["age"]);
+    }
+
+    public function testEscapeQuote()
+    {
+        $escapeQuote = $this->escapeQuote;
+
+        $this->dbDriver->execute(
+            "INSERT INTO Dogs (Breed, Name, Age) VALUES ('Dog', 'Puppy${escapeQuote}s Master', 6);"
+        );
+
+        $iterator = $this->dbDriver->getIterator('select Id, Breed, Name, Age from Dogs where id = 4');
+        $row = $iterator->toArray();
+
+        $this->assertEquals(4, $row[0]["id"]);
+        $this->assertEquals('Dog', $row[0]["breed"]);
+        $this->assertEquals('Puppy\'s Master', $row[0]["name"]);
+        $this->assertEquals(6, $row[0]["age"]);
+    }
+
+    public function testEscapeQuoteWithParam()
+    {
+        $this->dbDriver->execute(
+            "INSERT INTO Dogs (Breed, Name, Age) VALUES (:breed, :name, :age);",
+            [
+                "breed" => 'Dog',
+                "name" => "Puppy's Master",
+                "age" => 6
+            ]
+        );
+
+        $iterator = $this->dbDriver->getIterator('select Id, Breed, Name, Age from Dogs where id = 4');
+        $row = $iterator->toArray();
+
+        $this->assertEquals(4, $row[0]["id"]);
+        $this->assertEquals('Dog', $row[0]["breed"]);
+        $this->assertEquals('Puppy\'s Master', $row[0]["name"]);
+        $this->assertEquals(6, $row[0]["age"]);
+    }
+
+    public function testEscapeQuoteWithMixedParam()
+    {
+        $escapeQuote = $this->escapeQuote;
+
+        $this->dbDriver->execute(
+            "INSERT INTO Dogs (Breed, Name, Age) VALUES (:breed, 'Puppy${escapeQuote}s Master', :age);",
+            [
+                "breed" => 'Dog',
+                "age" => 6
+            ]
+        );
+
+        $iterator = $this->dbDriver->getIterator('select Id, Breed, Name, Age from Dogs where id = 4');
+        $row = $iterator->toArray();
+
+        $this->assertEquals(4, $row[0]["id"]);
+        $this->assertEquals('Dog', $row[0]["breed"]);
+        $this->assertEquals('Puppy\'s Master', $row[0]["name"]);
         $this->assertEquals(6, $row[0]["age"]);
     }
 
