@@ -1,6 +1,9 @@
 # AnyDataset-DB
 
-[![Opensource ByJG](https://img.shields.io/badge/opensource-byjg.com-brightgreen.svg)](http://opensource.byjg.com)
+[![Opensource ByJG](https://img.shields.io/badge/opensource-byjg-success.svg)](http://opensource.byjg.com)
+[![GitHub source](https://img.shields.io/badge/Github-source-informational?logo=github)](https://github.com/byjg/anydataset-db/)
+[![GitHub license](https://img.shields.io/github/license/byjg/anydataset-db.svg)](https://opensource.byjg.com/opensource/licensing.html)
+[![GitHub release](https://img.shields.io/github/release/byjg/anydataset-db.svg)](https://github.com/byjg/anydataset-db/releases/)
 [![Build Status](https://travis-ci.com/byjg/anydataset-db.svg?branch=master)](https://travis-ci.com/byjg/anydataset-db)
 
 
@@ -8,7 +11,7 @@ Anydataset Database Relational abstraction. Anydataset is an agnostic data sourc
 
 See more about Anydataset [here](https://opensource.byjg.com/anydataset).
 
-# Features
+## Features
 
 - Connection based on URI
 - Support and fix code tricks with several databases (MySQL, PostgresSql, MS SQL Server, etc)
@@ -16,7 +19,7 @@ See more about Anydataset [here](https://opensource.byjg.com/anydataset).
 - Supports Connection Routes based on regular expression against the queries, that's mean a select in a table should be 
 executed in a database and in another table should be executed in another (even if in different DB)
 
-# Connection Based on URI
+## Connection Based on URI
 
 The connection string for databases is based on URL. 
 
@@ -38,9 +41,9 @@ See below the current implemented drivers:
 $conn = \ByJG\AnyDataset\Db\Factory::getDbRelationalInstance("mysql://root:password@10.0.1.10/myschema");
 ```
 
-# Examples
+## Examples
 
-## Basic Query
+### Basic Query
 
 ```php
 <?php
@@ -52,7 +55,7 @@ foreach ($iterator as $row) {
 }
 ```
 
-## Updating in Relational databases
+### Updating in Relational databases
 
 ```php
 <?php
@@ -66,7 +69,7 @@ $dbDriver->execute(
 );
 ```
 
-## Inserting and Get Id
+### Inserting and Get Id
 
 ```php
 <?php
@@ -80,7 +83,7 @@ $id = $dbDriver->executeAndGetId(
 );
 ```
 
-## Database Transaction
+### Database Transaction
 
 ```php
 <?php
@@ -92,7 +95,7 @@ $dbDriver->beginTransaction();
 $dbDriver->commitTransaction(); // or rollbackTransaction()
 ```
 
-## Cache results
+### Cache results
 
 You can easily cache your results with the DbCached class; You need to add to your project an
 implementation of PSR-6. We suggested you add "byjg/cache".
@@ -110,7 +113,7 @@ $dbCached = new \ByJG\AnyDataset\Db\DbCached(
 $iterator = $dbCached->getIterator('select * from table where field = :param', ['param' => 'value']);
 ```
 
-## Load balance and connection pooling 
+### Load balance and connection pooling 
 
 The API have support for connection load balancing, connection pooling and persistent connection.
 
@@ -153,9 +156,9 @@ The possible route types are:
 - addRouteForFilter($routeName, $field, $value): Filter any WHERE clause based on FIELD = VALUE
 - addCustomRoute($routeName, $regEx): Filter by a custom regular expression. 
 
-## Connecting To MySQL via SSL
+### Connecting To MySQL via SSL
     
-(Read here https://gist.github.com/byjg/860065a828150caf29c20209ecbd5692 about create server mysql)
+Read [here](https://gist.github.com/byjg/860065a828150caf29c20209ecbd5692) about create SSL mysql
 
 ```php
 <?php
@@ -178,7 +181,7 @@ foreach ($iterator as $row) {
 ```
 
 
-## Using IteratorFilter in order to get the SQL
+### Using IteratorFilter in order to get the SQL
 
 You can use the IteratorFilter object to make easier create SQL
 
@@ -202,7 +205,7 @@ $sql = $formatter->format(
 $iterator = $db->getIterator($sql, $param);
 ```
 
-## Using IteratorFilter with Literal values
+### Using IteratorFilter with Literal values
 
 Sometimes you need an argument as a Literal value like a function or an explicit conversion. 
 
@@ -230,7 +233,7 @@ $filter->addRelation('field', \ByJG\AnyDataset\Core\Enum\Relation::EQUAL, $liter
 ```
 
 
-# Install
+## Install
 
 Just type: 
 
@@ -238,14 +241,14 @@ Just type:
 composer require "byjg/anydataset=4.0.*"
 ```
 
-# Running Unit tests
+## Running Unit tests
 
 
 ```bash
 vendor/bin/phpunit
 ```
 
-# Running database tests
+## Running database tests
 
 Run integration tests require you to have the databases up and running. We provided a basic `docker-compose.yml` and you
 can use to start the databases for test. 
