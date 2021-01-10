@@ -41,4 +41,12 @@ class PdoPostgresTest extends BasePdo
     {
         $this->dbDriver->execute('drop table Dogs;');
     }
+
+    public function testGetDate() {
+        $data = $this->dbDriver->getScalar("SELECT CAST('2018-07-26' AS DATE) ");
+        $this->assertEquals("2018-07-26", $data);
+
+        $data = $this->dbDriver->getScalar("SELECT CAST('2018-07-26 20:02:03' AS TIMESTAMP) ");
+        $this->assertEquals("2018-07-26 20:02:03", $data);
+    }
 }

@@ -331,5 +331,9 @@ abstract class BasePdo extends TestCase
         );
     }
 
+    public function testGetDate() {
+        throw new NotImplementedException("Needs to be implemented for each database");
+    }
+
 }
 

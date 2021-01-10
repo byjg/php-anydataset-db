@@ -6,7 +6,7 @@ use ByJG\AnyDataset\Db\Factory;
 
 require_once 'BasePdo.php';
 
-class PdoMySqlest extends BasePdo
+class PdoMySqlTest extends BasePdo
 {
 
     protected function createInstance()
@@ -39,5 +39,13 @@ class PdoMySqlest extends BasePdo
     public function deleteDatabase()
     {
         $this->dbDriver->execute('drop table Dogs;');
+    }
+
+    public function testGetDate() {
+        $data = $this->dbDriver->getScalar("SELECT CONVERT('2018-07-26 20:02:03', date) ");
+        $this->assertEquals("2018-07-26", $data);
+
+        $data = $this->dbDriver->getScalar("SELECT CONVERT('2018-07-26 20:02:03', datetime) ");
+        $this->assertEquals("2018-07-26 20:02:03", $data);
     }
 }
