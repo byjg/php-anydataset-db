@@ -2,7 +2,9 @@
 
 namespace ByJG\AnyDataset\Db;
 
+use ByJG\AnyDataset\Core\Exception\NotAvailableException;
 use ByJG\Util\Uri;
+use PDO;
 
 class PdoPdo extends DbPdoDriver
 {
@@ -10,12 +12,12 @@ class PdoPdo extends DbPdoDriver
     /**
      * PdoPdo constructor.
      *
-     * @param \ByJG\Util\Uri $connUri
-     * @throws \ByJG\AnyDataset\Core\Exception\NotAvailableException
+     * @param Uri $connUri
+     * @throws NotAvailableException
      */
     public function __construct(Uri $connUri, $preOptions = [], $postOptions = [])
     {
-        $this->connectionUri = $connUri;
+        $this->validateConnUri($connUri, $connUri->getHost());
 
         if (empty($connUri->getQueryPart("dsn"))) {
             throw new \InvalidArgumentException("The generic PDO Driver requires the `dsn` argument");
@@ -23,10 +25,8 @@ class PdoPdo extends DbPdoDriver
 
         $dsn = $connUri->getHost() . ":" . $connUri->getQueryPart("dsn");
 
-        $this->instance = new \PDO($dsn, $connUri->getUsername(), $connUri->getPassword(), $preOptions);
+        $this->instance = new PDO($dsn, $connUri->getUsername(), $connUri->getPassword(), $preOptions);
 
-        foreach ((array) $postOptions as $key => $value) {
-            $this->instance->setAttribute($key, $value);
-        }
+        $this->setPdoDefaultParams($postOptions);
     }
 }

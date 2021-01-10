@@ -31,6 +31,7 @@ class Factory
             [
                 "oci8" => $prefix . "DbOci8Driver",
                 "dblib" => $prefix . "PdoDblib",
+                "sqlsrv" => $prefix . "PdoSqlsrv",
                 "mysql" => $prefix . "PdoMysql",
                 "pgsql" => $prefix . "PdoPgsql",
                 "oci" => $prefix . "PdoOci",
@@ -41,7 +42,11 @@ class Factory
             (array)$schemesAlternative
         );
 
-        $class = isset($validSchemes[$scheme]) ? $validSchemes[$scheme] : PdoLiteral::class;
+        if (!isset($validSchemes[$scheme])) {
+            throw new \InvalidArgumentException("The '$scheme' scheme does not exist. Check the scheme name or use the Generic PDO scheme");
+        }
+
+        $class = $validSchemes[$scheme];
 
         $instance = new $class($connectionUri);
 

@@ -4,21 +4,30 @@ namespace ByJG\AnyDataset\Db;
 
 use ByJG\AnyDataset\Core\Exception\NotAvailableException;
 use ByJG\Util\Uri;
+use PDO;
 
-class PdoDblib extends DbPdoDriver
+class PdoSqlsrv extends PdoDblib
 {
 
     /**
-     * PdoDblib constructor.
+     * PdoSqlsrv constructor.
      *
      * @param Uri $connUri
-     * @throws NotAvailableException
+     * @throws \ByJG\AnyDataset\Core\Exception\NotAvailableException
      */
     public function __construct($connUri)
     {
         $this->setSupportMultRowset(true);
 
-        parent::__construct($connUri, null, null);
+        $this->validateConnUri($connUri);
+
+        $dsn = $connUri->getScheme() . ":"
+            . "server=" . $connUri->getHost() . (!empty($connUri->getPort()) ? "," . $connUri->getPort() : "") . ";"
+            . "Database=" . preg_replace('~^/~', '', $connUri->getPath());
+
+        $this->instance = new PDO($dsn, $connUri->getUsername(), $connUri->getPassword());
+
+        $this->setPdoDefaultParams();
 
         // Solve the error:
         // SQLSTATE[HY000]: General error: 1934 General SQL Server error: Check messages from the SQL Server [1934]
