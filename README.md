@@ -27,14 +27,15 @@ See below the current implemented drivers:
 
 {:.table}
 
-| Database      | Connection String                                     | Factory
-| ------------- | ----------------------------------------------------- | -------------------------  |
-| Sqlite        | sqlite:///path/to/file                                | getDbRelationalInstance()  |
-| MySql/MariaDb | mysql://username:password@hostname:port/database      | getDbRelationalInstance()  |
-| Postgres      | psql://username:password@hostname:port/database       | getDbRelationalInstance()  |
-| Sql Server    | dblib://username:password@hostname:port/database      | getDbRelationalInstance()  |
-| Oracle (OCI)  | oci://username:password@hostname:port/database        | getDbRelationalInstance()  |
-| Oracle (OCI8) | oci8://username:password@hostname:port/database       | getDbRelationalInstance()  |
+| Database           | Connection String                                        | Factory
+| ------------------ | -------------------------------------------------------- | -------------------------  |
+| Sqlite             | sqlite:///path/to/file                                   | getDbRelationalInstance()  |
+| MySql/MariaDb      | mysql://username:password@hostname:port/database         | getDbRelationalInstance()  |
+| Postgres           | psql://username:password@hostname:port/database          | getDbRelationalInstance()  |
+| Sql Server (DbLib) | dblib://username:password@hostname:port/database         | getDbRelationalInstance()  |
+| Oracle (OCI)       | oci://username:password@hostname:port/database           | getDbRelationalInstance()  |
+| Oracle (OCI8)      | oci8://username:password@hostname:port/database          | getDbRelationalInstance()  |
+| Generic PDO        | pdo://username:password@pdo_driver?dsn=<LITERAL PDO DSN> | getDbRelationalInstance()  |
 
 ```php
 <?php
