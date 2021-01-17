@@ -10,7 +10,7 @@ class DbDblibFunctionsTest extends TestCase
     /**
      * @var DbDblibFunctions
      */
-    private $object;
+    protected $object;
 
     protected function setUp()
     {

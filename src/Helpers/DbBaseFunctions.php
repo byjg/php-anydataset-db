@@ -138,7 +138,7 @@ abstract class DbBaseFunctions implements DbFunctionsInterface
     {
         $dbdataset->execute($sql, $param);
 
-        return -1;
+        return $dbdataset->getDbConnection()->lastInsertId();
     }
 
     protected $deliFieldLeft = '';

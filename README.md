@@ -27,14 +27,16 @@ See below the current implemented drivers:
 
 {:.table}
 
-| Database      | Connection String                                     | Factory
-| ------------- | ----------------------------------------------------- | -------------------------  |
-| Sqlite        | sqlite:///path/to/file                                | getDbRelationalInstance()  |
-| MySql/MariaDb | mysql://username:password@hostname:port/database      | getDbRelationalInstance()  |
-| Postgres      | psql://username:password@hostname:port/database       | getDbRelationalInstance()  |
-| Sql Server    | dblib://username:password@hostname:port/database      | getDbRelationalInstance()  |
-| Oracle (OCI)  | oci://username:password@hostname:port/database        | getDbRelationalInstance()  |
-| Oracle (OCI8) | oci8://username:password@hostname:port/database       | getDbRelationalInstance()  |
+| Database            | Connection String                                        | Factory
+| ------------------- | -------------------------------------------------------- | -------------------------  |
+| Sqlite              | sqlite:///path/to/file                                   | getDbRelationalInstance()  |
+| MySql/MariaDb       | mysql://username:password@hostname:port/database         | getDbRelationalInstance()  |
+| Postgres            | psql://username:password@hostname:port/database          | getDbRelationalInstance()  |
+| Sql Server (DbLib)  | dblib://username:password@hostname:port/database         | getDbRelationalInstance()  |
+| Sql Server (Sqlsrv) | sqlsrv://username:password@hostname:port/database        | getDbRelationalInstance()  |
+| Oracle (OCI)        | oci://username:password@hostname:port/database           | getDbRelationalInstance()  |
+| Oracle (OCI8)       | oci8://username:password@hostname:port/database          | getDbRelationalInstance()  |
+| Generic PDO         | pdo://username:password@pdo_driver?dsn=<LITERAL PDO DSN> | getDbRelationalInstance()  |
 
 ```php
 <?php
@@ -233,6 +235,36 @@ $filter->addRelation('field', \ByJG\AnyDataset\Core\Enum\Relation::EQUAL, $liter
 ```
 
 
+## FreeDTS / DBlib Date format Issues
+
+Date has the format `"Jul 27 2016 22:00:00.860"`. The solution is:
+
+Follow the solution:
+https://stackoverflow.com/questions/38615458/freetds-dateformat-issues
+
+## Generic PDO configuration
+
+The generic PDO driver uses the format `pdo://username:password@pdo_driver?dsn=<LITERAL PDO DSN>` and only need to be
+used for drivers are not mapped into the `anydataset-db` library.
+
+Let's say we want to connect with the PDO Interbase/Firebase database. 
+After install the PDO properly we need to create the connection string URI. 
+
+According to the Firebase documentation the PDO DSN is: 
+
+```text
+firebird:User=john;Password=mypass;Database=DATABASE.GDE;DataSource=localhost;Port=3050
+```
+
+and adapting to URI style we remove the information about the driver, user and password. Then we have:
+
+```php
+$uri = new \ByJG\Util\Uri("pdo://john:mypass@firebird?dsn=" . url_encode('Database=DATABASE.GDE;DataSource=localhost;Port=3050'));
+```
+
+Don't forget we need to `url_encode` the DSN parameter.
+
+
 ## Install
 
 Just type: 
@@ -260,7 +292,6 @@ docker-compose up -d postgres mysql
 ```
 
 **Run the tests**
-
 
 ```
 phpunit testsdb/PdoMySqlTest.php 

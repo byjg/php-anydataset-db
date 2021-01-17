@@ -62,4 +62,13 @@ class PdoSqliteTest extends BasePdo
         $this->assertEquals(10, $this->dbDriver->getCountStmtCache()); // because of createDatabase() and populateData()
         $this->assertEquals([["name" => 30]], $it->toArray());
     }
+
+    public function testGetDate() {
+        $data = $this->dbDriver->getScalar("SELECT DATE('2018-07-26') ");
+        $this->assertEquals("2018-07-26", $data);
+
+        $data = $this->dbDriver->getScalar("SELECT DATETIME('2018-07-26 20:02:03') ");
+        $this->assertEquals("2018-07-26 20:02:03", $data);
+    }
+
 }

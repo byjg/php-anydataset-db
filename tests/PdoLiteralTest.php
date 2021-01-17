@@ -29,4 +29,9 @@ class PdoLiteralTest extends BasePdo
     {
         $this->markTestSkipped('SqlLite does not have this method');
     }
+
+    public function testGetDate()
+    {
+        $this->markTestSkipped('Do not use here');
+    }
 }

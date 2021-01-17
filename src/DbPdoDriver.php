@@ -43,19 +43,7 @@ abstract class DbPdoDriver implements DbDriverInterface
      */
     public function __construct(Uri $connUri, $preOptions = null, $postOptions = null)
     {
-        $this->connectionUri = $connUri;
-
-        if (!defined('PDO::ATTR_DRIVER_NAME')) {
-            throw new NotAvailableException("Extension 'PDO' is not loaded");
-        }
-
-        if (!extension_loaded('pdo_' . strtolower($connUri->getScheme()))) {
-            throw new NotAvailableException("Extension 'pdo_" . strtolower($connUri->getScheme()) . "' is not loaded");
-        }
-
-        if ($connUri->getQueryPart("stmtcache") == "true") {
-            $this->useStmtCache = true;
-        }
+        $this->validateConnUri($connUri);
 
         $strcnn = $this->createPboConnStr($connUri);
 
@@ -74,6 +62,37 @@ abstract class DbPdoDriver implements DbDriverInterface
 
         $this->connectionUri = $this->connectionUri->withScheme($this->instance->getAttribute(PDO::ATTR_DRIVER_NAME));
 
+        $this->setPdoDefaultParams($postOptions);
+    }
+
+    /**
+     * @param Uri $connUri
+     * @param null $scheme
+     * @throws NotAvailableException
+     */
+    protected function validateConnUri($connUri, $scheme = null)
+    {
+        $this->connectionUri = $connUri;
+
+        if (!defined('PDO::ATTR_DRIVER_NAME')) {
+            throw new NotAvailableException("Extension 'PDO' is not loaded");
+        }
+
+        if (empty($scheme)) {
+            $scheme = $connUri->getScheme();
+        }
+
+        if (!extension_loaded('pdo_' . strtolower($scheme))) {
+            throw new NotAvailableException("Extension 'pdo_" . strtolower($connUri->getScheme()) . "' is not loaded");
+        }
+
+        if ($connUri->getQueryPart("stmtcache") == "true") {
+            $this->useStmtCache = true;
+        }
+    }
+
+    protected function setPdoDefaultParams($postOptions = [])
+    {
         // Set Specific Attributes
         $this->instance->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
         $this->instance->setAttribute(PDO::ATTR_CASE, PDO::CASE_LOWER);
