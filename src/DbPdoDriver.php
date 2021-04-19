@@ -101,22 +101,20 @@ abstract class DbPdoDriver implements DbDriverInterface
             $this->instance->setAttribute($key, $value);
         }
     }
-    
+
     protected function createPboConnStr(Uri $connUri)
     {
         $host = $connUri->getHost();
-        if (empty($host)) {
-            return $connUri->getScheme() . ":" . $connUri->getPath();
+
+        $strcnn = $connUri->getScheme() . ":";
+        if (!empty($host)) {
+            $strcnn .= "host=" . $connUri->getHost();
         }
 
         $database = preg_replace('~^/~', '', $connUri->getPath());
         if (!empty($database)) {
-            $database = ";dbname=$database";
+            $strcnn .= ";dbname=$database";
         }
-
-        $strcnn = $connUri->getScheme() . ":"
-            . "host=" . $connUri->getHost()
-            . $database;
 
         if ($connUri->getPort() != "") {
             $strcnn .= ";port=" . $connUri->getPort();
