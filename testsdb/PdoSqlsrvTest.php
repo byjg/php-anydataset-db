@@ -30,4 +30,17 @@ class PdoSqlsrvTest extends PdoDblibTest
         $data = $this->dbDriver->getScalar("SELECT CONVERT(datetime, '2018-07-26 20:02:03') ");
         $this->assertEquals("2018-07-26 20:02:03.000", $data);
     }
+
+    public function testDontBindParam()
+    {
+        try {
+            parent::testDontBindParam();
+            $this->fail();
+        } catch (\PDOException $ex) {
+            if (strpos($ex->getMessage(), "SQLSTATE[07002]") === false) {
+                throw $ex;
+            }
+            $this->assertTrue(true);
+        }
+    }
 }

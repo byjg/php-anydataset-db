@@ -5,6 +5,8 @@ namespace TestsDb\AnyDataset;
 use ByJG\AnyDataset\Core\Exception\NotImplementedException;
 use ByJG\AnyDataset\Db\DbCached;
 use ByJG\AnyDataset\Db\DbDriverInterface;
+use ByJG\AnyDataset\Db\DbPdoDriver;
+use ByJG\AnyDataset\Db\Factory;
 use PHPUnit\Framework\TestCase;
 
 abstract class BasePdo extends TestCase
@@ -76,7 +78,7 @@ abstract class BasePdo extends TestCase
                 'id' => 2
             ],
             [
-                'breed' => 'Pinscher',
+                'breed' => 'Pincher',
                 'name' => 'Lola',
                 'age' => 1,
                 'id' => 3
@@ -267,6 +269,13 @@ abstract class BasePdo extends TestCase
         $this->assertEquals('Dog', $row[0]["breed"]);
         $this->assertEquals('FÃ©lix', $row[0]["name"]);
         $this->assertEquals(6, $row[0]["age"]);
+    }
+
+    public function testDontBindParam()
+    {
+        $newUri = $this->dbDriver->getUri()->withQueryKeyValue("dont_bind_param", "");
+        $newConn = Factory::getDbInstance($newUri);
+        $newConn->getIterator('select Id, Breed, Name, Age from Dogs where id = :field');
     }
 
     public function testCachedResults()

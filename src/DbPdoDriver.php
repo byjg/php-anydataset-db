@@ -28,6 +28,8 @@ abstract class DbPdoDriver implements DbDriverInterface
 
     protected $supportMultRowset = false;
 
+    const DONT_BIND_PARAM="dont_bind_param";
+
     /**
      * @var Uri
      */
@@ -123,7 +125,9 @@ abstract class DbPdoDriver implements DbDriverInterface
         }
 
         $query = $connUri->getQuery();
-        $strcnn .= ";" . implode(';', explode('&', $query));
+        $queryArr = explode('&', $query);
+        unset($queryArr[self::DONT_BIND_PARAM]);
+        $strcnn .= ";" . implode(';', $queryArr);
 
         return $strcnn;
     }
@@ -142,7 +146,9 @@ abstract class DbPdoDriver implements DbDriverInterface
      */
     protected function getDBStatement($sql, $array = null)
     {
-        list($sql, $array) = SqlBind::parseSQL($this->connectionUri, $sql, $array);
+        if (is_null($this->connectionUri->getQueryPart(self::DONT_BIND_PARAM))) {
+            list($sql, $array) = SqlBind::parseSQL($this->connectionUri, $sql, $array);
+        }
 
         if ($this->useStmtCache) {
             if ($this->getMaxStmtCache() > 0 && !isset($this->stmtCache[$sql])) {
