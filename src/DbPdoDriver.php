@@ -28,7 +28,8 @@ abstract class DbPdoDriver implements DbDriverInterface
 
     protected $supportMultRowset = false;
 
-    const DONT_BIND_PARAM="dont_bind_param";
+    const DONT_BIND_PARAM = "dont_bind_param";
+    const STATEMENT_CACHE = "stmtcache";
 
     /**
      * @var Uri
@@ -88,7 +89,7 @@ abstract class DbPdoDriver implements DbDriverInterface
             throw new NotAvailableException("Extension 'pdo_" . strtolower($connUri->getScheme()) . "' is not loaded");
         }
 
-        if ($connUri->getQueryPart("stmtcache") == "true") {
+        if ($connUri->getQueryPart(self::STATEMENT_CACHE) == "true") {
             $this->useStmtCache = true;
         }
     }

@@ -45,7 +45,7 @@ abstract class BasePdo extends TestCase
             );
         }
 
-        if ($this->dbDriver->getUri()->getQueryPart("stmtcache") == "true") {
+        if ($this->dbDriver->getUri()->getQueryPart(DbPdoDriver::STATEMENT_CACHE) == "true") {
             // One cache for CREATE TABLE... and another for INSERT INTO...
             $this->assertEquals(2, $this->dbDriver->getCountStmtCache());
         } else {
@@ -273,7 +273,7 @@ abstract class BasePdo extends TestCase
 
     public function testDontBindParam()
     {
-        $newUri = $this->dbDriver->getUri()->withQueryKeyValue("dont_bind_param", "");
+        $newUri = $this->dbDriver->getUri()->withQueryKeyValue(DbPdoDriver::DONT_BIND_PARAM, "");
         $newConn = Factory::getDbInstance($newUri);
         $newConn->getIterator('select Id, Breed, Name, Age from Dogs where id = :field');
     }

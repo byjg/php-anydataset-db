@@ -2,6 +2,7 @@
 
 namespace TestsDb\AnyDataset;
 
+use ByJG\AnyDataset\Db\DbPdoDriver;
 use ByJG\AnyDataset\Db\Factory;
 use ByJG\Util\Uri;
 
@@ -19,7 +20,7 @@ class PdoSqliteTest extends BasePdo
         }
 
         $uri = Uri::getInstanceFromString("sqlite://" . $this->host)
-            ->withQueryKeyValue("stmtcache", "true");
+            ->withQueryKeyValue(DbPdoDriver::STATEMENT_CACHE, "true");
 
         $this->dbDriver = Factory::getDbInstance($uri);
     }
@@ -43,7 +44,7 @@ class PdoSqliteTest extends BasePdo
 
     public function testStatementCache()
     {
-        $this->assertEquals("true", $this->dbDriver->getUri()->getQueryPart("stmtcache"));
+        $this->assertEquals("true", $this->dbDriver->getUri()->getQueryPart(DbPdoDriver::STATEMENT_CACHE));
         $this->assertEquals(2, $this->dbDriver->getCountStmtCache()); // because of createDatabase() and populateData()
 
         $i = 3;
