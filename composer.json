@@ -1,12 +1,6 @@
 {
   "name": "byjg/anydataset-db",
   "description": "Anydataset Database Relational abstraction. Anydataset is an agnostic data source abstraction layer in PHP.",
-  "authors": [
-    {
-      "name": "João Gilberto Magalhães",
-      "email": "joao@byjg.com.br"
-    }
-  ],
   "autoload": {
     "psr-4": {
       "ByJG\\AnyDataset\\Db\\": "src/"
