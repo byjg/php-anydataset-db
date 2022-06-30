@@ -275,7 +275,7 @@ abstract class BasePdo extends TestCase
     {
         $newUri = $this->dbDriver->getUri()->withQueryKeyValue(DbPdoDriver::DONT_BIND_PARAM, "");
         $newConn = Factory::getDbInstance($newUri);
-        $newConn->getIterator('select Id, Breed, Name, Age from Dogs where id = :field');
+        $newConn->getIterator('select Id, Breed, Name, Age from Dogs where id = :field', [ "field" => 4 ]);
     }
 
     public function testCachedResults()

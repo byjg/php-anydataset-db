@@ -48,7 +48,7 @@ abstract class DbPdoDriver implements DbDriverInterface
     {
         $this->validateConnUri($connUri);
 
-        $strcnn = $this->createPboConnStr($connUri);
+        $strcnn = $this->createPdoConnStr($connUri);
 
         $this->createPdoInstance($strcnn, $preOptions, $postOptions);
     }
@@ -105,7 +105,7 @@ abstract class DbPdoDriver implements DbDriverInterface
         }
     }
     
-    protected function createPboConnStr(Uri $connUri)
+    protected function createPdoConnStr(Uri $connUri)
     {
         $host = $connUri->getHost();
         if (empty($host)) {
@@ -127,8 +127,11 @@ abstract class DbPdoDriver implements DbDriverInterface
 
         $query = $connUri->getQuery();
         $queryArr = explode('&', $query);
-        unset($queryArr[self::DONT_BIND_PARAM]);
-        $strcnn .= ";" . implode(';', $queryArr);
+        foreach ($queryArr as $value) {
+            if (strpos($value, self::DONT_BIND_PARAM . "=") === false) {
+                $strcnn .= ";" . $value;
+            }
+        }
 
         return $strcnn;
     }
