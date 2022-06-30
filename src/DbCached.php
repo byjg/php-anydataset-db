@@ -117,7 +117,7 @@ class DbCached implements DbDriverInterface
 
     public function getDbConnection()
     {
-        $this->dbDriver->getDbConnection();
+        return $this->dbDriver->getDbConnection();
     }
 
     public function setAttribute($name, $value)
@@ -137,7 +137,7 @@ class DbCached implements DbDriverInterface
 
     public function getDbHelper()
     {
-        $this->dbDriver->getDbHelper();
+        return $this->dbDriver->getDbHelper();
     }
 
     /**
