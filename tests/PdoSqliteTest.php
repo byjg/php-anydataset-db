@@ -15,7 +15,7 @@ class PdoSqliteTest extends TestCase
      */
     protected $dbDriver;
 
-    public function setUp()
+    public function setUp(): void
     {
         $this->dbDriver = Factory::getDbRelationalInstance('sqlite:///tmp/test.db');
 
@@ -41,7 +41,7 @@ class PdoSqliteTest extends TestCase
         $this->dbDriver->execute("insert into info (iduser, property) values (3, 'bbb')");
     }
 
-    public function tearDown()
+    public function tearDown(): void
     {
         unlink('/tmp/test.db');
     }

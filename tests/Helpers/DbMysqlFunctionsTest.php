@@ -12,12 +12,12 @@ class DbMysqlFunctionsTest extends TestCase
      */
     private $object;
 
-    protected function setUp()
+    protected function setUp(): void
     {
         $this->object = new DbMysqlFunctions();
     }
 
-    protected function tearDown()
+    protected function tearDown(): void
     {
         $this->object = null;
     }

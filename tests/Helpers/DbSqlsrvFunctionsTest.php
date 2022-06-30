@@ -10,7 +10,7 @@ require_once __DIR__ . "/DbDblibFunctionsTest.php";
 
 class DbSqlsrvFunctionsTest extends DbDblibFunctionsTest
 {
-    protected function setUp()
+    protected function setUp(): void
     {
         $this->object = new DbSqlsrvFunctions();
     }

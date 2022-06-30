@@ -12,12 +12,12 @@ class DbDblibFunctionsTest extends TestCase
      */
     protected $object;
 
-    protected function setUp()
+    protected function setUp(): void
     {
         $this->object = new DbDblibFunctions();
     }
 
-    protected function tearDown()
+    protected function tearDown(): void
     {
         $this->object = null;
     }
@@ -34,11 +34,10 @@ class DbDblibFunctionsTest extends TestCase
         $this->assertEquals('param1 + param2 + param3 + param4', $result);
     }
 
-    /**
-     * @expectedException \ByJG\AnyDataset\Core\Exception\NotAvailableException
-     */
     public function testLimit()
     {
+        $this->expectException(\ByJG\AnyDataset\Core\Exception\NotAvailableException::class);
+
         $this->object->limit('select  from table', 0, 10);
     }
 
@@ -95,13 +94,11 @@ class DbDblibFunctionsTest extends TestCase
         $this->assertEquals('"master"."dbo"."table"', $tableDb2);
     }
 
-    /**
-     * @expectedException \ByJG\AnyDataset\Core\Exception\NotAvailableException
-     */
     public function testForUpdate()
     {
-        $this->assertFalse($this->object->hasForUpdate());
+        $this->expectException(\ByJG\AnyDataset\Core\Exception\NotAvailableException::class);
 
+        $this->assertFalse($this->object->hasForUpdate());
         $this->object->forUpdate('select * from table');
     }
 }
