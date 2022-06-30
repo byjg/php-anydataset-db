@@ -18,7 +18,7 @@ and open the template in the editor.
         <ini name="display_startup_errors" value="On" />
         <ini name="error_reporting" value="E_ALL" />
     </php>
-    
+
     <filter>
         <whitelist>
             <directory>./src</directory>

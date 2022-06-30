@@ -17,7 +17,7 @@ class DbMysqlFunctions extends DbBaseFunctions
 
     public function concat($str1, $str2 = null)
     {
-        return "concat(" . implode(func_get_args(), ', ') . ")";
+        return "concat(" . implode(', ', func_get_args()) . ")";
     }
 
     /**
@@ -95,7 +95,7 @@ class DbMysqlFunctions extends DbBaseFunctions
             'Q' => "",
             'q' => "",
             'D' => "%d",
-            'd' => "%d",
+            'd' => "%e",
             'h' => "%I",
             'H' => "%H",
             'i' => "%i",

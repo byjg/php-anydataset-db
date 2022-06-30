@@ -71,11 +71,11 @@ class DbMysqlFunctionsTest extends TestCase
 
     public function testSqlDate()
     {
-        $this->assertEquals("DATE_FORMAT(column,'%d/%b/%Y')", $this->object->sqlDate('d/M/Y', 'column'));
-        $this->assertEquals("DATE_FORMAT(column,'%d/%m/%Y %H:%i')", $this->object->sqlDate('d/m/Y H:i', 'column'));
+        $this->assertEquals("DATE_FORMAT(column,'%e/%b/%Y')", $this->object->sqlDate('d/M/Y', 'column'));
+        $this->assertEquals("DATE_FORMAT(column,'%d/%m/%Y %H:%i')", $this->object->sqlDate('D/m/Y H:i', 'column'));
         $this->assertEquals("DATE_FORMAT(column,'%H:%i')", $this->object->sqlDate('H:i', 'column'));
-        $this->assertEquals("DATE_FORMAT(column,'%d %m %Y %H %i')", $this->object->sqlDate('d m Y H i', 'column'));
-        $this->assertEquals("DATE_FORMAT(now(),'%d/%m/%y %I:%i')", $this->object->sqlDate('d/m/y h:i'));
+        $this->assertEquals("DATE_FORMAT(column,'%e %m %Y %H %i')", $this->object->sqlDate('d m Y H i', 'column'));
+        $this->assertEquals("DATE_FORMAT(now(),'%e/%m/%y %I:%i')", $this->object->sqlDate('d/m/y h:i'));
         $this->assertEquals("DATE_FORMAT(column,'%b ')", $this->object->sqlDate('M q', 'column'));
     }
 
