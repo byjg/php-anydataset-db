@@ -30,6 +30,7 @@ abstract class DbPdoDriver implements DbDriverInterface
 
     const DONT_PARSE_PARAM = "dont_parse_param";
     const STATEMENT_CACHE = "stmtcache";
+    const UNIX_SOCKET = "unix_socket";
 
     /**
      * @var Uri
@@ -108,17 +109,24 @@ abstract class DbPdoDriver implements DbDriverInterface
     protected function createPdoConnStr(Uri $connUri)
     {
         $host = $connUri->getHost();
-        if (empty($host)) {
+        $hostHeader = "host=";
+        if (!empty($connUri->getQueryPart(self::UNIX_SOCKET))) {
+            $host = $connUri->getQueryPart(self::UNIX_SOCKET);
+            $hostHeader = "unix_socket=";
+            if (empty($host)) {
+                $hostHeader = "";
+            }
+        } elseif (empty($host)) {
             return $connUri->getScheme() . ":" . $connUri->getPath();
         }
 
         $database = preg_replace('~^/~', '', $connUri->getPath());
         if (!empty($database)) {
-            $database = ";dbname=$database";
+            $database = (!empty($hostHeader) ? ";" : "") . "dbname=$database";
         }
 
         $strcnn = $connUri->getScheme() . ":"
-            . "host=" . $connUri->getHost()
+            . "${hostHeader}${host}"
             . $database;
 
         if ($connUri->getPort() != "") {
@@ -129,7 +137,8 @@ abstract class DbPdoDriver implements DbDriverInterface
         $queryArr = explode('&', $query);
         foreach ($queryArr as $value) {
             if ((strpos($value, self::DONT_PARSE_PARAM . "=") === false) && 
-               (strpos($value, self::STATEMENT_CACHE . "=") === false)) {
+               (strpos($value, self::STATEMENT_CACHE . "=") === false) && 
+               (strpos($value, self::UNIX_SOCKET . "=") === false)) {
                 $strcnn .= ";" . $value;
             }
         }
