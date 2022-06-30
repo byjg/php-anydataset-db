@@ -50,7 +50,7 @@ class PdoMySqlTest extends BasePdo
     }
 
     public function testDontParseParam_3() {
-        $this->expectExceptionMessage("syntax to use near ':field'");
+        $this->expectException(\PDOException::class);
         
         parent::testDontParseParam_3();
     }

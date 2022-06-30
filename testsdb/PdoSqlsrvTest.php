@@ -30,10 +30,4 @@ class PdoSqlsrvTest extends PdoDblibTest
         $data = $this->dbDriver->getScalar("SELECT CONVERT(datetime, '2018-07-26 20:02:03') ");
         $this->assertEquals("2018-07-26 20:02:03.000", $data);
     }
-
-    public function testDontParseParam_3() {
-        $this->expectExceptionMessage("COUNT field incorrect");
-        
-        $this->dontParseParam_3();
-    }
 }

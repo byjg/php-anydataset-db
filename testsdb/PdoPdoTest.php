@@ -36,7 +36,7 @@ class PdoPdoTest extends PdoPostgresTest
     }
 
     public function testDontParseParam_3() {
-        $this->expectExceptionMessage("bind message supplies 0 parameters");
+        $this->expectException(\PDOException::class);
         
         parent::testDontParseParam_3();
     }

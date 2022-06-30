@@ -43,12 +43,8 @@ class PdoDblibTest extends BasePdo
     }
 
     public function testDontParseParam_3() {
-        $this->expectExceptionMessage("Incorrect syntax near ':'.");
-
-        $this->dontParseParam_3();
-    }
-
-    protected function dontParseParam_3() {
+        $this->expectException(\PDOException::class);
+        
         parent::testDontParseParam_3();
     }
 }
