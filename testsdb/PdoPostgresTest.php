@@ -49,4 +49,10 @@ class PdoPostgresTest extends BasePdo
         $data = $this->dbDriver->getScalar("SELECT CAST('2018-07-26 20:02:03' AS TIMESTAMP) ");
         $this->assertEquals("2018-07-26 20:02:03", $data);
     }
+
+    public function testDontParseParam_3() {
+        $this->expectExceptionMessage("bind message supplies 0 parameters");
+        
+        parent::testDontParseParam_3();
+    }
 }

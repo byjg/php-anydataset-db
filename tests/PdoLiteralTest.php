@@ -40,4 +40,16 @@ class PdoLiteralTest extends BasePdo
         // Ignoring because is using a connection into the memory.
         $this->markTestSkipped();
     }
+
+    public function testDontParseParam_2()
+    {
+        // Ignoring because is using a connection into the memory.
+        $this->markTestSkipped();
+    }
+
+    public function testDontParseParam_3()
+    {
+        // Ignoring because is using a connection into the memory.
+        $this->markTestSkipped();
+    }
 }

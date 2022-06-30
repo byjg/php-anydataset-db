@@ -278,6 +278,19 @@ abstract class BasePdo extends TestCase
         $newConn->getIterator('select Id, Breed, Name, Age from Dogs where id = :field', [ "field" => 1 ]);
     }
 
+    public function testDontParseParam_2()
+    {
+        $this->dbDriver->getIterator('select Id, Breed, Name, Age from Dogs where id = :field');
+    }
+
+    public function testDontParseParam_3()
+    {
+        $newUri = $this->dbDriver->getUri()->withQueryKeyValue(DbPdoDriver::DONT_PARSE_PARAM, "");
+        $newConn = Factory::getDbInstance($newUri);
+        $newConn->getIterator('select Id, Breed, Name, Age from Dogs where id = :field');
+    }
+
+
     public function testCachedResults()
     {
         $dbCached = new DbCached($this->dbDriver, \ByJG\Cache\Factory::createArrayPool(), 600);

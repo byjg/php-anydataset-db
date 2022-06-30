@@ -41,4 +41,14 @@ class PdoDblibTest extends BasePdo
         $data = $this->dbDriver->getScalar("SELECT CONVERT(datetime, '2018-07-26 20:02:03') ");
         $this->assertEquals("2018-07-26 20:02:03", $data);
     }
+
+    public function testDontParseParam_3() {
+        $this->expectExceptionMessage("Incorrect syntax near ':'.");
+
+        $this->dontParseParam_3();
+    }
+
+    protected function dontParseParam_3() {
+        parent::testDontParseParam_3();
+    }
 }

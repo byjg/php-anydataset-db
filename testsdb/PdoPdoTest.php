@@ -34,4 +34,10 @@ class PdoPdoTest extends PdoPostgresTest
         $pdoConn = "$pdoConn;dbname=testpdo;";
         $this->dbDriver = Factory::getDbRelationalInstance("pdo://postgres:$password@pgsql?dsn=" . urlencode($pdoConn));
     }
+
+    public function testDontParseParam_3() {
+        $this->expectExceptionMessage("bind message supplies 0 parameters");
+        
+        parent::testDontParseParam_3();
+    }
 }
