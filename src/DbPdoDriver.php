@@ -40,8 +40,8 @@ abstract class DbPdoDriver implements DbDriverInterface
      * DbPdoDriver constructor.
      *
      * @param Uri $connUri
-     * @param null $preOptions
-     * @param null $postOptions
+     * @param array $preOptions
+     * @param array $postOptions
      * @throws NotAvailableException
      */
     public function __construct(Uri $connUri, $preOptions = null, $postOptions = null)
@@ -70,7 +70,7 @@ abstract class DbPdoDriver implements DbDriverInterface
 
     /**
      * @param Uri $connUri
-     * @param null $scheme
+     * @param string $scheme
      * @throws NotAvailableException
      */
     protected function validateConnUri($connUri, $scheme = null)

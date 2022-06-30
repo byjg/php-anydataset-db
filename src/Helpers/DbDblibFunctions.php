@@ -18,7 +18,7 @@ class DbDblibFunctions extends DbBaseFunctions
 
     public function concat($str1, $str2 = null)
     {
-        return implode(func_get_args(), ' + ');
+        return implode(' + ', func_get_args());
     }
 
     /**
@@ -117,7 +117,7 @@ class DbDblibFunctions extends DbBaseFunctions
      * @param DbDriverInterface $dbdataset
      * @param string $sql
      * @param array $param
-     * @return int
+     * @return bool|string
      */
     public function executeAndGetInsertedId(DbDriverInterface $dbdataset, $sql, $param)
     {

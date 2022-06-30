@@ -22,7 +22,7 @@ abstract class BasePdo extends TestCase
     /**
      * @throws \Exception
      */
-    public function setUp()
+    public function setUp(): void
     {
         $this->createInstance();
         $this->createDatabase();
@@ -57,7 +57,7 @@ abstract class BasePdo extends TestCase
 
     abstract protected function deleteDatabase();
 
-    public function tearDown()
+    public function tearDown(): void
     {
         $this->deleteDatabase();
     }
