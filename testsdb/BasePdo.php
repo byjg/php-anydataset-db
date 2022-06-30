@@ -271,11 +271,11 @@ abstract class BasePdo extends TestCase
         $this->assertEquals(6, $row[0]["age"]);
     }
 
-    public function testDontBindParam()
+    public function testDontParseParam()
     {
-        $newUri = $this->dbDriver->getUri()->withQueryKeyValue(DbPdoDriver::DONT_BIND_PARAM, "");
+        $newUri = $this->dbDriver->getUri()->withQueryKeyValue(DbPdoDriver::DONT_PARSE_PARAM, "");
         $newConn = Factory::getDbInstance($newUri);
-        $newConn->getIterator('select Id, Breed, Name, Age from Dogs where id = :field', [ "field" => 4 ]);
+        $newConn->getIterator('select Id, Breed, Name, Age from Dogs where id = :field', [ "field" => 1 ]);
     }
 
     public function testCachedResults()

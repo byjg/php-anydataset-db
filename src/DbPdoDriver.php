@@ -28,7 +28,7 @@ abstract class DbPdoDriver implements DbDriverInterface
 
     protected $supportMultRowset = false;
 
-    const DONT_BIND_PARAM = "dont_bind_param";
+    const DONT_PARSE_PARAM = "dont_parse_param";
     const STATEMENT_CACHE = "stmtcache";
 
     /**
@@ -128,7 +128,8 @@ abstract class DbPdoDriver implements DbDriverInterface
         $query = $connUri->getQuery();
         $queryArr = explode('&', $query);
         foreach ($queryArr as $value) {
-            if (strpos($value, self::DONT_BIND_PARAM . "=") === false) {
+            if ((strpos($value, self::DONT_PARSE_PARAM . "=") === false) && 
+               (strpos($value, self::STATEMENT_CACHE . "=") === false)) {
                 $strcnn .= ";" . $value;
             }
         }
@@ -150,7 +151,7 @@ abstract class DbPdoDriver implements DbDriverInterface
      */
     protected function getDBStatement($sql, $array = null)
     {
-        if (is_null($this->connectionUri->getQueryPart(self::DONT_BIND_PARAM))) {
+        if (is_null($this->connectionUri->getQueryPart(self::DONT_PARSE_PARAM))) {
             list($sql, $array) = SqlBind::parseSQL($this->connectionUri, $sql, $array);
         }
 
