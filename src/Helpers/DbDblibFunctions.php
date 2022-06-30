@@ -117,7 +117,7 @@ class DbDblibFunctions extends DbBaseFunctions
      * @param DbDriverInterface $dbdataset
      * @param string $sql
      * @param array $param
-     * @return int
+     * @return bool|string
      */
     public function executeAndGetInsertedId(DbDriverInterface $dbdataset, $sql, $param)
     {

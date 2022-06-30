@@ -6,7 +6,6 @@
 [![GitHub release](https://img.shields.io/github/release/byjg/anydataset-db.svg)](https://github.com/byjg/anydataset-db/releases/)
 [![Build Status](https://travis-ci.com/byjg/anydataset-db.svg?branch=master)](https://travis-ci.com/byjg/anydataset-db)
 
-
 Anydataset Database Relational abstraction. Anydataset is an agnostic data source abstraction layer in PHP.
 
 See more about Anydataset [here](https://opensource.byjg.com/anydataset).
@@ -16,12 +15,12 @@ See more about Anydataset [here](https://opensource.byjg.com/anydataset).
 - Connection based on URI
 - Support and fix code tricks with several databases (MySQL, PostgresSql, MS SQL Server, etc)
 - Natively supports Query Cache by implementing a PSR-6 interface
-- Supports Connection Routes based on regular expression against the queries, that's mean a select in a table should be 
+- Supports Connection Routes based on regular expression against the queries, that's mean a select in a table should be
 executed in a database and in another table should be executed in another (even if in different DB)
 
 ## Connection Based on URI
 
-The connection string for databases is based on URL. 
+The connection string for databases is based on URL.
 
 See below the current implemented drivers:
 
@@ -36,7 +35,7 @@ See below the current implemented drivers:
 | Sql Server (Sqlsrv) | sqlsrv://username:password@hostname:port/database        | getDbRelationalInstance()  |
 | Oracle (OCI)        | oci://username:password@hostname:port/database           | getDbRelationalInstance()  |
 | Oracle (OCI8)       | oci8://username:password@hostname:port/database          | getDbRelationalInstance()  |
-| Generic PDO         | pdo://username:password@pdo_driver?dsn=<LITERAL PDO DSN> | getDbRelationalInstance()  |
+| Generic PDO         | pdo://username:password@pdo_driver?dsn=LITERAL_PDO_DSN   | getDbRelationalInstance()  |
 
 ```php
 <?php
@@ -115,11 +114,11 @@ $dbCached = new \ByJG\AnyDataset\Db\DbCached(
 $iterator = $dbCached->getIterator('select * from table where field = :param', ['param' => 'value']);
 ```
 
-### Load balance and connection pooling 
+### Load balance and connection pooling
 
 The API have support for connection load balancing, connection pooling and persistent connection.
 
-There is the Route class an DbDriverInterface implementation with route capabilities. Basically you have to define 
+There is the Route class an DbDriverInterface implementation with route capabilities. Basically you have to define
 the routes and the system will choose the proper DbDriver based on your route definition.
 
 Example:
@@ -156,10 +155,10 @@ The possible route types are:
 - addRouteForDelete($routeName, $table = null): Filter any delete. Optional specific table;
 - addRouteForUpdate($routeName, $table = null): Filter any update. Optional specific table;
 - addRouteForFilter($routeName, $field, $value): Filter any WHERE clause based on FIELD = VALUE
-- addCustomRoute($routeName, $regEx): Filter by a custom regular expression. 
+- addCustomRoute($routeName, $regEx): Filter by a custom regular expression.
 
 ### Connecting To MySQL via SSL
-    
+
 Read [here](https://gist.github.com/byjg/860065a828150caf29c20209ecbd5692) about create SSL mysql
 
 ```php
@@ -181,7 +180,6 @@ foreach ($iterator as $row) {
     // $row->getField('field');
 }
 ```
-
 
 ### Using IteratorFilter in order to get the SQL
 
@@ -209,7 +207,7 @@ $iterator = $db->getIterator($sql, $param);
 
 ### Using IteratorFilter with Literal values
 
-Sometimes you need an argument as a Literal value like a function or an explicit conversion. 
+Sometimes you need an argument as a Literal value like a function or an explicit conversion.
 
 In this case you have to create a class that expose the "__toString()" method
 
@@ -292,23 +290,22 @@ $date2 = $dbHelper->sqlDate(DbBaseFunctions::DMYH, "some_field_date"); // Same a
 // based on the current connection
 ```
 
-
 ## FreeDTS / DBlib Date format Issues
 
 Date has the format `"Jul 27 2016 22:00:00.860"`. The solution is:
 
 Follow the solution:
-https://stackoverflow.com/questions/38615458/freetds-dateformat-issues
+<https://stackoverflow.com/questions/38615458/freetds-dateformat-issues>
 
 ## Generic PDO configuration
 
 The generic PDO driver uses the format `pdo://username:password@pdo_driver?dsn=<LITERAL PDO DSN>` and only need to be
 used for drivers are not mapped into the `anydataset-db` library.
 
-Let's say we want to connect with the PDO Interbase/Firebase database. 
-After install the PDO properly we need to create the connection string URI. 
+Let's say we want to connect with the PDO Interbase/Firebase database.
+After install the PDO properly we need to create the connection string URI.
 
-According to the Firebase documentation the PDO DSN is: 
+According to the Firebase documentation the PDO DSN is:
 
 ```text
 firebird:User=john;Password=mypass;Database=DATABASE.GDE;DataSource=localhost;Port=3050
@@ -322,17 +319,15 @@ $uri = new \ByJG\Util\Uri("pdo://john:mypass@firebird?dsn=" . url_encode('Databa
 
 Don't forget we need to `url_encode` the DSN parameter.
 
-
 ## Install
 
-Just type: 
+Just type:
 
 ```bash
 composer require "byjg/anydataset=4.0.*"
 ```
 
 ## Running Unit tests
-
 
 ```bash
 vendor/bin/phpunit
@@ -341,17 +336,17 @@ vendor/bin/phpunit
 ## Running database tests
 
 Run integration tests require you to have the databases up and running. We provided a basic `docker-compose.yml` and you
-can use to start the databases for test. 
+can use to start the databases for test.
 
-**Running the databases**
+### unning the databases
 
 ```bash
 docker-compose up -d postgres mysql
 ```
 
-**Run the tests**
+### Run the tests
 
-```
+```bash
 phpunit testsdb/PdoMySqlTest.php 
 phpunit testsdb/PdoSqliteTest.php 
 phpunit testsdb/PdoPostgresTest.php 
