@@ -34,4 +34,10 @@ class PdoLiteralTest extends BasePdo
     {
         $this->markTestSkipped('Do not use here');
     }
+
+    public function testDontBindParam()
+    {
+        // Ignoring because is using a connection into the memory.
+        $this->markTestSkipped();
+    }
 }

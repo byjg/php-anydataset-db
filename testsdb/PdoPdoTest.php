@@ -34,17 +34,4 @@ class PdoPdoTest extends PdoPostgresTest
         $pdoConn = "$pdoConn;dbname=testpdo;";
         $this->dbDriver = Factory::getDbRelationalInstance("pdo://postgres:$password@pgsql?dsn=" . urlencode($pdoConn));
     }
-
-    public function testDontBindParam()
-    {
-        try {
-            parent::testDontBindParam();
-            $this->fail();
-        } catch (\PDOException $ex) {
-            if (strpos($ex->getMessage(), "SQLSTATE[08P01]") === false) {
-                throw $ex;
-            }
-            $this->assertTrue(true);
-        }
-    }
 }

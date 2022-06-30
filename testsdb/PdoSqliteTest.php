@@ -71,18 +71,4 @@ class PdoSqliteTest extends BasePdo
         $data = $this->dbDriver->getScalar("SELECT DATETIME('2018-07-26 20:02:03') ");
         $this->assertEquals("2018-07-26 20:02:03", $data);
     }
-
-    public function testDontBindParam()
-    {
-        try {
-            parent::testDontBindParam();
-            $this->fail();
-        } catch (\PDOException $ex) {
-            if (strpos($ex->getMessage(), "SQLSTATE[08P01]") === false) {
-                throw $ex;
-            }
-            $this->assertTrue(true);
-        }
-    }
-
 }
