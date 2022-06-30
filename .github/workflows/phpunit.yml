@@ -1,0 +1,86 @@
+name: PHPUnit
+on:
+  push:
+    branches:
+      - master
+    tags:
+      - "*.*.*"
+  pull_request:
+    branches:
+      - master
+  schedule:
+    - cron: "0 8 * * 1"
+
+jobs:
+  Build:
+    runs-on: 'ubuntu-latest'
+    container: 'byjg/php:${{ matrix.php-version }}-cli'
+    strategy:
+      matrix:
+        php-version:
+          - "8.1"
+          - "8.0"
+          - "7.4"
+          - "7.3"
+          - "7.2"
+          - "7.1"
+
+    services:
+      mysql:
+        image: bitnami/mysql:8.0.20
+        env:
+          MYSQL_ROOT_PASSWORD: password
+          MYSQL_AUTHENTICATION_PLUGIN: mysql_native_password
+        ports:
+          - "3306:3306"
+        options: >-
+          --health-cmd="mysqladmin ping" 
+          --health-interval=10s 
+          --health-timeout=20s 
+          --health-retries=10
+      postgres:
+        image: postgres
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: password
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+#      sqlserver:
+#        image: mcr.microsoft.com/mssql/server
+#        env:
+#          ACCEPT_EULA: Y
+#          SA_PASSWORD: Pa55word
+#        ports:
+#          - "1433:1433"
+#        options: >-
+#          --health-cmd "/opt/mssql-tools/bin/sqlcmd -U sa -P Pa55word -Q 'SELECT 1'"
+#          --health-interval 10s
+#          --health-timeout 5s
+#          --health-retries 5
+
+    env:
+      MYSQL_TEST_HOST: mysql
+      PSQL_TEST_HOST: postgres
+      MSSQL_TEST_HOST: sqlserver
+      
+    steps:
+      - uses: actions/checkout@v2
+      - run: composer install
+      - run: ./vendor/bin/phpunit
+      - run: ./vendor/bin/phpunit testsdb/PdoMySqlTest.php 
+      - run: ./vendor/bin/phpunit testsdb/PdoSqliteTest.php 
+      - run: ./vendor/bin/phpunit testsdb/PdoPostgresTest.php 
+      # - run: ./vendor/bin/phpunit testsdb/PdoDblibTest.php 
+
+  Documentation:
+    runs-on: 'ubuntu-latest'
+    needs: Build
+    if: github.ref == 'refs/heads/master'
+    env:
+      DOC_GITHUB_TOKEN: '${{ secrets.DOC_TOKEN }}'
+    steps:
+      - uses: actions/checkout@v2
+      - run: curl https://opensource.byjg.com/add-doc.sh | bash /dev/stdin php anydataset-db
