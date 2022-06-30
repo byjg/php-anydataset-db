@@ -234,6 +234,64 @@ $filter = new \ByJG\AnyDataset\Core\IteratorFilter();
 $filter->addRelation('field', \ByJG\AnyDataset\Core\Enum\Relation::EQUAL, $literal);
 ```
 
+## Helper - DbFunctions
+
+AnyDataset has a helper `ByJG\AnyDataset\Db\DbFunctionsInterface` that can be adjustable for each Database connection you have. It helps to do specific iteraction like:
+
+- concat($str1, $str2 = null);
+- limit($sql, $start, $qty);
+- top($sql, $qty);
+- hasTop();
+- hasLimit();
+- sqlDate($format, $column = null);
+- toDate($date, $dateFormat);
+- fromDate($date, $dateFormat);
+- executeAndGetInsertedId(DbDriverInterface $dbdataset, $sql, $param);
+- delimiterField($field);
+- delimiterTable($table);
+- forUpdate($sql);
+- hasForUpdate();
+
+It is useful when you are working with different and don't want to hard code the information there. E.g.
+
+```php
+$dbDriver = \ByJG\AnyDataset\Db\Factory::getDbRelationalInstance('...connection string...');
+$dbHelper = $dbDriver->getDbHelper();
+
+// This will return the proper SQL with the TOP 10
+// based on the current connection
+$sql = $dbHelper->top("select * from foo", 10);
+
+// This will return the proper concatenation operation
+// based on the current connection
+$concat = $dbHelper->concat("'This is '", "field1", "'concatenated'");
+
+
+// This will return the proper function to format a date field
+// based on the current connection
+// These are the formats availables:
+// Y => 4 digits year (e.g. 2022)
+// y => 2 digits year (e.g. 22)
+// M => Month fullname (e.g. January)
+// m => Month with leading zero (e.g. 01)
+// Q => Quarter
+// q => Quarter with leading zero
+// D => Day with leading zero (e.g. 01)
+// d => Day (e.g. 1)
+// h => Hour 12 hours format (e.g. 11)
+// H => Hour 24 hours format (e.g. 23)
+// i => Minute leading zero
+// s => Seconds leading zero
+// a => a/p
+// A => AM/PM
+$date = $dbHelper->sqlDate("d-m-Y H:i", "some_field_date");
+$date2 = $dbHelper->sqlDate(DbBaseFunctions::DMYH, "some_field_date"); // Same as above
+
+
+// This will return the fields with proper field delimiter
+// based on the current connection
+```
+
 
 ## FreeDTS / DBlib Date format Issues
 

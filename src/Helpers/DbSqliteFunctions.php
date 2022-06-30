@@ -23,7 +23,7 @@ class DbSqliteFunctions extends DbBaseFunctions
      */
     public function concat($str1, $str2 = null)
     {
-        return implode(func_get_args(), ' || ');
+        return implode(' || ', func_get_args());
     }
 
     /**
