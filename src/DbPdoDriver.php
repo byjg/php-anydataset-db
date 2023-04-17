@@ -97,10 +97,15 @@ abstract class DbPdoDriver implements DbDriverInterface
     protected function setPdoDefaultParams($postOptions = [])
     {
         // Set Specific Attributes
-        $this->instance->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-        $this->instance->setAttribute(PDO::ATTR_CASE, PDO::CASE_LOWER);
+        $defaultPostOptions = [
+            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+            PDO::ATTR_CASE => PDO::CASE_LOWER,
+            PDO::ATTR_EMULATE_PREPARES => true,
+            PDO::ATTR_STRINGIFY_FETCHES => false,
+        ];
+        $defaultPostOptions = $defaultPostOptions + (array)$postOptions;
 
-        foreach ((array) $postOptions as $key => $value) {
+        foreach ((array) $defaultPostOptions as $key => $value) {
             $this->instance->setAttribute($key, $value);
         }
     }
@@ -112,7 +117,7 @@ abstract class DbPdoDriver implements DbDriverInterface
             return $connUri->getScheme() . ":" . $connUri->getPath();
         }
 
-        $database = preg_replace('~^/~', '', $connUri->getPath());
+        $database = preg_replace('~^/~', '', empty($connUri->getPath()) ? '' : $connUri->getPath());
         if (!empty($database)) {
             $database = ";dbname=$database";
         }

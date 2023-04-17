@@ -157,4 +157,19 @@ class DbCached implements DbDriverInterface
     {
         $this->dbDriver->setSupportMultRowset($multipleRowSet);
     }
+
+    public function getMaxStmtCache()
+    {
+        return $this->dbDriver->getMaxStmtCache();
+    }
+
+    public function setMaxStmtCache($maxStmtCache)
+    {
+        $this->dbDriver->setMaxStmtCache($maxStmtCache);
+    }
+
+    public function getCountStmtCache()
+    {
+        return $this->dbDriver->getCountStmtCache();
+    }
 }

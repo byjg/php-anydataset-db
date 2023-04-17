@@ -19,12 +19,6 @@ class PdoLiteral extends DbPdoDriver
      */
     public function __construct($pdoConnStr, $username = "", $password = "", $preOptions = null, $postOptions = null)
     {
-        if (empty($postOptions)) {
-            $postOptions = [
-                PDO::ATTR_EMULATE_PREPARES => true
-            ];
-        }
-
         $parts = explode(":", $pdoConnStr);
 
         $this->connectionUri = new Uri($parts[0] . "://$username:$password@literal");

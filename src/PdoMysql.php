@@ -31,7 +31,6 @@ class PdoMysql extends DbPdoDriver
 
         $postOptions = [
             PDO::MYSQL_ATTR_USE_BUFFERED_QUERY => true,
-            PDO::ATTR_EMULATE_PREPARES => true
         ];
 
         if (!empty($connUri->getQuery())) {

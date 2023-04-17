@@ -351,5 +351,20 @@ class Route implements DbDriverInterface
     {
         throw new NotImplementedException('Feature not available');
     }
+
+    public function getMaxStmtCache()
+    {
+        throw new NotImplementedException('Feature not available');
+    }
+
+    public function setMaxStmtCache($maxStmtCache)
+    {
+        throw new NotImplementedException('Feature not available');
+    }
+
+    public function getCountStmtCache()
+    {
+        throw new NotImplementedException('Feature not available');
+    }
     //</editor-fold>
 }

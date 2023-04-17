@@ -19,9 +19,5 @@ class PdoOci extends DbPdoDriver
             $this->connectionUri->getUsername(),
             $this->connectionUri->getPassword()
         );
-
-        $this->instance->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-        $this->instance->setAttribute(PDO::ATTR_CASE, PDO::CASE_LOWER);
-        $this->instance->setAttribute(PDO::ATTR_EMULATE_PREPARES, true);
     }
 }
