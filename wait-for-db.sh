@@ -22,5 +22,3 @@ then
 fi
 
 echo "$1 is up"
-
-
