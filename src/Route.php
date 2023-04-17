@@ -10,7 +10,7 @@ class Route implements DbDriverInterface
 {
 
     /**
-     * @var DbDriverInterface[]
+     * @var array(DbDriverInterface[])
      */
     protected $dbDriverInterface = [];
 

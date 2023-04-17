@@ -127,4 +127,27 @@ class DbPgsqlFunctions extends DbBaseFunctions
     {
         return true;
     }
+
+    public function getTableMetadata(DbDriverInterface $dbdataset, $tableName)
+    {
+        $tableName = strtolower($tableName);
+        $sql = "select column_name, data_type || '(' || coalesce(cast(character_maximum_length as varchar), cast(numeric_precision_radix as varchar) || ',' || numeric_scale) || ')' as type, column_default, is_nullable from INFORMATION_SCHEMA.COLUMNS where table_name = '$tableName' ";
+        return $this->getTableMetadataFromSql($dbdataset, $sql);
+    }
+
+    protected function parseColumnMetadata($metadata)
+    {
+        $return = [];
+
+        foreach ($metadata as $key => $value) {
+            $return[strtolower($value['column_name'])] = [
+                'name' => $value['column_name'],
+                'dbType' => strtolower($value['type']),
+                'required' => $value['is_nullable'] == 'NO',
+                'default' => $value['column_default'],
+            ] + $this->parseTypeMetadata(strtolower($value['type']));
+        }
+
+        return $return;
+    }
 }

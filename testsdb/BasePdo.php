@@ -362,5 +362,56 @@ abstract class BasePdo extends TestCase
         throw new NotImplementedException("Needs to be implemented for each database");
     }
 
+    public function testGetMetadata()
+    {
+        $metadata = $this->dbDriver->getDbHelper()->getTableMetadata($this->dbDriver, 'Dogs');
+
+        foreach ($metadata as $key => $field) {
+            unset($metadata[$key]['dbType']);
+        }
+
+        $this->assertEquals([
+            'id' => [
+                'name' => 'Id',
+                'required' => true,
+                'default' => null,
+                'phpType' => 'integer',
+                'length' => null,
+                'precision' => null,
+            ],
+            'breed' => [
+                'name' => 'Breed',
+                'required' => false,
+                'default' => null,
+                'phpType' => 'string',
+                'length' => 50,
+                'precision' => null,
+            ],
+            'name' => [
+                'name' => 'Name',
+                'required' => false,
+                'default' => null,
+                'phpType' => 'string',
+                'length' => 50,
+                'precision' => null,
+            ],
+            'age' => [
+                'name' => 'Age',
+                'required' => false,
+                'default' => null,
+                'phpType' => 'integer',
+                'length' => null,
+                'precision' => null,
+            ],
+            'weight' => [
+                'name' => 'Weight',
+                'required' => false,
+                'default' => null,
+                'phpType' => 'float',
+                'length' => 10,
+                'precision' => 2,
+            ],
+        ], $metadata);
+    }
 }
 

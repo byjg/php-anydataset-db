@@ -55,4 +55,56 @@ class PdoPostgresTest extends BasePdo
         
         parent::testDontParseParam_3();
     }
+
+    public function testGetMetadata()
+    {
+        $metadata = $this->dbDriver->getDbHelper()->getTableMetadata($this->dbDriver, 'Dogs');
+
+        foreach ($metadata as $key => $field) {
+            unset($metadata[$key]['dbType']);
+        }
+
+        $this->assertEquals([
+            'id' => [
+                'name' => 'id',
+                'required' => true,
+                'default' => "nextval('dogs_id_seq'::regclass)",
+                'phpType' => 'integer',
+                'length' => null,
+                'precision' => null,
+            ],
+            'breed' => [
+                'name' => 'breed',
+                'required' => false,
+                'default' => null,
+                'phpType' => 'string',
+                'length' => 50,
+                'precision' => null,
+            ],
+            'name' => [
+                'name' => 'name',
+                'required' => false,
+                'default' => null,
+                'phpType' => 'string',
+                'length' => 50,
+                'precision' => null,
+            ],
+            'age' => [
+                'name' => 'age',
+                'required' => false,
+                'default' => null,
+                'phpType' => 'integer',
+                'length' => null,
+                'precision' => null,
+            ],
+            'weight' => [
+                'name' => 'weight',
+                'required' => false,
+                'default' => null,
+                'phpType' => 'float',
+                'length' => 10,
+                'precision' => 2,
+            ],
+        ], $metadata);
+    }
 }
