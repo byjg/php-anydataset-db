@@ -7,6 +7,11 @@ use ByJG\Util\Uri;
 class PdoSqlite extends DbPdoDriver
 {
 
+    public static function schema()
+    {
+        return ['sqlite'];
+    }
+
     /**
      * PdoSqlite constructor.
      *

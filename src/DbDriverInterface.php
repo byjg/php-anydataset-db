@@ -8,6 +8,8 @@ use ByJG\Util\Uri;
 interface DbDriverInterface
 {
 
+    public static function schema();
+
     /**
      * @param string $sql
      * @param array|null $params

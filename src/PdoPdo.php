@@ -9,6 +9,11 @@ use PDO;
 class PdoPdo extends DbPdoDriver
 {
 
+    public static function schema()
+    {
+        return ['pdo'];
+    }
+
     /**
      * PdoPdo constructor.
      *

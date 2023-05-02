@@ -8,6 +8,10 @@ use ByJG\AnyDataset\Db\Exception\RouteNotMatchedException;
 
 class Route implements DbDriverInterface
 {
+    public static function schema()
+    {
+        return null;
+    }
 
     /**
      * @var array(DbDriverInterface[])

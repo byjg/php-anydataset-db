@@ -11,6 +11,11 @@ use Psr\Cache\InvalidArgumentException;
 
 class DbCached implements DbDriverInterface
 {
+    public static function schema()
+    {
+        return null;
+    }
+
     /**
      * @var DbDriverInterface|null
      */

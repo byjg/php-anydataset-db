@@ -11,6 +11,17 @@ use ByJG\Util\Uri;
 class DbOci8Driver implements DbDriverInterface
 {
 
+    public function getMaxStmtCache() { }
+
+    public function getCountStmtCache() { }
+
+    public function setMaxStmtCache($maxStmtCache) { }
+
+    public static function schema()
+    {
+        return ['oci8'];
+    }
+
     /**
      * Enter description here...
      *

@@ -8,6 +8,11 @@ use PDO;
 class PdoLiteral extends DbPdoDriver
 {
 
+    public static function schema()
+    {
+        return null;
+    }
+
     /**
      * PdoLiteral constructor.
      *

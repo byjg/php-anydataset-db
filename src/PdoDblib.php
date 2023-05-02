@@ -7,6 +7,11 @@ use ByJG\Util\Uri;
 
 class PdoDblib extends DbPdoDriver
 {
+    public static function schema()
+    {
+        return ['dblib'];
+    }
+
 
     /**
      * PdoDblib constructor.

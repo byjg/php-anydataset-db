@@ -8,6 +8,11 @@ use PDO;
 class PdoOci extends DbPdoDriver
 {
 
+    public static function schema()
+    {
+        return ['oci'];
+    }
+
     public function __construct(Uri $connUri)
     {
         $this->connectionUri = $connUri;

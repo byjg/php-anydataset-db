@@ -8,6 +8,11 @@ use PDO;
 class PdoMysql extends DbPdoDriver
 {
 
+    public static function schema()
+    {
+        return ['mysql', 'mariadb'];
+    }
+
     protected $mysqlAttr = [
         "ca" => PDO::MYSQL_ATTR_SSL_CA,
         "capath" => PDO::MYSQL_ATTR_SSL_CAPATH,
