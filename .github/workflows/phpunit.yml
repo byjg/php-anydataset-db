@@ -8,8 +8,6 @@ on:
   pull_request:
     branches:
       - master
-  schedule:
-    - cron: "0 8 * * 1"
 
 jobs:
   Build:
@@ -18,11 +16,10 @@ jobs:
     strategy:
       matrix:
         php-version:
+          - "8.2"
           - "8.1"
           - "8.0"
           - "7.4"
-          - "7.3"
-          - "7.2"
 
     services:
       mysql:
@@ -33,9 +30,9 @@ jobs:
         ports:
           - "3306:3306"
         options: >-
-          --health-cmd="mysqladmin ping" 
-          --health-interval=10s 
-          --health-timeout=20s 
+          --health-cmd="mysqladmin ping"
+          --health-interval=10s
+          --health-timeout=20s
           --health-retries=10
       postgres:
         image: postgres
@@ -64,15 +61,15 @@ jobs:
       MYSQL_TEST_HOST: mysql
       PSQL_TEST_HOST: postgres
       MSSQL_TEST_HOST: sqlserver
-      
+
     steps:
       - uses: actions/checkout@v3
       - run: composer install
       - run: ./vendor/bin/phpunit
-      - run: ./vendor/bin/phpunit testsdb/PdoMySqlTest.php 
-      - run: ./vendor/bin/phpunit testsdb/PdoSqliteTest.php 
-      - run: ./vendor/bin/phpunit testsdb/PdoPostgresTest.php 
-      # - run: ./vendor/bin/phpunit testsdb/PdoDblibTest.php 
+      - run: ./vendor/bin/phpunit testsdb/PdoMySqlTest.php
+      - run: ./vendor/bin/phpunit testsdb/PdoSqliteTest.php
+      - run: ./vendor/bin/phpunit testsdb/PdoPostgresTest.php
+      # - run: ./vendor/bin/phpunit testsdb/PdoDblibTest.php
 
   Documentation:
     runs-on: 'ubuntu-latest'
