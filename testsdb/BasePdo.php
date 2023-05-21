@@ -5,6 +5,8 @@ namespace TestsDb\AnyDataset;
 use ByJG\AnyDataset\Core\Exception\NotImplementedException;
 use ByJG\AnyDataset\Db\DbCached;
 use ByJG\AnyDataset\Db\DbDriverInterface;
+use ByJG\AnyDataset\Db\DbPdoDriver;
+use ByJG\AnyDataset\Db\Factory;
 use PHPUnit\Framework\TestCase;
 
 abstract class BasePdo extends TestCase
@@ -38,12 +40,12 @@ abstract class BasePdo extends TestCase
         $array = $this->allData();
         foreach ($array as $param) {
             $this->dbDriver->execute(
-                "INSERT INTO Dogs (Breed, Name, Age) VALUES (:breed, :name, :age);",
+                "INSERT INTO Dogs (Breed, Name, Age, Weight) VALUES (:breed, :name, :age, :weight);",
                 $param
             );
         }
 
-        if ($this->dbDriver->getUri()->getQueryPart("stmtcache") == "true") {
+        if ($this->dbDriver->getUri()->getQueryPart(DbPdoDriver::STATEMENT_CACHE) == "true") {
             // One cache for CREATE TABLE... and another for INSERT INTO...
             $this->assertEquals(2, $this->dbDriver->getCountStmtCache());
         } else {
@@ -67,19 +69,22 @@ abstract class BasePdo extends TestCase
                 'breed' => 'Mutt',
                 'name' => 'Spyke',
                 'age' => 8,
-                'id' => 1
+                'id' => 1,
+                'weight' =>  8.5
             ],
             [
                 'breed' => 'Brazilian Terrier',
                 'name' => 'Sandy',
                 'age' => 3,
-                'id' => 2
+                'id' => 2,
+                'weight' =>  3.8
             ],
             [
-                'breed' => 'Pinscher',
+                'breed' => 'Pincher',
                 'name' => 'Lola',
                 'age' => 1,
-                'id' => 3
+                'id' => 3,
+                'weight' =>  1.2
             ]
         ];
     }
@@ -126,7 +131,8 @@ abstract class BasePdo extends TestCase
                 'id',
                 'breed',
                 'name',
-                'age'
+                'age',
+                'weight'
             ],
             $allFields
         );
@@ -152,8 +158,8 @@ abstract class BasePdo extends TestCase
             return;
         }
 
-        $sql = "INSERT INTO Dogs (Breed, Name, Age) VALUES ('Cat', 'Doris', 7); " .
-            "INSERT INTO Dogs (Breed, Name, Age) VALUES ('Dog', 'Lolla', 1); ";
+        $sql = "INSERT INTO Dogs (Breed, Name, Age, Weight) VALUES ('Cat', 'Doris', 7, 4.2); " .
+            "INSERT INTO Dogs (Breed, Name, Age, Weight) VALUES ('Dog', 'Lolla', 1, 1.4); ";
 
         $idInserted = $this->dbDriver->executeAndGetId($sql);
 
@@ -184,16 +190,17 @@ abstract class BasePdo extends TestCase
     public function testInsertSpecialChars()
     {
         $this->dbDriver->execute(
-            "INSERT INTO Dogs (Breed, Name, Age) VALUES ('Dog', '€ Sign Pètit Pannô', 6);"
+            "INSERT INTO Dogs (Breed, Name, Age, Weight) VALUES ('Dog', '€ Sign Pètit Pannô', 6, 3.2);"
         );
 
-        $iterator = $this->dbDriver->getIterator('select Id, Breed, Name, Age from Dogs where id = 4');
+        $iterator = $this->dbDriver->getIterator('select Id, Breed, Name, Age, Weight from Dogs where id = 4');
         $row = $iterator->toArray();
 
         $this->assertEquals(4, $row[0]["id"]);
         $this->assertEquals('Dog', $row[0]["breed"]);
         $this->assertEquals('€ Sign Pètit Pannô', $row[0]["name"]);
         $this->assertEquals(6, $row[0]["age"]);
+        $this->assertEquals(3.2, $row[0]["weight"]);
     }
 
     public function testEscapeQuote()
@@ -269,6 +276,26 @@ abstract class BasePdo extends TestCase
         $this->assertEquals(6, $row[0]["age"]);
     }
 
+    public function testDontParseParam()
+    {
+        $newUri = $this->dbDriver->getUri()->withQueryKeyValue(DbPdoDriver::DONT_PARSE_PARAM, "");
+        $newConn = Factory::getDbInstance($newUri);
+        $newConn->getIterator('select Id, Breed, Name, Age from Dogs where id = :field', [ "field" => 1 ]);
+    }
+
+    public function testDontParseParam_2()
+    {
+        $this->dbDriver->getIterator('select Id, Breed, Name, Age from Dogs where id = :field');
+    }
+
+    public function testDontParseParam_3()
+    {
+        $newUri = $this->dbDriver->getUri()->withQueryKeyValue(DbPdoDriver::DONT_PARSE_PARAM, "");
+        $newConn = Factory::getDbInstance($newUri);
+        $newConn->getIterator('select Id, Breed, Name, Age from Dogs where id = :field');
+    }
+
+
     public function testCachedResults()
     {
         $dbCached = new DbCached($this->dbDriver, \ByJG\Cache\Factory::createArrayPool(), 600);
@@ -277,7 +304,7 @@ abstract class BasePdo extends TestCase
         $iterator = $dbCached->getIterator('select * from Dogs where id = :id', ['id' => 1]);
         $this->assertEquals(
             [
-                [ 'id'=> 1, 'breed' => "Mutt", 'name' => 'Spyke', "age" => 8, "__id" => 0, "__key" => 0],
+                [ 'id'=> 1, 'breed' => "Mutt", 'name' => 'Spyke', "age" => 8, "weight" => 8.5, "__id" => 0, "__key" => 0],
             ],
             $iterator->toArray()
         );
@@ -289,7 +316,7 @@ abstract class BasePdo extends TestCase
         $iterator = $dbCached->getIterator('select * from Dogs where id = :id', ['id' => 1]);
         $this->assertEquals(
             [
-                [ 'id'=> 1, 'breed' => "Mutt", 'name' => 'Spyke', "age" => 8, "__id" => 0, "__key" => 0],
+                [ 'id'=> 1, 'breed' => "Mutt", 'name' => 'Spyke', "age" => 8, "weight" => 8.5, "__id" => 0, "__key" => 0],
             ],
             $iterator->toArray()
         );
@@ -308,7 +335,7 @@ abstract class BasePdo extends TestCase
         $iterator = $dbCached->getIterator('select * from Dogs where id = :id', ['id' => 1]);
         $this->assertEquals(
             [
-                [ 'id'=> 1, 'breed' => "Mutt", 'name' => 'Spyke', "age" => 8, "__id" => 0, "__key" => 0],
+                [ 'id'=> 1, 'breed' => "Mutt", 'name' => 'Spyke', "age" => 8, "weight" => 8.5, "__id" => 0, "__key" => 0],
             ],
             $iterator->toArray()
         );
@@ -320,7 +347,7 @@ abstract class BasePdo extends TestCase
         $iterator = $dbCached->getIterator('select * from Dogs where id = :id', ['id' => 1]);
         $this->assertEquals(
             [
-                [ 'id'=> 1, 'breed' => "Mutt", 'name' => 'Spyke', "age" => 8, "__id" => 0, "__key" => 0],
+                [ 'id'=> 1, 'breed' => "Mutt", 'name' => 'Spyke', "age" => 8, "weight" => 8.5, "__id" => 0, "__key" => 0],
             ],
             $iterator->toArray()
         );
@@ -335,5 +362,56 @@ abstract class BasePdo extends TestCase
         throw new NotImplementedException("Needs to be implemented for each database");
     }
 
+    public function testGetMetadata()
+    {
+        $metadata = $this->dbDriver->getDbHelper()->getTableMetadata($this->dbDriver, 'Dogs');
+
+        foreach ($metadata as $key => $field) {
+            unset($metadata[$key]['dbType']);
+        }
+
+        $this->assertEquals([
+            'id' => [
+                'name' => 'Id',
+                'required' => true,
+                'default' => null,
+                'phpType' => 'integer',
+                'length' => null,
+                'precision' => null,
+            ],
+            'breed' => [
+                'name' => 'Breed',
+                'required' => false,
+                'default' => null,
+                'phpType' => 'string',
+                'length' => 50,
+                'precision' => null,
+            ],
+            'name' => [
+                'name' => 'Name',
+                'required' => false,
+                'default' => null,
+                'phpType' => 'string',
+                'length' => 50,
+                'precision' => null,
+            ],
+            'age' => [
+                'name' => 'Age',
+                'required' => false,
+                'default' => null,
+                'phpType' => 'integer',
+                'length' => null,
+                'precision' => null,
+            ],
+            'weight' => [
+                'name' => 'Weight',
+                'required' => false,
+                'default' => null,
+                'phpType' => 'float',
+                'length' => 10,
+                'precision' => 2,
+            ],
+        ], $metadata);
+    }
 }
 

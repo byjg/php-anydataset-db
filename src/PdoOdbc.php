@@ -7,6 +7,11 @@ use ByJG\Util\Uri;
 class PdoOdbc extends DbPdoDriver
 {
 
+    public static function schema()
+    {
+        return ['odbc'];
+    }
+
     /**
      * PdoOdbc constructor.
      *

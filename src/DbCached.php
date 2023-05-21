@@ -11,6 +11,11 @@ use Psr\Cache\InvalidArgumentException;
 
 class DbCached implements DbDriverInterface
 {
+    public static function schema()
+    {
+        return null;
+    }
+
     /**
      * @var DbDriverInterface|null
      */
@@ -156,5 +161,20 @@ class DbCached implements DbDriverInterface
     public function setSupportMultRowset($multipleRowSet)
     {
         $this->dbDriver->setSupportMultRowset($multipleRowSet);
+    }
+
+    public function getMaxStmtCache()
+    {
+        return $this->dbDriver->getMaxStmtCache();
+    }
+
+    public function setMaxStmtCache($maxStmtCache)
+    {
+        $this->dbDriver->setMaxStmtCache($maxStmtCache);
+    }
+
+    public function getCountStmtCache()
+    {
+        return $this->dbDriver->getCountStmtCache();
     }
 }

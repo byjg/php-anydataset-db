@@ -17,7 +17,7 @@ class PdoLiteralTest extends BasePdo
     protected function createDatabase()
     {
         //create the database
-        $this->dbDriver->execute("CREATE TABLE Dogs (Id INTEGER PRIMARY KEY, Breed VARCHAR(50), Name VARCHAR(50), Age INTEGER)");
+        $this->dbDriver->execute("CREATE TABLE Dogs (Id INTEGER NOT NULL PRIMARY KEY, Breed VARCHAR(50), Name VARCHAR(50), Age INTEGER, Weight NUMERIC(10,2))");
     }
 
     public function deleteDatabase()
@@ -33,5 +33,23 @@ class PdoLiteralTest extends BasePdo
     public function testGetDate()
     {
         $this->markTestSkipped('Do not use here');
+    }
+
+    public function testDontParseParam()
+    {
+        // Ignoring because is using a connection into the memory.
+        $this->markTestSkipped();
+    }
+
+    public function testDontParseParam_2()
+    {
+        // Ignoring because is using a connection into the memory.
+        $this->markTestSkipped();
+    }
+
+    public function testDontParseParam_3()
+    {
+        // Ignoring because is using a connection into the memory.
+        $this->markTestSkipped();
     }
 }

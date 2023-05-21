@@ -2,6 +2,7 @@
 
 namespace TestsDb\AnyDataset;
 
+use ByJG\AnyDataset\Db\DbPdoDriver;
 use ByJG\AnyDataset\Db\Factory;
 use ByJG\Util\Uri;
 
@@ -19,7 +20,7 @@ class PdoSqliteTest extends BasePdo
         }
 
         $uri = Uri::getInstanceFromString("sqlite://" . $this->host)
-            ->withQueryKeyValue("stmtcache", "true");
+            ->withQueryKeyValue(DbPdoDriver::STATEMENT_CACHE, "true");
 
         $this->dbDriver = Factory::getDbInstance($uri);
     }
@@ -27,7 +28,7 @@ class PdoSqliteTest extends BasePdo
     protected function createDatabase()
     {
         //create the database
-        $this->dbDriver->execute("CREATE TABLE Dogs (Id INTEGER PRIMARY KEY, Breed VARCHAR(50), Name VARCHAR(50), Age INTEGER)");
+        $this->dbDriver->execute("CREATE TABLE Dogs (Id INTEGER NOT NULL PRIMARY KEY, Breed VARCHAR(50), Name VARCHAR(50), Age INTEGER, Weight NUMERIC(10,2))");
     }
 
     public function deleteDatabase()
@@ -40,10 +41,9 @@ class PdoSqliteTest extends BasePdo
         $this->markTestSkipped('Skipped: SqlLite does not support get all fields');
     }
 
-
     public function testStatementCache()
     {
-        $this->assertEquals("true", $this->dbDriver->getUri()->getQueryPart("stmtcache"));
+        $this->assertEquals("true", $this->dbDriver->getUri()->getQueryPart(DbPdoDriver::STATEMENT_CACHE));
         $this->assertEquals(2, $this->dbDriver->getCountStmtCache()); // because of createDatabase() and populateData()
 
         $i = 3;
@@ -70,5 +70,4 @@ class PdoSqliteTest extends BasePdo
         $data = $this->dbDriver->getScalar("SELECT DATETIME('2018-07-26 20:02:03') ");
         $this->assertEquals("2018-07-26 20:02:03", $data);
     }
-
 }

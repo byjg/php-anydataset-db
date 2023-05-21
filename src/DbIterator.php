@@ -33,6 +33,7 @@ class DbIterator extends GenericIterator
     /**
      * @return int
      */
+    #[\ReturnTypeWillChange]
     public function count()
     {
         return $this->statement->rowCount();
@@ -54,18 +55,9 @@ class DbIterator extends GenericIterator
 
         $rowArray = $this->statement->fetch(PDO::FETCH_ASSOC);
         if (!empty($rowArray)) {
-            foreach ($rowArray as $key => $value) {
-                if (is_object($value)) {
-                    $rowArray[$key] = "[OBJECT]";
-                } else {
-                    $rowArray[$key] = $value;
-                }
-            }
             $singleRow = new Row($rowArray);
 
-            // Enfileira o registo
             array_push($this->rowBuffer, $singleRow);
-            // Traz novos até encher o Buffer
             if (count($this->rowBuffer) < DbIterator::RECORD_BUFFER) {
                 $this->hasNext();
             }

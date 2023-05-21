@@ -33,7 +33,7 @@ class PdoMySqlTest extends BasePdo
     protected function createDatabase()
     {
         //create the database
-        $this->dbDriver->execute("CREATE TABLE Dogs (Id INTEGER PRIMARY KEY auto_increment, Breed VARCHAR(50), Name VARCHAR(50), Age INTEGER)");
+        $this->dbDriver->execute("CREATE TABLE Dogs (Id INTEGER PRIMARY KEY auto_increment, Breed VARCHAR(50), Name VARCHAR(50), Age INTEGER, Weight NUMERIC(10,2))");
     }
 
     public function deleteDatabase()
@@ -47,5 +47,11 @@ class PdoMySqlTest extends BasePdo
 
         $data = $this->dbDriver->getScalar("SELECT CONVERT('2018-07-26 20:02:03', datetime) ");
         $this->assertEquals("2018-07-26 20:02:03", $data);
+    }
+
+    public function testDontParseParam_3() {
+        $this->expectException(\PDOException::class);
+        
+        parent::testDontParseParam_3();
     }
 }

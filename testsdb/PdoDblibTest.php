@@ -26,7 +26,7 @@ class PdoDblibTest extends BasePdo
     protected function createDatabase()
     {
         //create the database
-        $this->dbDriver->execute("CREATE TABLE Dogs (Id INT NOT NULL IDENTITY(1,1) PRIMARY KEY, Breed VARCHAR(50), Name VARCHAR(50), Age INTEGER)");
+        $this->dbDriver->execute("CREATE TABLE Dogs (Id INT NOT NULL IDENTITY(1,1) PRIMARY KEY, Breed VARCHAR(50), Name VARCHAR(50), Age INTEGER, Weight FLOAT)");
     }
 
     public function deleteDatabase()
@@ -42,4 +42,9 @@ class PdoDblibTest extends BasePdo
         $this->assertEquals("2018-07-26 20:02:03", $data);
     }
 
+    public function testDontParseParam_3() {
+        $this->expectException(\PDOException::class);
+
+        parent::testDontParseParam_3();
+    }
 }

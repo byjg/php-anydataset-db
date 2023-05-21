@@ -6,6 +6,11 @@ use ByJG\Util\Uri;
 
 class PdoPgsql extends DbPdoDriver
 {
+    public static function schema()
+    {
+        return ['pgsql', 'postgres', 'postgresql'];
+    }
+
     /**
      * PdoPgsql constructor.
      *

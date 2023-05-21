@@ -8,6 +8,8 @@ use ByJG\Util\Uri;
 interface DbDriverInterface
 {
 
+    public static function schema();
+
     /**
      * @param string $sql
      * @param array|null $params
@@ -51,4 +53,14 @@ interface DbDriverInterface
     public function isSupportMultRowset();
 
     public function setSupportMultRowset($multipleRowSet);
+
+    public function getMaxStmtCache();
+
+    public function getCountStmtCache();
+
+    /**
+     * @param int $maxStmtCache
+     */
+    public function setMaxStmtCache($maxStmtCache);
+
 }

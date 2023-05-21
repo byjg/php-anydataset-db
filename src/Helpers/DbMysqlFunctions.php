@@ -136,4 +136,26 @@ class DbMysqlFunctions extends DbBaseFunctions
     {
         return true;
     }
+
+    public function getTableMetadata(DbDriverInterface $dbdataset, $tableName)
+    {
+        $sql = "EXPLAIN " . $this->deliTableLeft . $tableName . $this->deliTableRight;
+        return $this->getTableMetadataFromSql($dbdataset, $sql);
+    }
+
+    protected function parseColumnMetadata($metadata)
+    {
+        $return = [];
+
+        foreach ($metadata as $key => $value) {
+            $return[strtolower($value['field'])] = [
+                'name' => $value['field'],
+                'dbType' => strtolower($value['type']),
+                'required' => $value['null'] == 'NO',
+                'default' => $value['default'],
+            ] + $this->parseTypeMetadata(strtolower($value['type']));
+        }
+
+        return $return;
+    }
 }

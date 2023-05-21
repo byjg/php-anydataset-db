@@ -8,9 +8,13 @@ use ByJG\AnyDataset\Db\Exception\RouteNotMatchedException;
 
 class Route implements DbDriverInterface
 {
+    public static function schema()
+    {
+        return null;
+    }
 
     /**
-     * @var DbDriverInterface[]
+     * @var array(DbDriverInterface[])
      */
     protected $dbDriverInterface = [];
 
@@ -348,6 +352,21 @@ class Route implements DbDriverInterface
      * @throws NotImplementedException
      */
     public function setSupportMultRowset($multipleRowSet)
+    {
+        throw new NotImplementedException('Feature not available');
+    }
+
+    public function getMaxStmtCache()
+    {
+        throw new NotImplementedException('Feature not available');
+    }
+
+    public function setMaxStmtCache($maxStmtCache)
+    {
+        throw new NotImplementedException('Feature not available');
+    }
+
+    public function getCountStmtCache()
     {
         throw new NotImplementedException('Feature not available');
     }

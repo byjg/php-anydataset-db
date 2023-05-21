@@ -28,6 +28,9 @@ abstract class DbPdoDriver implements DbDriverInterface
 
     protected $supportMultRowset = false;
 
+    const DONT_PARSE_PARAM = "dont_parse_param";
+    const STATEMENT_CACHE = "stmtcache";
+
     /**
      * @var Uri
      */
@@ -45,7 +48,7 @@ abstract class DbPdoDriver implements DbDriverInterface
     {
         $this->validateConnUri($connUri);
 
-        $strcnn = $this->createPboConnStr($connUri);
+        $strcnn = $this->createPdoConnStr($connUri);
 
         $this->createPdoInstance($strcnn, $preOptions, $postOptions);
     }
@@ -86,7 +89,7 @@ abstract class DbPdoDriver implements DbDriverInterface
             throw new NotAvailableException("Extension 'pdo_" . strtolower($connUri->getScheme()) . "' is not loaded");
         }
 
-        if ($connUri->getQueryPart("stmtcache") == "true") {
+        if ($connUri->getQueryPart(self::STATEMENT_CACHE) == "true") {
             $this->useStmtCache = true;
         }
     }
@@ -94,22 +97,27 @@ abstract class DbPdoDriver implements DbDriverInterface
     protected function setPdoDefaultParams($postOptions = [])
     {
         // Set Specific Attributes
-        $this->instance->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-        $this->instance->setAttribute(PDO::ATTR_CASE, PDO::CASE_LOWER);
+        $defaultPostOptions = [
+            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+            PDO::ATTR_CASE => PDO::CASE_LOWER,
+            PDO::ATTR_EMULATE_PREPARES => true,
+            PDO::ATTR_STRINGIFY_FETCHES => false,
+        ];
+        $defaultPostOptions = $defaultPostOptions + (array)$postOptions;
 
-        foreach ((array) $postOptions as $key => $value) {
+        foreach ((array) $defaultPostOptions as $key => $value) {
             $this->instance->setAttribute($key, $value);
         }
     }
     
-    protected function createPboConnStr(Uri $connUri)
+    protected function createPdoConnStr(Uri $connUri)
     {
         $host = $connUri->getHost();
         if (empty($host)) {
             return $connUri->getScheme() . ":" . $connUri->getPath();
         }
 
-        $database = preg_replace('~^/~', '', $connUri->getPath());
+        $database = preg_replace('~^/~', '', empty($connUri->getPath()) ? '' : $connUri->getPath());
         if (!empty($database)) {
             $database = ";dbname=$database";
         }
@@ -123,7 +131,13 @@ abstract class DbPdoDriver implements DbDriverInterface
         }
 
         $query = $connUri->getQuery();
-        $strcnn .= ";" . implode(';', explode('&', $query));
+        $queryArr = explode('&', $query);
+        foreach ($queryArr as $value) {
+            if ((strpos($value, self::DONT_PARSE_PARAM . "=") === false) && 
+               (strpos($value, self::STATEMENT_CACHE . "=") === false)) {
+                $strcnn .= ";" . $value;
+            }
+        }
 
         return $strcnn;
     }
@@ -142,7 +156,9 @@ abstract class DbPdoDriver implements DbDriverInterface
      */
     protected function getDBStatement($sql, $array = null)
     {
-        list($sql, $array) = SqlBind::parseSQL($this->connectionUri, $sql, $array);
+        if (is_null($this->connectionUri->getQueryPart(self::DONT_PARSE_PARAM))) {
+            list($sql, $array) = SqlBind::parseSQL($this->connectionUri, $sql, $array);
+        }
 
         if ($this->useStmtCache) {
             if ($this->getMaxStmtCache() > 0 && !isset($this->stmtCache[$sql])) {

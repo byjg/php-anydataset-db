@@ -34,11 +34,12 @@ class PdoSqliteTest extends TestCase
             'create table info (
             id integer primary key  autoincrement,
             iduser INTEGER,
+            number numeric(10,2),
             property varchar(45));'
         );
-        $this->dbDriver->execute("insert into info (iduser, property) values (1, 'xxx')");
-        $this->dbDriver->execute("insert into info (iduser, property) values (1, 'ggg')");
-        $this->dbDriver->execute("insert into info (iduser, property) values (3, 'bbb')");
+        $this->dbDriver->execute("insert into info (iduser, number, property) values (1, 10.45, 'xxx')");
+        $this->dbDriver->execute("insert into info (iduser, number, property) values (1, 3, 'ggg')");
+        $this->dbDriver->execute("insert into info (iduser, number, property) values (3, 20.02, 'bbb')");
     }
 
     public function tearDown(): void
@@ -51,9 +52,9 @@ class PdoSqliteTest extends TestCase
         $iterator = $this->dbDriver->getIterator('select * from info');
         $expected =
             [
-                [ 'id'=> 1, 'iduser' => 1, 'property' => 'xxx'],
-                [ 'id'=> 2, 'iduser' => 1, 'property' => 'ggg'],
-                [ 'id'=> 3, 'iduser' => 3, 'property' => 'bbb'],
+                [ 'id'=> 1, 'iduser' => 1, 'number' => 10.45, 'property' => 'xxx'],
+                [ 'id'=> 2, 'iduser' => 1, 'number' => 3, 'property' => 'ggg'],
+                [ 'id'=> 3, 'iduser' => 3, 'number' => 20.02, 'property' => 'bbb'],
             ];
 
         // To Array
@@ -83,8 +84,8 @@ class PdoSqliteTest extends TestCase
         $iterator = $this->dbDriver->getIterator('select * from info where iduser = :id', ['id' => 1]);
         $expected =
             [
-                [ 'id'=> 1, 'iduser' => 1, 'property' => 'xxx'],
-                [ 'id'=> 2, 'iduser' => 1, 'property' => 'ggg'],
+                [ 'id'=> 1, 'iduser' => 1, 'number' => 10.45, 'property' => 'xxx'],
+                [ 'id'=> 2, 'iduser' => 1, 'number' => 3, 'property' => 'ggg'],
             ];
 
         // To Array
@@ -276,19 +277,19 @@ class PdoSqliteTest extends TestCase
         $iterator = $dbCached->getIterator('select * from info where id = :id', ['id' => 1]);
         $this->assertEquals(
             [
-                [ 'id'=> 1, 'iduser' => 1, 'property' => 'xxx', "__id" => 0, "__key" => 0],
+                [ "__id" => 0, "__key" => 0, 'id'=> 1, 'iduser' => 1, 'number' => 10.45, 'property' => 'xxx'],
             ],
             $iterator->toArray()
         );
 
-        // Remove it from DB (Still in cache) - Execute don't use cache
+        // Remove it from DB (Still in cache) - Execute dont use cache
         $dbCached->execute("delete from users where name = [[name]]", ['name' => 'Another2']);
 
         // Try get from cache
         $iterator = $dbCached->getIterator('select * from info where id = :id', ['id' => 1]);
         $this->assertEquals(
             [
-                [ 'id'=> 1, 'iduser' => 1, 'property' => 'xxx', "__id" => 0, "__key" => 0],
+                [ "__id" => 0, "__key" => 0, 'id'=> 1, 'iduser' => 1, 'number' => 10.45, 'property' => 'xxx'],
             ],
             $iterator->toArray()
         );
@@ -307,7 +308,7 @@ class PdoSqliteTest extends TestCase
         $iterator = $dbCached->getIterator('select * from info where id = :id', ['id' => 1]);
         $this->assertEquals(
             [
-                [ 'id'=> 1, 'iduser' => 1, 'property' => 'xxx', "__id" => 0, "__key" => 0],
+                [ "__id" => 0, "__key" => 0, 'id'=> 1, 'iduser' => 1, 'number' => 10.45, 'property' => 'xxx'],
             ],
             $iterator->toArray()
         );
@@ -319,7 +320,7 @@ class PdoSqliteTest extends TestCase
         $iterator = $dbCached->getIterator('select * from info where id = :id', ['id' => 1]);
         $this->assertEquals(
             [
-                [ 'id'=> 1, 'iduser' => 1, 'property' => 'xxx', "__id" => 0, "__key" => 0],
+                [ "__id" => 0, "__key" => 0, 'id'=> 1, 'iduser' => 1, 'number' => 10.45, 'property' => 'xxx'],
             ],
             $iterator->toArray()
         );

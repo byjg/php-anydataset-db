@@ -9,6 +9,11 @@ use PDO;
 class PdoSqlsrv extends PdoDblib
 {
 
+    public static function schema()
+    {
+        return ['sqlsrv'];
+    }
+
     /**
      * PdoSqlsrv constructor.
      *
