@@ -135,13 +135,15 @@ AnyDatasetDB has some special parameters:
 |--------------------------------|-----------|----------------------------------------------------------------------------------------------------------------------------|
 | DbPdoDriver::STATEMENT_CACHE   | true      | If this parameter is set with "true", anydataset will cache the last prepared queries.                                     |
 | DbPdoDriver::DONT_PARSE_PARAM  | any value | Is this parameter is set with any value, anydataset won't try to parse the SQL to find the values to bind the parameters.  |
+| DbPdoDriver::UNIX_SOCKET       | any value | PDO will use "unix_socket=" instead of "host=". If empty, ignore both "host" and "unix_socket"                             |
 
 e.g.
 
 ```php
-$uri = Uri::getInstanceFromString("sqlite://" . $this->host)
+$uri = Uri::getInstanceFromString("mysql://" . $this->host)
     ->withQueryKeyValue(DbPdoDriver::STATEMENT_CACHE, "true")
     ->withQueryKeyValue(DbPdoDriver::DONT_PARSE_PARAM, "");
+    ->withQueryKeyValue(DbPdoDriver::UNIX_SOCKET, "/run/mysql.sock");
 ```
 
 ### Load balance and connection pooling
