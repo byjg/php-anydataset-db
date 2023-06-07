@@ -9,7 +9,7 @@
   "prefer-stable": true,
   "minimum-stability": "dev",
   "require": {
-    "php": ">=7.2",
+    "php": ">=7.3",
     "ext-pdo": "*",
     "byjg/anydataset-array": "^4.9",
     "psr/cache": "1.0.*",
