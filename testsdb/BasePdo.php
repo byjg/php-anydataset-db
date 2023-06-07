@@ -60,6 +60,7 @@ abstract class BasePdo extends TestCase
 
     public function tearDown(): void
     {
+        $this->dbDriver->reconnect();
         $this->deleteDatabase();
     }
 
