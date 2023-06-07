@@ -58,6 +58,11 @@ interface DbDriverInterface
 
     public function getCountStmtCache();
 
+    public function isConnected($softCheck = false, $throwError = false);
+    public function reconnect($force = false);
+
+    public function disconnect();
+
     /**
      * @param int $maxStmtCache
      */

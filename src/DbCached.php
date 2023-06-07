@@ -177,4 +177,19 @@ class DbCached implements DbDriverInterface
     {
         return $this->dbDriver->getCountStmtCache();
     }
+
+    public function reconnect($force = false)
+    {
+        $this->dbDriver->reconnect();
+    }
+
+    public function disconnect()
+    {
+        $this->dbDriver->disconnect();
+    }
+
+    public function isConnected($softCheck = false, $throwError = false)
+    {
+        return $this->dbDriver->isConnected($softCheck, $throwError);
+    }
 }

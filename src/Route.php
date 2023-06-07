@@ -371,4 +371,18 @@ class Route implements DbDriverInterface
         throw new NotImplementedException('Feature not available');
     }
     //</editor-fold>
+    public function reconnect($force = false)
+    {
+        throw new NotImplementedException('Feature not available');
+    }
+
+    public function disconnect()
+    {
+        throw new NotImplementedException('Feature not available');
+    }
+
+    public function isConnected($softCheck = false, $throwError = false)
+    {
+        throw new NotImplementedException('Feature not available');
+    }
 }

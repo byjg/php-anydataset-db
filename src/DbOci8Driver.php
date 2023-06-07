@@ -303,4 +303,19 @@ class DbOci8Driver implements DbDriverInterface
     {
         throw new NotImplementedException('Method not implemented for OCI Driver');
     }
+
+    public function reconnect($force = false)
+    {
+        throw new NotImplementedException('Method not implemented for OCI Driver');
+    }
+
+    public function disconnect()
+    {
+        throw new NotImplementedException('Method not implemented for OCI Driver');
+    }
+
+    public function isConnected($softCheck = false, $throwError = false)
+    {
+        throw new NotImplementedException('Method not implemented for OCI Driver');
+    }
 }

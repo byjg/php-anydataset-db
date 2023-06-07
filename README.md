@@ -1,10 +1,10 @@
 # AnyDataset-DB
 
+[![Build Status](https://github.com/byjg/anydataset-db/actions/workflows/phpunit.yml/badge.svg?branch=master)](https://github.com/byjg/anydataset-db/actions/workflows/phpunit.yml)
 [![Opensource ByJG](https://img.shields.io/badge/opensource-byjg-success.svg)](http://opensource.byjg.com)
 [![GitHub source](https://img.shields.io/badge/Github-source-informational?logo=github)](https://github.com/byjg/anydataset-db/)
 [![GitHub license](https://img.shields.io/github/license/byjg/anydataset-db.svg)](https://opensource.byjg.com/opensource/licensing.html)
 [![GitHub release](https://img.shields.io/github/release/byjg/anydataset-db.svg)](https://github.com/byjg/anydataset-db/releases/)
-[![Build Status](https://travis-ci.com/byjg/anydataset-db.svg?branch=master)](https://travis-ci.com/byjg/anydataset-db)
 
 Anydataset Database Relational abstraction. Anydataset is an agnostic data source abstraction layer in PHP.
 
@@ -26,16 +26,16 @@ See below the current implemented drivers:
 
 {:.table}
 
-| Database            | Connection String                                        | Factory
-| ------------------- | -------------------------------------------------------- | -------------------------  |
-| Sqlite              | sqlite:///path/to/file                                   | getDbRelationalInstance()  |
-| MySql/MariaDb       | mysql://username:password@hostname:port/database         | getDbRelationalInstance()  |
-| Postgres            | psql://username:password@hostname:port/database          | getDbRelationalInstance()  |
-| Sql Server (DbLib)  | dblib://username:password@hostname:port/database         | getDbRelationalInstance()  |
-| Sql Server (Sqlsrv) | sqlsrv://username:password@hostname:port/database        | getDbRelationalInstance()  |
-| Oracle (OCI)        | oci://username:password@hostname:port/database           | getDbRelationalInstance()  |
-| Oracle (OCI8)       | oci8://username:password@hostname:port/database          | getDbRelationalInstance()  |
-| Generic PDO         | pdo://username:password@pdo_driver?dsn=LITERAL_PDO_DSN   | getDbRelationalInstance()  |
+| Database            | Connection String                                      | Factory                   |
+|---------------------|--------------------------------------------------------|---------------------------|
+| Sqlite              | sqlite:///path/to/file                                 | getDbRelationalInstance() |
+| MySql/MariaDb       | mysql://username:password@hostname:port/database       | getDbRelationalInstance() |
+| Postgres            | psql://username:password@hostname:port/database        | getDbRelationalInstance() |
+| Sql Server (DbLib)  | dblib://username:password@hostname:port/database       | getDbRelationalInstance() |
+| Sql Server (Sqlsrv) | sqlsrv://username:password@hostname:port/database      | getDbRelationalInstance() |
+| Oracle (OCI)        | oci://username:password@hostname:port/database         | getDbRelationalInstance() |
+| Oracle (OCI8)       | oci8://username:password@hostname:port/database        | getDbRelationalInstance() |
+| Generic PDO         | pdo://username:password@pdo_driver?dsn=LITERAL_PDO_DSN | getDbRelationalInstance() |
 
 ```php
 <?php

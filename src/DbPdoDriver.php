@@ -3,6 +3,7 @@
 namespace ByJG\AnyDataset\Db;
 
 use ByJG\AnyDataset\Core\Exception\NotAvailableException;
+use ByJG\AnyDataset\Db\Exception\DbDriverNotConnected;
 use ByJG\AnyDataset\Db\Helpers\SqlBind;
 use ByJG\AnyDataset\Db\Helpers\SqlHelper;
 use ByJG\Util\Uri;
@@ -36,6 +37,10 @@ abstract class DbPdoDriver implements DbDriverInterface
      */
     protected $connectionUri;
 
+    protected $preOptions;
+
+    protected $postOptions;
+
     /**
      * DbPdoDriver constructor.
      *
@@ -46,26 +51,48 @@ abstract class DbPdoDriver implements DbDriverInterface
      */
     public function __construct(Uri $connUri, $preOptions = null, $postOptions = null)
     {
-        $this->validateConnUri($connUri);
-
-        $strcnn = $this->createPdoConnStr($connUri);
-
-        $this->createPdoInstance($strcnn, $preOptions, $postOptions);
+        $this->connectionUri = $connUri;
+        $this->preOptions = $preOptions;
+        $this->postOptions = $postOptions;
+        $this->validateConnUri();
+        $this->reconnect();
     }
 
-    protected function createPdoInstance($pdoConnectionString, $preOptions = null, $postOptions = null)
+    public function reconnect($force = false)
     {
+        if ($this->isConnected() && !$force) {
+            return false;
+        }
+
+        // Release old instance
+        $this->disconnect();
+
+        // Connect
+        $this->createPdoInstance();
+
+        return true;
+    }
+
+    public function disconnect()
+    {
+        $this->instance = null;
+    }
+
+    protected function createPdoInstance()
+    {
+        $pdoConnectionString = $this->createPdoConnStr($this->connectionUri);
+
         // Create Connection
         $this->instance = new PDO(
             $pdoConnectionString,
             $this->connectionUri->getUsername(),
             $this->connectionUri->getPassword(),
-            (array) $preOptions
+            (array) $this->preOptions
         );
 
-        $this->connectionUri = $this->connectionUri->withScheme($this->instance->getAttribute(PDO::ATTR_DRIVER_NAME));
+        $this->connectionUri = $this->connectionUri->withScheme($this->getInstance()->getAttribute(PDO::ATTR_DRIVER_NAME));
 
-        $this->setPdoDefaultParams($postOptions);
+        $this->setPdoDefaultParams($this->postOptions);
     }
 
     /**
@@ -73,23 +100,19 @@ abstract class DbPdoDriver implements DbDriverInterface
      * @param string $scheme
      * @throws NotAvailableException
      */
-    protected function validateConnUri($connUri, $scheme = null)
+    protected function validateConnUri()
     {
-        $this->connectionUri = $connUri;
-
         if (!defined('PDO::ATTR_DRIVER_NAME')) {
             throw new NotAvailableException("Extension 'PDO' is not loaded");
         }
 
-        if (empty($scheme)) {
-            $scheme = $connUri->getScheme();
-        }
+        $scheme = $this->connectionUri->getScheme();
 
         if (!extension_loaded('pdo_' . strtolower($scheme))) {
-            throw new NotAvailableException("Extension 'pdo_" . strtolower($connUri->getScheme()) . "' is not loaded");
+            throw new NotAvailableException("Extension 'pdo_" . strtolower($this->connectionUri->getScheme()) . "' is not loaded");
         }
 
-        if ($connUri->getQueryPart(self::STATEMENT_CACHE) == "true") {
+        if ($this->connectionUri->getQueryPart(self::STATEMENT_CACHE) == "true") {
             $this->useStmtCache = true;
         }
     }
@@ -106,7 +129,7 @@ abstract class DbPdoDriver implements DbDriverInterface
         $defaultPostOptions = $defaultPostOptions + (array)$postOptions;
 
         foreach ((array) $defaultPostOptions as $key => $value) {
-            $this->instance->setAttribute($key, $value);
+            $this->getInstance()->setAttribute($key, $value);
         }
     }
     
@@ -162,15 +185,16 @@ abstract class DbPdoDriver implements DbDriverInterface
 
         if ($this->useStmtCache) {
             if ($this->getMaxStmtCache() > 0 && !isset($this->stmtCache[$sql])) {
-                $this->stmtCache[$sql] = $this->instance->prepare($sql);
+                $this->stmtCache[$sql] = $this->getInstance()->prepare($sql);
                 if ($this->getCountStmtCache() > $this->getMaxStmtCache()) { //Kill old cache to get waste memory
                     array_shift($this->stmtCache);
                 }
             }
 
+            $this->isConnected(true, true);
             $stmt = $this->stmtCache[$sql];
         } else {
-            $stmt = $this->instance->prepare($sql);
+            $stmt = $this->getInstance()->prepare($sql);
         }
 
         if (!empty($array)) {
@@ -204,7 +228,7 @@ abstract class DbPdoDriver implements DbDriverInterface
     public function getAllFields($tablename)
     {
         $fields = array();
-        $statement = $this->instance->query(
+        $statement = $this->getInstance()->query(
             SqlHelper::createSafeSQL(
                 "select * from @@table where 0=1",
                 [
@@ -222,17 +246,17 @@ abstract class DbPdoDriver implements DbDriverInterface
 
     public function beginTransaction()
     {
-        $this->instance->beginTransaction();
+        $this->getInstance()->beginTransaction();
     }
 
     public function commitTransaction()
     {
-        $this->instance->commit();
+        $this->getInstance()->commit();
     }
 
     public function rollbackTransaction()
     {
-        $this->instance->rollBack();
+        $this->getInstance()->rollBack();
     }
 
     public function execute($sql, $array = null)
@@ -267,12 +291,12 @@ abstract class DbPdoDriver implements DbDriverInterface
 
     public function getAttribute($name)
     {
-        $this->instance->getAttribute($name);
+        $this->getInstance()->getAttribute($name);
     }
 
     public function setAttribute($name, $value)
     {
-        $this->instance->setAttribute($name, $value);
+        $this->getInstance()->setAttribute($name, $value);
     }
 
     protected $dbHelper;
@@ -325,5 +349,36 @@ abstract class DbPdoDriver implements DbDriverInterface
     public function setMaxStmtCache($maxStmtCache)
     {
         $this->maxStmtCache = $maxStmtCache;
+    }
+
+    public function isConnected($softCheck = false, $throwError = false)
+    {
+        if (empty($this->instance)) {
+            if ($throwError) {
+                throw new DbDriverNotConnected('DbDriver not connected');
+            }
+            return false;
+        }
+
+        if ($softCheck) {
+            return true;
+        }
+
+        try {
+            $this->instance->query("SELECT 1"); // Do not use $this->getInstance()
+        } catch (\Exception $ex) {
+            if ($throwError) {
+                throw new DbDriverNotConnected('DbDriver not connected');
+            }
+            return false;
+        }
+
+        return true;
+    }
+
+    protected function getInstance()
+    {
+        $this->isConnected(true, true);
+        return $this->instance;
     }
 }

@@ -6,6 +6,7 @@ use ByJG\AnyDataset\Core\Exception\NotImplementedException;
 use ByJG\AnyDataset\Db\DbCached;
 use ByJG\AnyDataset\Db\DbDriverInterface;
 use ByJG\AnyDataset\Db\DbPdoDriver;
+use ByJG\AnyDataset\Db\Exception\DbDriverNotConnected;
 use ByJG\AnyDataset\Db\Factory;
 use PHPUnit\Framework\TestCase;
 
@@ -412,6 +413,25 @@ abstract class BasePdo extends TestCase
                 'precision' => 2,
             ],
         ], $metadata);
+    }
+
+    public function testDisconnect()
+    {
+        $iterator = $this->dbDriver->getIterator('select Id, Breed, Name, Age from Dogs where id = 1');
+        $row = $iterator->toArray();
+        $this->assertEquals(1, $row[0]["id"]);
+
+        $this->dbDriver->disconnect();
+
+        $this->expectException(DbDriverNotConnected::class);
+        $iterator = $this->dbDriver->getIterator('select Id, Breed, Name, Age from Dogs where id = 1');
+    }
+
+    public function testReconnect()
+    {
+        $this->assertFalse($this->dbDriver->reconnect());
+        $this->assertTrue($this->dbDriver->reconnect(true));
+        $iterator = $this->dbDriver->getIterator('select Id, Breed, Name, Age from Dogs where id = 1');
     }
 }
 
