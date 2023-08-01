@@ -3,26 +3,26 @@
 namespace ByJG\AnyDataset\Db;
 
 use ByJG\Util\Uri;
+use InvalidArgumentException;
 
 class Factory
 {
     private static $config = [];
 
     /**
-     * @param string $protocol
      * @param string $class
      * @return void
      */
     public static function registerDbDriver($class)
     {
         if (!in_array(DbDriverInterface::class, class_implements($class))) {
-            throw new \InvalidArgumentException(
+            throw new InvalidArgumentException(
                 "The class '$class' is not a instance of DbDriverInterface"
             );
         }
 
         if (empty($class::schema())) {
-            throw new \InvalidArgumentException(
+            throw new InvalidArgumentException(
                 "The class '$class' must implement the static method schema()"
             );
         }
@@ -35,8 +35,7 @@ class Factory
 
     /**
      * @param $connectionString
-     * @param $schemesAlternative
-     * @return \ByJG\AnyDataset\Db\DbDriverInterface
+     * @return DbDriverInterface
      */
     public static function getDbRelationalInstance($connectionString)
     {
@@ -46,7 +45,6 @@ class Factory
 
     /**
      * @param $connectionUri Uri
-     * @param $schemesAlternative
      * @return mixed
      */
     public static function getDbInstance($connectionUri)
@@ -67,14 +65,12 @@ class Factory
         $scheme = $connectionUri->getScheme();
 
         if (!isset(self::$config[$scheme])) {
-            throw new \InvalidArgumentException("The '$scheme' scheme does not exist.");
+            throw new InvalidArgumentException("The '$scheme' scheme does not exist.");
         }
 
         $class = self::$config[$scheme];
 
-        $instance = new $class($connectionUri);
-
-        return $instance;
+        return new $class($connectionUri);
     }
 
     /**

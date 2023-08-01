@@ -29,7 +29,7 @@ class PdoDblib extends DbPdoDriver
             ->withQueryKeyValue("server" , $connUri->getHost() . (!empty($connUri->getPort()) ? "," . $connUri->getPort() : ""))
             ->withQueryKeyValue("Database", ltrim($connUri->getPath(), "/"));
 
-        parent::__construct($uri, null, null);
+        parent::__construct($uri);
     }
 
     protected function createPdoInstance()

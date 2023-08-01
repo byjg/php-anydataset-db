@@ -7,6 +7,7 @@ use ByJG\AnyDataset\Db\Exception\DbDriverNotConnected;
 use ByJG\AnyDataset\Db\Helpers\SqlBind;
 use ByJG\AnyDataset\Db\Helpers\SqlHelper;
 use ByJG\Util\Uri;
+use Exception;
 use PDO;
 use PDOStatement;
 
@@ -96,8 +97,6 @@ abstract class DbPdoDriver implements DbDriverInterface
     }
 
     /**
-     * @param Uri $connUri
-     * @param string $scheme
      * @throws NotAvailableException
      */
     protected function validateConnUri()
@@ -373,7 +372,7 @@ abstract class DbPdoDriver implements DbDriverInterface
 
         try {
             $this->instance->query("SELECT 1"); // Do not use $this->getInstance()
-        } catch (\Exception $ex) {
+        } catch (Exception $ex) {
             if ($throwError) {
                 throw new DbDriverNotConnected('DbDriver not connected');
             }

@@ -2,6 +2,7 @@
 
 namespace ByJG\AnyDataset\Db;
 
+use ByJG\AnyDataset\Core\Exception\NotAvailableException;
 use ByJG\Util\Uri;
 
 class PdoSqlite extends DbPdoDriver
@@ -16,7 +17,7 @@ class PdoSqlite extends DbPdoDriver
      * PdoSqlite constructor.
      *
      * @param \ByJG\Util\Uri $connUri
-     * @throws \ByJG\AnyDataset\Core\Exception\NotAvailableException
+     * @throws NotAvailableException
      */
     public function __construct(Uri $connUri)
     {

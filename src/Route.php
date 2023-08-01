@@ -3,8 +3,10 @@
 namespace ByJG\AnyDataset\Db;
 
 use ByJG\AnyDataset\Core\Exception\NotImplementedException;
+use ByJG\AnyDataset\Core\GenericIterator;
 use ByJG\AnyDataset\Db\Exception\RouteNotFoundException;
 use ByJG\AnyDataset\Db\Exception\RouteNotMatchedException;
+use PDO;
 
 class Route implements DbDriverInterface
 {
@@ -215,7 +217,7 @@ class Route implements DbDriverInterface
     /**
      * @param string $sql
      * @param null $params
-     * @return \ByJG\AnyDataset\Core\GenericIterator
+     * @return GenericIterator
      * @throws \ByJG\AnyDataset\Db\Exception\RouteNotMatchedException
      */
     public function getIterator($sql, $params = null)
@@ -282,7 +284,7 @@ class Route implements DbDriverInterface
     }
 
     /**
-     * @return \PDO|void
+     * @return PDO|void
      * @throws NotImplementedException
      */
     public function getDbConnection()

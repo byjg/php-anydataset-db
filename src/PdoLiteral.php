@@ -3,7 +3,6 @@
 namespace ByJG\AnyDataset\Db;
 
 use ByJG\Util\Uri;
-use PDO;
 
 class PdoLiteral extends DbPdoDriver
 {

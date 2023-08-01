@@ -2,9 +2,10 @@
 
 namespace ByJG\AnyDataset\Db\Helpers;
 
-use ByJG\AnyDataset\Db\DbFunctionsInterface;
 use ByJG\AnyDataset\Db\DbDriverInterface;
+use ByJG\AnyDataset\Db\DbFunctionsInterface;
 use DateTime;
+use Exception;
 
 abstract class DbBaseFunctions implements DbFunctionsInterface
 {
@@ -189,7 +190,7 @@ abstract class DbBaseFunctions implements DbFunctionsInterface
 
     public function getTableMetadata(DbDriverInterface $dbdataset, $tableName)
     {
-        throw new \Exception("Not implemented");
+        throw new Exception("Not implemented");
     }
 
     protected function getTableMetadataFromSql(DbDriverInterface $dbdataset, $sql)
@@ -200,7 +201,7 @@ abstract class DbBaseFunctions implements DbFunctionsInterface
 
     protected function parseColumnMetadata($metadata)
     {
-        throw new \Exception("Not implemented");
+        throw new Exception("Not implemented");
     }
 
     protected function parseTypeMetadata($type)
@@ -223,7 +224,7 @@ abstract class DbBaseFunctions implements DbFunctionsInterface
         }
 
         if (strpos($matches['type'], 'int') !== false) {
-            return [ 'phpType' => 'integer', 'length' => null, 'precision' => null ];;
+            return [ 'phpType' => 'integer', 'length' => null, 'precision' => null ];
         }
 
         if (strpos($matches['type'], 'char') !== false || strpos($matches['type'], 'text') !== false) {

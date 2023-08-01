@@ -17,6 +17,8 @@ class PdoPdo extends DbPdoDriver
      * PdoPdo constructor.
      *
      * @param Uri $connUri
+     * @param array $preOptions
+     * @param array $postOptions
      * @throws NotAvailableException
      */
     public function __construct(Uri $connUri, $preOptions = [], $postOptions = [])

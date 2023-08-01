@@ -4,6 +4,7 @@ namespace ByJG\AnyDataset\Db;
 
 use ByJG\AnyDataset\Core\GenericIterator;
 use ByJG\Util\Uri;
+use PDO;
 
 interface DbDriverInterface
 {
@@ -37,7 +38,7 @@ interface DbDriverInterface
     public function rollbackTransaction();
 
     /**
-     * @return \PDO
+     * @return PDO
      */
     public function getDbConnection();
 

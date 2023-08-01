@@ -2,8 +2,6 @@
 
 namespace ByJG\AnyDataset\Db\Helpers;
 
-use ByJG\AnyDataset\Db\DbDriverInterface;
-
 class DbPdoFunctions extends DbBaseFunctions
 {
 

@@ -2,6 +2,7 @@
 
 namespace ByJG\AnyDataset\Db;
 
+use ByJG\AnyDataset\Core\Exception\NotAvailableException;
 use ByJG\Util\Uri;
 
 class PdoSqlsrv extends PdoDblib
@@ -16,7 +17,7 @@ class PdoSqlsrv extends PdoDblib
      * PdoSqlsrv constructor.
      *
      * @param Uri $connUri
-     * @throws \ByJG\AnyDataset\Core\Exception\NotAvailableException
+     * @throws NotAvailableException
      */
     public function __construct($connUri)
     {
