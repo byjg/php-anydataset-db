@@ -147,7 +147,7 @@ abstract class DbPdoDriver implements DbDriverInterface
             return $scheme . ":" . $database;
         }
 
-        $database = ltrim($database, '/');
+        $database = ltrim(empty($database) ? "" : $database, '/');
         if (!empty($database)) {
             $database = ";dbname=$database";
         }
