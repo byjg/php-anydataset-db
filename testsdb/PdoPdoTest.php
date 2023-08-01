@@ -3,6 +3,7 @@
 namespace TestsDb\AnyDataset;
 
 use ByJG\AnyDataset\Db\Factory;
+use ByJG\Util\Uri;
 
 require_once 'PdoPostgresTest.php';
 
@@ -23,16 +24,19 @@ class PdoPdoTest extends PdoPostgresTest
             $password = "";
         }
 
-        $pdoConn = "host=$host";
-        $this->dbDriver = Factory::getDbRelationalInstance("pdo://postgres:$password@pgsql?dsn=" . urlencode($pdoConn));
+        $this->dbDriver = Factory::getDbRelationalInstance(
+            Uri::getInstanceFromString("pdo://postgres:$password@pgsql")
+                ->withQueryKeyValue("host", $host));
 
         $exists = $this->dbDriver->getScalar('select count(1) from pg_catalog.pg_database where datname = \'testpdo\'');
         if ($exists == 0) {
             $this->dbDriver->execute('CREATE DATABASE testpdo');
         }
 
-        $pdoConn = "$pdoConn;dbname=testpdo;";
-        $this->dbDriver = Factory::getDbRelationalInstance("pdo://postgres:$password@pgsql?dsn=" . urlencode($pdoConn));
+        $this->dbDriver = Factory::getDbRelationalInstance(
+            Uri::getInstanceFromString("pdo://postgres:$password@pgsql")
+                ->withQueryKeyValue("host", $host)
+                ->withQueryKeyValue("dbname", "testpdo"));
     }
 
     public function testDontParseParam_3() {

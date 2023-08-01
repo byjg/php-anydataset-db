@@ -87,7 +87,7 @@ abstract class DbPdoDriver implements DbDriverInterface
             $pdoConnectionString,
             $this->connectionUri->getUsername(),
             $this->connectionUri->getPassword(),
-            (array) $this->preOptions
+            (array)$this->preOptions
         );
 
         $this->connectionUri = $this->connectionUri->withScheme($this->getInstance()->getAttribute(PDO::ATTR_DRIVER_NAME));
@@ -108,7 +108,7 @@ abstract class DbPdoDriver implements DbDriverInterface
 
         $scheme = $this->connectionUri->getScheme();
 
-        if (!extension_loaded('pdo_' . strtolower($scheme))) {
+        if ($this->connectionUri->getScheme() != "pdo" && !extension_loaded('pdo_' . strtolower($scheme))) {
             throw new NotAvailableException("Extension 'pdo_" . strtolower($this->connectionUri->getScheme()) . "' is not loaded");
         }
 
@@ -135,34 +135,41 @@ abstract class DbPdoDriver implements DbDriverInterface
     
     protected function createPdoConnStr(Uri $connUri)
     {
-        $host = $connUri->getHost();
+        if ($connUri->getScheme() == "pdo") {
+            return $this->preparePdoConnectionStr($connUri->getHost(), ".", null, null, $connUri->getQuery());
+        } else {
+            return $this->preparePdoConnectionStr($connUri->getScheme(), $connUri->getHost(), $connUri->getPath(), $connUri->getPort(), $connUri->getQuery());
+        }
+    }
+
+    public function preparePdoConnectionStr($scheme, $host, $database, $port, $query)
+    {
         if (empty($host)) {
-            return $connUri->getScheme() . ":" . $connUri->getPath();
+            return $scheme . ":" . $database;
         }
 
-        $database = preg_replace('~^/~', '', empty($connUri->getPath()) ? '' : $connUri->getPath());
+        $database = ltrim($database, '/');
         if (!empty($database)) {
             $database = ";dbname=$database";
         }
 
-        $strcnn = $connUri->getScheme() . ":"
-            . "host=" . $connUri->getHost()
+        $pdoConnectionStr = $scheme . ":"
+            . ($host != "." ? "host=" . $host : "")
             . $database;
 
-        if ($connUri->getPort() != "") {
-            $strcnn .= ";port=" . $connUri->getPort();
+        if (!empty($port)) {
+            $pdoConnectionStr .= ";port=" . $port;
         }
 
-        $query = $connUri->getQuery();
-        $queryArr = explode('&', $query);
-        foreach ($queryArr as $value) {
-            if ((strpos($value, self::DONT_PARSE_PARAM . "=") === false) && 
-               (strpos($value, self::STATEMENT_CACHE . "=") === false)) {
-                $strcnn .= ";" . $value;
-            }
+        parse_str($query, $queryArr);
+        unset($queryArr[self::DONT_PARSE_PARAM]);
+        unset($queryArr[self::STATEMENT_CACHE]);
+        if ($pdoConnectionStr[-1] != ":") {
+            $pdoConnectionStr .= ";";
         }
+        $pdoConnectionStr .= http_build_query($queryArr, "", ";");
 
-        return $strcnn;
+        return $pdoConnectionStr;
     }
     
     public function __destruct()

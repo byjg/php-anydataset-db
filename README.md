@@ -26,16 +26,16 @@ See below the current implemented drivers:
 
 {:.table}
 
-| Database            | Connection String                                      | Factory                   |
-|---------------------|--------------------------------------------------------|---------------------------|
-| Sqlite              | sqlite:///path/to/file                                 | getDbRelationalInstance() |
-| MySql/MariaDb       | mysql://username:password@hostname:port/database       | getDbRelationalInstance() |
-| Postgres            | psql://username:password@hostname:port/database        | getDbRelationalInstance() |
-| Sql Server (DbLib)  | dblib://username:password@hostname:port/database       | getDbRelationalInstance() |
-| Sql Server (Sqlsrv) | sqlsrv://username:password@hostname:port/database      | getDbRelationalInstance() |
-| Oracle (OCI)        | oci://username:password@hostname:port/database         | getDbRelationalInstance() |
-| Oracle (OCI8)       | oci8://username:password@hostname:port/database        | getDbRelationalInstance() |
-| Generic PDO         | pdo://username:password@pdo_driver?dsn=LITERAL_PDO_DSN | getDbRelationalInstance() |
+| Database            | Connection String                                 | Factory                   |
+|---------------------|---------------------------------------------------|---------------------------|
+| Sqlite              | sqlite:///path/to/file                            | getDbRelationalInstance() |
+| MySql/MariaDb       | mysql://username:password@hostname:port/database  | getDbRelationalInstance() |
+| Postgres            | psql://username:password@hostname:port/database   | getDbRelationalInstance() |
+| Sql Server (DbLib)  | dblib://username:password@hostname:port/database  | getDbRelationalInstance() |
+| Sql Server (Sqlsrv) | sqlsrv://username:password@hostname:port/database | getDbRelationalInstance() |
+| Oracle (OCI)        | oci://username:password@hostname:port/database    | getDbRelationalInstance() |
+| Oracle (OCI8)       | oci8://username:password@hostname:port/database   | getDbRelationalInstance() |
+| Generic PDO         | pdo://username:password@pdo_driver?PDO_PARAMETERS | getDbRelationalInstance() |
 
 ```php
 <?php
@@ -329,7 +329,7 @@ Follow the solution:
 
 ## Generic PDO configuration
 
-The generic PDO driver uses the format `pdo://username:password@pdo_driver?dsn=<LITERAL PDO DSN>` and only need to be
+The generic PDO driver uses the format `pdo://username:password@pdo_driver?PDO_ARGUMENTS` and only need to be
 used for drivers are not mapped into the `anydataset-db` library.
 
 Let's say we want to connect with the PDO Interbase/Firebase database.
@@ -344,17 +344,22 @@ firebird:User=john;Password=mypass;Database=DATABASE.GDE;DataSource=localhost;Po
 and adapting to URI style we remove the information about the driver, user and password. Then we have:
 
 ```php
-$uri = new \ByJG\Util\Uri("pdo://john:mypass@firebird?dsn=" . url_encode('Database=DATABASE.GDE;DataSource=localhost;Port=3050'));
+$uri = new Uri("pdo://john:mypass@firebird?Database=DATABASE.GDE&DataSource=localhost&Port=3050");
 ```
 
-Don't forget we need to `url_encode` the DSN parameter.
+Note the configuration:
+
+- The schema for generic PDO is "pdo";
+- The host is the PDO driver. In this example is "firebird";
+- The PDO arguments are passed as query string. Remember to replace the `;` by `&`.
+- The user and password are passed as part of the URI.
 
 ## Install
 
 Just type:
 
 ```bash
-composer require "byjg/anydataset=4.0.*"
+composer require "byjg/anydataset=4.9.*"
 ```
 
 ## Running Unit tests
