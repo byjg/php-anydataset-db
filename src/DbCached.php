@@ -198,4 +198,10 @@ class DbCached implements DbDriverInterface
     {
         $this->dbDriver->enableLogger($logger);
     }
+
+    public function log($message, $context = [])
+    {
+        $this->dbDriver->log($message, $context);
+    }
+
 }

@@ -72,4 +72,6 @@ interface DbDriverInterface
 
     public function enableLogger(LoggerInterface $logger);
 
+    public function log($message, $context = []);
+
 }

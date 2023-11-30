@@ -333,4 +333,9 @@ class DbOci8Driver implements DbDriverInterface
     {
         $this->logger = $logger;
     }
+
+    public function log($message, $context = [])
+    {
+        $this->logger->debug($message, $context);
+    }
 }
