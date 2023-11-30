@@ -106,7 +106,7 @@ class DbOci8Driver implements DbDriverInterface
     {
         list($query, $array) = SqlBind::parseSQL($this->connectionUri, $sql, $array);
 
-        $this->logger->debug("SQL: $query");
+        $this->logger->debug("SQL: $query, Params: " . json_encode($array));
 
         // Prepare the statement
         $stid = oci_parse($this->conn, $query);

@@ -216,7 +216,7 @@ abstract class DbPdoDriver implements DbDriverInterface
             }
         }
 
-        $this->logger->debug("SQL: $sql");
+        $this->logger->debug("SQL: $sql\nParams: " . json_encode($array));
 
         return $stmt;
     }
