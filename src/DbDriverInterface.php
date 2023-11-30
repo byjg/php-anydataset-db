@@ -5,6 +5,7 @@ namespace ByJG\AnyDataset\Db;
 use ByJG\AnyDataset\Core\GenericIterator;
 use ByJG\Util\Uri;
 use PDO;
+use Psr\Log\LoggerInterface;
 
 interface DbDriverInterface
 {
@@ -68,5 +69,7 @@ interface DbDriverInterface
      * @param int $maxStmtCache
      */
     public function setMaxStmtCache($maxStmtCache);
+
+    public function enableLogger(LoggerInterface $logger);
 
 }

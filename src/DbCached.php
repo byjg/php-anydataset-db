@@ -8,6 +8,7 @@ use ByJG\Util\Uri;
 use DateInterval;
 use Psr\Cache\CacheItemPoolInterface;
 use Psr\Cache\InvalidArgumentException;
+use Psr\Log\LoggerInterface;
 
 class DbCached implements DbDriverInterface
 {
@@ -191,5 +192,10 @@ class DbCached implements DbDriverInterface
     public function isConnected($softCheck = false, $throwError = false)
     {
         return $this->dbDriver->isConnected($softCheck, $throwError);
+    }
+
+    public function enableLogger(LoggerInterface $logger)
+    {
+        $this->dbDriver->enableLogger($logger);
     }
 }

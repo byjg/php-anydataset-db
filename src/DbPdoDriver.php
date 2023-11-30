@@ -10,6 +10,8 @@ use ByJG\Util\Uri;
 use Exception;
 use PDO;
 use PDOStatement;
+use Psr\Log\LoggerInterface;
+use Psr\Log\NullLogger;
 
 abstract class DbPdoDriver implements DbDriverInterface
 {
@@ -41,6 +43,10 @@ abstract class DbPdoDriver implements DbDriverInterface
     protected $preOptions;
 
     protected $postOptions;
+    /**
+     * @var LoggerInterface
+     */
+    private LoggerInterface $logger;
 
     /**
      * DbPdoDriver constructor.
@@ -52,6 +58,7 @@ abstract class DbPdoDriver implements DbDriverInterface
      */
     public function __construct(Uri $connUri, $preOptions = null, $postOptions = null)
     {
+        $this->logger = new NullLogger();
         $this->connectionUri = $connUri;
         $this->preOptions = $preOptions;
         $this->postOptions = $postOptions;
@@ -209,6 +216,8 @@ abstract class DbPdoDriver implements DbDriverInterface
             }
         }
 
+        $this->logger->debug("SQL: $sql");
+
         return $stmt;
     }
 
@@ -252,16 +261,19 @@ abstract class DbPdoDriver implements DbDriverInterface
 
     public function beginTransaction()
     {
+        $this->logger->debug("SQL: Begin transaction");
         $this->getInstance()->beginTransaction();
     }
 
     public function commitTransaction()
     {
+        $this->logger->debug("SQL: Commit transaction");
         $this->getInstance()->commit();
     }
 
     public function rollbackTransaction()
     {
+        $this->logger->debug("SQL: Rollback transaction");
         $this->getInstance()->rollBack();
     }
 
@@ -386,5 +398,10 @@ abstract class DbPdoDriver implements DbDriverInterface
     {
         $this->isConnected(true, true);
         return $this->instance;
+    }
+
+    public function enableLogger(LoggerInterface $logger)
+    {
+        $this->logger = $logger;
     }
 }
