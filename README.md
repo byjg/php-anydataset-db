@@ -98,20 +98,17 @@ $dbDriver->commitTransaction(); // or rollbackTransaction()
 
 ### Cache results
 
-You can easily cache your results with the DbCached class; You need to add to your project an
-implementation of PSR-6. We suggested you add "byjg/cache".
+You can easily cache your results to speed up the results of long queries; 
+You need to add to your project an implementation of PSR-16. We suggested you add "byjg/cache".
 
 ```php
 <?php
 $dbDriver = \ByJG\AnyDataset\Db\Factory::getDbRelationalInstance('mysql://username:password@host/database');
-$dbCached = new \ByJG\AnyDataset\Db\DbCached(
-    $dbDriver,              // The connection string
-    $psrCacheEngine,        // Any PSR-6 (Cache) implementation
-    30                      // TTL (in seconds)
-);
+$cache = new \ByJG\Cache\Psr16\ArrayCacheEngine()
 
-// Use the DbCached instance instead the DbDriver
-$iterator = $dbCached->getIterator('select * from table where field = :param', ['param' => 'value']);
+// Query using the PSR16 cache interface.
+// If not exists, will cache. If exists will get from cache.
+$iterator = $dbDriver>getIterator('select * from table where field = :param', ['param' => 'value'], $cache, 60);
 ```
 
 ### Passing Parameters to PDODriver

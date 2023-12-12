@@ -6,15 +6,19 @@ use ByJG\AnyDataset\Core\Exception\NotAvailableException;
 use ByJG\AnyDataset\Db\Exception\DbDriverNotConnected;
 use ByJG\AnyDataset\Db\Helpers\SqlBind;
 use ByJG\AnyDataset\Db\Helpers\SqlHelper;
+use ByJG\AnyDataset\Lists\ArrayDataset;
 use ByJG\Util\Uri;
 use Exception;
 use PDO;
 use PDOStatement;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
+use Psr\SimpleCache\CacheInterface;
 
 abstract class DbPdoDriver implements DbDriverInterface
 {
+
+    use DbCacheTrait;
 
     /**
      * @var PDO
@@ -221,11 +225,31 @@ abstract class DbPdoDriver implements DbDriverInterface
         return $stmt;
     }
 
-    public function getIterator($sql, $params = null)
+    public function getIterator($sql, $params = null, CacheInterface $cache = null, $ttl = 60)
     {
+        if (!empty($cache)) {
+            // Otherwise try to get from cache
+            $key = $this->getQueryKey($sql, $params);
+
+            // Get the CACHE
+            $cachedItem = $cache->get($key);
+            if (!is_null($cachedItem)) {
+                return (new ArrayDataset($cachedItem))->getIterator();
+            }
+        }
+
+
         $stmt = $this->getDBStatement($sql, $params);
         $stmt->execute();
-        return new DbIterator($stmt);
+        $iterator = new DbIterator($stmt);
+
+        if (!empty($cache)) {
+            $cachedItem = $iterator->toArray();
+            $cache->set($key, $cachedItem, $ttl);
+            return (new ArrayDataset($cachedItem))->getIterator();
+        }
+
+        return $iterator;
     }
 
     public function getScalar($sql, $array = null)
