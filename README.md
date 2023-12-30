@@ -397,5 +397,16 @@ export MSSQL_PASSWORD=Pa55word
 export SQLITE_TEST_HOST=/tmp/test.db      # defaults to /tmp/test.db
 ```
 
+## Dependencies
+
+```mermaid
+flowchart TD
+    byjg/anydataset-db --> byjg/anydataset-array
+    byjg/anydataset-db --> ext-pdo
+    byjg/anydataset-db --> byjg/uri
+    byjg/anydataset-db --> psr/cache
+    byjg/anydataset-db --> psr/log
+```
+
 ----
 [Open source ByJG](http://opensource.byjg.com)
