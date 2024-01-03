@@ -87,6 +87,7 @@ abstract class DbPdoDriver implements DbDriverInterface
 
     public function disconnect()
     {
+        $this->stmtCache = [];
         $this->instance = null;
     }
 
@@ -184,8 +185,7 @@ abstract class DbPdoDriver implements DbDriverInterface
     
     public function __destruct()
     {
-        $this->stmtCache = null;
-        $this->instance = null;
+        $this->disconnect();
     }
 
     /**
