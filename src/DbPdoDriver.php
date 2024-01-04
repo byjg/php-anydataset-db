@@ -50,7 +50,7 @@ abstract class DbPdoDriver implements DbDriverInterface
     /**
      * @var LoggerInterface
      */
-    private LoggerInterface $logger;
+    protected LoggerInterface $logger;
 
     /**
      * DbPdoDriver constructor.

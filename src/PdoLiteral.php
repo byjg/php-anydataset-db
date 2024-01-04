@@ -30,11 +30,7 @@ class PdoLiteral extends DbPdoDriver
             $credential = "$username:$password@";
         }
 
-        $this->connectionUri = new Uri( "{$parts[0]}://{$credential}pdo?connection=" . urlencode($pdoConnStr));
-        $this->preOptions = $preOptions;
-        $this->postOptions = $postOptions;
-        $this->validateConnUri();
-        $this->reconnect();
+        parent::__construct(new Uri("{$parts[0]}://{$credential}pdo?connection=" . urlencode($pdoConnStr)), $preOptions, $postOptions);
     }
 
     public function createPdoConnStr(Uri $connUri)
