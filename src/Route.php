@@ -7,6 +7,7 @@ use ByJG\AnyDataset\Core\GenericIterator;
 use ByJG\AnyDataset\Db\Exception\RouteNotFoundException;
 use ByJG\AnyDataset\Db\Exception\RouteNotMatchedException;
 use PDO;
+use Psr\Log\LoggerInterface;
 
 class Route implements DbDriverInterface
 {
@@ -384,6 +385,16 @@ class Route implements DbDriverInterface
     }
 
     public function isConnected($softCheck = false, $throwError = false)
+    {
+        throw new NotImplementedException('Feature not available');
+    }
+
+    public function enableLogger(LoggerInterface $logger)
+    {
+        throw new NotImplementedException('Feature not available');
+    }
+
+    public function log($message, $context = [])
     {
         throw new NotImplementedException('Feature not available');
     }
