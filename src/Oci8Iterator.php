@@ -5,6 +5,7 @@ namespace ByJG\AnyDataset\Db;
 use ByJG\AnyDataset\Core\Exception\IteratorException;
 use ByJG\AnyDataset\Core\GenericIterator;
 use ByJG\AnyDataset\Core\Row;
+use ByJG\Serializer\Exception\InvalidArgumentException;
 
 class Oci8Iterator extends GenericIterator
 {
@@ -42,7 +43,7 @@ class Oci8Iterator extends GenericIterator
     /**
      * @access public
      * @return bool
-     * @throws \ByJG\Serializer\Exception\InvalidArgumentException
+     * @throws InvalidArgumentException
      */
     public function hasNext()
     {
@@ -62,7 +63,7 @@ class Oci8Iterator extends GenericIterator
             $this->currentRow++;
 
             // Enfileira o registo
-            array_push($this->rowBuffer, $singleRow);
+            $this->rowBuffer[] = $singleRow;
             // Traz novos até encher o Buffer
             if (count($this->rowBuffer) < DbIterator::RECORD_BUFFER) {
                 $this->hasNext();
@@ -86,7 +87,7 @@ class Oci8Iterator extends GenericIterator
     /**
      * @return mixed
      * @throws IteratorException
-     * @throws \ByJG\Serializer\Exception\InvalidArgumentException
+     * @throws InvalidArgumentException
      */
     public function moveNext()
     {

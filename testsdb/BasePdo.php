@@ -3,10 +3,11 @@
 namespace TestsDb\AnyDataset;
 
 use ByJG\AnyDataset\Core\Exception\NotImplementedException;
-use ByJG\AnyDataset\Db\DbCached;
 use ByJG\AnyDataset\Db\DbDriverInterface;
 use ByJG\AnyDataset\Db\DbPdoDriver;
+use ByJG\AnyDataset\Db\Exception\DbDriverNotConnected;
 use ByJG\AnyDataset\Db\Factory;
+use ByJG\Cache\Psr16\ArrayCacheEngine;
 use PHPUnit\Framework\TestCase;
 
 abstract class BasePdo extends TestCase
@@ -59,6 +60,7 @@ abstract class BasePdo extends TestCase
 
     public function tearDown(): void
     {
+        $this->dbDriver->reconnect();
         $this->deleteDatabase();
     }
 
@@ -155,7 +157,6 @@ abstract class BasePdo extends TestCase
     {
         if (!$this->dbDriver->isSupportMultRowset()) {
             $this->markTestSkipped('Skipped: This DbDriver does not support multiple row set');
-            return;
         }
 
         $sql = "INSERT INTO Dogs (Breed, Name, Age, Weight) VALUES ('Cat', 'Doris', 7, 4.2); " .
@@ -298,10 +299,18 @@ abstract class BasePdo extends TestCase
 
     public function testCachedResults()
     {
-        $dbCached = new DbCached($this->dbDriver, \ByJG\Cache\Factory::createArrayPool(), 600);
+        // Check with no cache at all
+        $iterator = $this->dbDriver->getIterator('select * from Dogs where id = :id', ['id' => 1]);
+        $this->assertEquals(
+            [
+                [ 'id'=> 1, 'breed' => "Mutt", 'name' => 'Spyke', "age" => 8, "weight" => 8.5],
+            ],
+            $iterator->toArray()
+        );
 
+        $cacheEngine = new ArrayCacheEngine();
         // Get the first from Db and then cache it;
-        $iterator = $dbCached->getIterator('select * from Dogs where id = :id', ['id' => 1]);
+        $iterator = $this->dbDriver->getIterator('select * from Dogs where id = :id', ['id' => 1], $cacheEngine, 60);
         $this->assertEquals(
             [
                 [ 'id'=> 1, 'breed' => "Mutt", 'name' => 'Spyke', "age" => 8, "weight" => 8.5, "__id" => 0, "__key" => 0],
@@ -310,10 +319,10 @@ abstract class BasePdo extends TestCase
         );
 
         // Remove it from DB (Still in cache) - Execute don't use cache
-        $dbCached->execute("delete from Dogs where id = :id", ['id' => 1]);
+        $this->dbDriver->execute("delete from Dogs where id = :id", ['id' => 1]);
 
         // Try get from cache
-        $iterator = $dbCached->getIterator('select * from Dogs where id = :id', ['id' => 1]);
+        $iterator = $this->dbDriver->getIterator('select * from Dogs where id = :id', ['id' => 1], $cacheEngine, 60);
         $this->assertEquals(
             [
                 [ 'id'=> 1, 'breed' => "Mutt", 'name' => 'Spyke', "age" => 8, "weight" => 8.5, "__id" => 0, "__key" => 0],
@@ -324,15 +333,15 @@ abstract class BasePdo extends TestCase
 
     public function testCachedResultsNotFound()
     {
-        $dbCached = new DbCached($this->dbDriver, \ByJG\Cache\Factory::createArrayPool(), 600);
+        $cacheEngine = new ArrayCacheEngine();
 
         // Get the first from Db and then cache it;
-        $iterator = $dbCached->getIterator('select * from Dogs where id = :id', ['id' => 4]);
+        $iterator = $this->dbDriver->getIterator('select * from Dogs where id = :id', ['id' => 4], $cacheEngine, 60);
         $this->assertEquals(
             [],
             $iterator->toArray()
         );
-        $iterator = $dbCached->getIterator('select * from Dogs where id = :id', ['id' => 1]);
+        $iterator = $this->dbDriver->getIterator('select * from Dogs where id = :id', ['id' => 1], $cacheEngine, 60);
         $this->assertEquals(
             [
                 [ 'id'=> 1, 'breed' => "Mutt", 'name' => 'Spyke', "age" => 8, "weight" => 8.5, "__id" => 0, "__key" => 0],
@@ -340,18 +349,18 @@ abstract class BasePdo extends TestCase
             $iterator->toArray()
         );
 
-        // Remove it from DB (Still in cache)
+        // Update Record
         $this->dbDriver->execute("INSERT INTO Dogs (Breed, Name, Age) VALUES (:breed, :name, :age);", ["breed" => "Cat", "name" => "Doris", "age" => 6]);
 
-        // Try get from cache
-        $iterator = $dbCached->getIterator('select * from Dogs where id = :id', ['id' => 1]);
+        // Try get from cache (should have the same result from before)
+        $iterator = $this->dbDriver->getIterator('select * from Dogs where id = :id', ['id' => 1], $cacheEngine, 60);
         $this->assertEquals(
             [
                 [ 'id'=> 1, 'breed' => "Mutt", 'name' => 'Spyke', "age" => 8, "weight" => 8.5, "__id" => 0, "__key" => 0],
             ],
             $iterator->toArray()
         );
-        $iterator = $dbCached->getIterator('select * from Dogs where id = :id', ['id' => 4]);
+        $iterator = $this->dbDriver->getIterator('select * from Dogs where id = :id', ['id' => 4], $cacheEngine, 60);
         $this->assertEquals(
             [],
             $iterator->toArray()
@@ -412,6 +421,25 @@ abstract class BasePdo extends TestCase
                 'precision' => 2,
             ],
         ], $metadata);
+    }
+
+    public function testDisconnect()
+    {
+        $iterator = $this->dbDriver->getIterator('select Id, Breed, Name, Age from Dogs where id = 1');
+        $row = $iterator->toArray();
+        $this->assertEquals(1, $row[0]["id"]);
+
+        $this->dbDriver->disconnect();
+
+        $this->expectException(DbDriverNotConnected::class);
+        $iterator = $this->dbDriver->getIterator('select Id, Breed, Name, Age from Dogs where id = 1');
+    }
+
+    public function testReconnect()
+    {
+        $this->assertFalse($this->dbDriver->reconnect());
+        $this->assertTrue($this->dbDriver->reconnect(true));
+        $iterator = $this->dbDriver->getIterator('select Id, Breed, Name, Age from Dogs where id = 1');
     }
 }
 

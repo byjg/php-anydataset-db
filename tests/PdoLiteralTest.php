@@ -52,4 +52,15 @@ class PdoLiteralTest extends BasePdo
         // Ignoring because is using a connection into the memory.
         $this->markTestSkipped();
     }
+
+    public function testReconnect()
+    {
+        $this->assertFalse($this->dbDriver->reconnect());
+        $this->assertTrue($this->dbDriver->reconnect(true));
+
+        // The connection is on memory, it means, when reconnect will be in an empty DB
+        $this->expectException(\PDOException::class);
+        $this->expectExceptionMessageMatches('/no such table/');
+        $iterator = $this->dbDriver->getIterator('select Id, Breed, Name, Age from Dogs where id = 1');
+    }
 }

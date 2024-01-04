@@ -3,7 +3,6 @@
 namespace ByJG\AnyDataset\Db;
 
 use ByJG\Util\Uri;
-use PDO;
 
 class PdoLiteral extends DbPdoDriver
 {
@@ -26,8 +25,16 @@ class PdoLiteral extends DbPdoDriver
     {
         $parts = explode(":", $pdoConnStr);
 
-        $this->connectionUri = new Uri($parts[0] . "://$username:$password@literal");
+        $credential = "";
+        if (!empty($username)) {
+            $credential = "$username:$password@";
+        }
 
-        $this->createPdoInstance($pdoConnStr, $preOptions, $postOptions);
+        parent::__construct(new Uri("{$parts[0]}://{$credential}pdo?connection=" . urlencode($pdoConnStr)), $preOptions, $postOptions);
+    }
+
+    public function createPdoConnStr(Uri $connUri)
+    {
+        return $this->connectionUri->getQueryPart("connection");
     }
 }

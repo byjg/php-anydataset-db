@@ -5,6 +5,7 @@ namespace ByJG\AnyDataset\Db;
 use ByJG\AnyDataset\Core\Exception\IteratorException;
 use ByJG\AnyDataset\Core\GenericIterator;
 use ByJG\AnyDataset\Core\Row;
+use ByJG\Serializer\Exception\InvalidArgumentException;
 use PDO;
 use PDOStatement;
 
@@ -41,7 +42,7 @@ class DbIterator extends GenericIterator
 
     /**
      * @return bool
-     * @throws \ByJG\Serializer\Exception\InvalidArgumentException
+     * @throws InvalidArgumentException
      */
     public function hasNext()
     {
@@ -57,7 +58,7 @@ class DbIterator extends GenericIterator
         if (!empty($rowArray)) {
             $singleRow = new Row($rowArray);
 
-            array_push($this->rowBuffer, $singleRow);
+            $this->rowBuffer[] = $singleRow;
             if (count($this->rowBuffer) < DbIterator::RECORD_BUFFER) {
                 $this->hasNext();
             }
@@ -74,7 +75,7 @@ class DbIterator extends GenericIterator
     /**
      * @return Row
      * @throws IteratorException
-     * @throws \ByJG\Serializer\Exception\InvalidArgumentException
+     * @throws InvalidArgumentException
      */
     public function moveNext()
     {

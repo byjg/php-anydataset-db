@@ -2,6 +2,7 @@
 
 namespace ByJG\AnyDataset\Db;
 
+use ByJG\AnyDataset\Core\Exception\NotAvailableException;
 use ByJG\Util\Uri;
 use PDO;
 
@@ -26,7 +27,7 @@ class PdoMysql extends DbPdoDriver
      * PdoMysql constructor.
      *
      * @param \ByJG\Util\Uri $connUri
-     * @throws \ByJG\AnyDataset\Core\Exception\NotAvailableException
+     * @throws NotAvailableException
      */
     public function __construct(Uri $connUri)
     {

@@ -2,7 +2,9 @@
 
 namespace ByJG\AnyDataset\Db\Exception;
 
-class RouteNotFoundException extends \Exception
+use Exception;
+
+class RouteNotFoundException extends Exception
 {
 
 }

@@ -23,7 +23,18 @@ class PdoDblib extends DbPdoDriver
     {
         $this->setSupportMultRowset(true);
 
-        parent::__construct($connUri, null, null);
+        $uri = Uri::getInstanceFromString("pdo://")
+            ->withUserInfo($connUri->getUsername(), $connUri->getPassword())
+            ->withHost($connUri->getScheme())
+            ->withQueryKeyValue("server" , $connUri->getHost() . (!empty($connUri->getPort()) ? "," . $connUri->getPort() : ""))
+            ->withQueryKeyValue("Database", ltrim($connUri->getPath(), "/"));
+
+        parent::__construct($uri);
+    }
+
+    protected function createPdoInstance()
+    {
+        parent::createPdoInstance();
 
         // Solve the error:
         // SQLSTATE[HY000]: General error: 1934 General SQL Server error: Check messages from the SQL Server [1934]
