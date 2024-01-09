@@ -1,14 +1,11 @@
 <?php
 
-namespace Tests\AnyDataset\Dataset;
+namespace Test;
 
+use ByJG\AnyDataset\Core\Enum\Relation;
 use ByJG\AnyDataset\Core\IteratorFilter;
 use ByJG\AnyDataset\Db\IteratorFilterSqlFormatter;
-use ByJG\AnyDataset\Core\Enum\Relation;
 use PHPUnit\Framework\TestCase;
-use Tests\AnyDataset\Sample\LiteralSample;
-
-require_once 'LiteralSample.php';
 
 class IteratorFilterTest extends TestCase
 {

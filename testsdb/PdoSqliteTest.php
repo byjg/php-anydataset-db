@@ -1,12 +1,11 @@
 <?php
 
-namespace TestsDb\AnyDataset;
+namespace TestDb;
 
 use ByJG\AnyDataset\Db\DbPdoDriver;
 use ByJG\AnyDataset\Db\Factory;
 use ByJG\Util\Uri;
 
-require_once 'BasePdo.php';
 
 class PdoSqliteTest extends BasePdo
 {

@@ -1,6 +1,6 @@
 <?php
 
-namespace Tests\AnyDataset\Sample;
+namespace Test;
 
 use ByJG\Serializer\BaseModel;
 
@@ -10,14 +10,14 @@ use ByJG\Serializer\BaseModel;
 class LiteralSample extends BaseModel
 {
 
-    protected $value = "";
+    protected string $value = "";
 
     /**
      * LiteralSample constructor.
      *
      * @param string $value
      */
-    public function __construct($value)
+    public function __construct(string $value)
     {
         $this->value = $value;
     }
