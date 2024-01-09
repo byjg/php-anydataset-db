@@ -1,6 +1,6 @@
 <?php
 
-namespace TestsDb\AnyDataset;
+namespace TestDb;
 
 use ByJG\AnyDataset\Db\Factory;
 use ByJG\Util\Uri;

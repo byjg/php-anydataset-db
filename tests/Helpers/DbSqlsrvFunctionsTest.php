@@ -1,12 +1,8 @@
 <?php
 
-namespace Tests\AnyDataset\Store\Helpers;
+namespace Test\Helpers;
 
-use ByJG\AnyDataset\Db\Helpers\DbDblibFunctions;
 use ByJG\AnyDataset\Db\Helpers\DbSqlsrvFunctions;
-use PHPUnit\Framework\TestCase;
-
-require_once __DIR__ . "/DbDblibFunctionsTest.php";
 
 class DbSqlsrvFunctionsTest extends DbDblibFunctionsTest
 {
