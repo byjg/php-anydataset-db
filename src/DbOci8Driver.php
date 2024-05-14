@@ -189,7 +189,7 @@ class DbOci8Driver implements DbDriverInterface
         return $fields;
     }
 
-    public function beginTransaction()
+    public function beginTransaction($isolationLevel = null)
     {
         $this->logger->debug("SQL: Begin Transaction");
         $this->transaction = OCI_NO_AUTO_COMMIT;
@@ -228,6 +228,17 @@ class DbOci8Driver implements DbDriverInterface
 
         oci_rollback($this->conn);
     }
+
+    public function hasActiveTransaction()
+    {
+        return $this->transaction != OCI_COMMIT_ON_SUCCESS;
+    }
+
+    public function requiresTransaction()
+    {
+        return true;
+    }
+
 
     /**
      * @param $sql

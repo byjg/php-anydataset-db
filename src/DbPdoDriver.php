@@ -4,6 +4,8 @@ namespace ByJG\AnyDataset\Db;
 
 use ByJG\AnyDataset\Core\Exception\NotAvailableException;
 use ByJG\AnyDataset\Db\Exception\DbDriverNotConnected;
+use ByJG\AnyDataset\Db\Exception\TransactionNotStartedException;
+use ByJG\AnyDataset\Db\Exception\TransactionStartedException;
 use ByJG\AnyDataset\Db\Helpers\SqlBind;
 use ByJG\AnyDataset\Db\Helpers\SqlHelper;
 use ByJG\AnyDataset\Lists\ArrayDataset;
@@ -35,6 +37,8 @@ abstract class DbPdoDriver implements DbDriverInterface
     protected $useStmtCache = false;
 
     protected $supportMultRowset = false;
+
+    protected $hasActiveTransaction = false;
 
     const DONT_PARSE_PARAM = "dont_parse_param";
     const STATEMENT_CACHE = "stmtcache";
@@ -283,22 +287,51 @@ abstract class DbPdoDriver implements DbDriverInterface
         return $fields;
     }
 
-    public function beginTransaction()
+    public function beginTransaction($isolationLevel = null)
     {
+        if ($this->hasActiveTransaction) {
+            throw new TransactionStartedException("There is already an active transaction");
+        }
+
         $this->logger->debug("SQL: Begin transaction");
+        $isolLevelCommand = $this->getDbHelper()->getIsolationLevelCommand($isolationLevel);
+        if (!empty($isolLevelCommand)) {
+            $this->getInstance()->exec($isolLevelCommand);
+        }
         $this->getInstance()->beginTransaction();
+        $this->hasActiveTransaction = true;
     }
 
     public function commitTransaction()
     {
         $this->logger->debug("SQL: Commit transaction");
+        if (!$this->hasActiveTransaction) {
+            throw new TransactionNotStartedException("There is no active transaction");
+        }
         $this->getInstance()->commit();
+        $this->hasActiveTransaction = false;
     }
 
     public function rollbackTransaction()
     {
         $this->logger->debug("SQL: Rollback transaction");
+        if (!$this->hasActiveTransaction) {
+            throw new TransactionNotStartedException("There is no active transaction");
+        }
         $this->getInstance()->rollBack();
+        $this->hasActiveTransaction = false;
+    }
+
+    public function requiresTransaction()
+    {
+        if (!$this->hasActiveTransaction) {
+            throw new TransactionNotStartedException("A transaction is required.");
+        }
+    }
+
+    public function hasActiveTransaction()
+    {
+        return $this->hasActiveTransaction;
     }
 
     public function execute($sql, $array = null)
