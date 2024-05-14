@@ -516,6 +516,21 @@ abstract class BasePdo extends TestCase
         }
     }
 
+    public function testJoinTransaction()
+    {
+        $this->dbDriver->beginTransaction(IsolationLevelEnum::READ_UNCOMMITTED);
+        $this->assertEquals(1, $this->dbDriver->remainingCommits());
 
+        $this->dbDriver->beginTransaction(IsolationLevelEnum::READ_UNCOMMITTED, true);
+        $this->assertEquals(2, $this->dbDriver->remainingCommits());
+
+        $this->dbDriver->commitTransaction();
+        $this->assertEquals(1, $this->dbDriver->remainingCommits());
+        $this->assertTrue($this->dbDriver->hasActiveTransaction());
+
+        $this->dbDriver->commitTransaction();
+        $this->assertEquals(0, $this->dbDriver->remainingCommits());
+        $this->assertFalse($this->dbDriver->hasActiveTransaction());
+    }
 }
 

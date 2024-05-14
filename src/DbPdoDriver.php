@@ -4,10 +4,10 @@ namespace ByJG\AnyDataset\Db;
 
 use ByJG\AnyDataset\Core\Exception\NotAvailableException;
 use ByJG\AnyDataset\Db\Exception\DbDriverNotConnected;
-use ByJG\AnyDataset\Db\Exception\TransactionNotStartedException;
-use ByJG\AnyDataset\Db\Exception\TransactionStartedException;
 use ByJG\AnyDataset\Db\Helpers\SqlBind;
 use ByJG\AnyDataset\Db\Helpers\SqlHelper;
+use ByJG\AnyDataset\Db\Traits\DbCacheTrait;
+use ByJG\AnyDataset\Db\Traits\TransactionTrait;
 use ByJG\AnyDataset\Lists\ArrayDataset;
 use ByJG\Util\Uri;
 use Exception;
@@ -19,38 +19,22 @@ use Psr\SimpleCache\CacheInterface;
 
 abstract class DbPdoDriver implements DbDriverInterface
 {
-
+    use TransactionTrait;
     use DbCacheTrait;
 
-    /**
-     * @var PDO
-     */
-    protected $instance = null;
+    protected ?PDO $instance = null;
 
-    /**
-     * @var PDOStatement[]
-     */
-    protected $stmtCache = [];
+    protected bool $supportMultRowset = false;
 
-    protected $maxStmtCache = 10;
-
-    protected $useStmtCache = false;
-
-    protected $supportMultRowset = false;
-
-    protected $hasActiveTransaction = false;
 
     const DONT_PARSE_PARAM = "dont_parse_param";
     const STATEMENT_CACHE = "stmtcache";
 
-    /**
-     * @var Uri
-     */
-    protected $connectionUri;
+    protected Uri $connectionUri;
 
-    protected $preOptions;
+    protected ?array $preOptions;
 
-    protected $postOptions;
+    protected ?array $postOptions;
     /**
      * @var LoggerInterface
      */
@@ -91,7 +75,7 @@ abstract class DbPdoDriver implements DbDriverInterface
 
     public function disconnect()
     {
-        $this->stmtCache = [];
+        $this->clearCache();
         $this->instance = null;
     }
 
@@ -128,7 +112,7 @@ abstract class DbPdoDriver implements DbDriverInterface
         }
 
         if ($this->connectionUri->getQueryPart(self::STATEMENT_CACHE) == "true") {
-            $this->useStmtCache = true;
+            $this->enableCache();
         }
     }
 
@@ -204,16 +188,9 @@ abstract class DbPdoDriver implements DbDriverInterface
             list($sql, $array) = SqlBind::parseSQL($this->connectionUri, $sql, $array);
         }
 
-        if ($this->useStmtCache) {
-            if ($this->getMaxStmtCache() > 0 && !isset($this->stmtCache[$sql])) {
-                $this->stmtCache[$sql] = $this->getInstance()->prepare($sql);
-                if ($this->getCountStmtCache() > $this->getMaxStmtCache()) { //Kill old cache to get waste memory
-                    array_shift($this->stmtCache);
-                }
-            }
-
+        if ($this->isCachingStmt()) {
             $this->isConnected(true, true);
-            $stmt = $this->stmtCache[$sql];
+            $stmt = $this->getOrSetSqlCacheStmt($sql);
         } else {
             $stmt = $this->getInstance()->prepare($sql);
         }
@@ -287,53 +264,6 @@ abstract class DbPdoDriver implements DbDriverInterface
         return $fields;
     }
 
-    public function beginTransaction(IsolationLevelEnum $isolationLevel = null)
-    {
-        if ($this->hasActiveTransaction) {
-            throw new TransactionStartedException("There is already an active transaction");
-        }
-
-        $this->logger->debug("SQL: Begin transaction");
-        $isolLevelCommand = $this->getDbHelper()->getIsolationLevelCommand($isolationLevel);
-        if (!empty($isolLevelCommand)) {
-            $this->getInstance()->exec($isolLevelCommand);
-        }
-        $this->getInstance()->beginTransaction();
-        $this->hasActiveTransaction = true;
-    }
-
-    public function commitTransaction()
-    {
-        $this->logger->debug("SQL: Commit transaction");
-        if (!$this->hasActiveTransaction) {
-            throw new TransactionNotStartedException("There is no active transaction");
-        }
-        $this->getInstance()->commit();
-        $this->hasActiveTransaction = false;
-    }
-
-    public function rollbackTransaction()
-    {
-        $this->logger->debug("SQL: Rollback transaction");
-        if (!$this->hasActiveTransaction) {
-            throw new TransactionNotStartedException("There is no active transaction");
-        }
-        $this->getInstance()->rollBack();
-        $this->hasActiveTransaction = false;
-    }
-
-    public function requiresTransaction()
-    {
-        if (!$this->hasActiveTransaction) {
-            throw new TransactionNotStartedException("A transaction is required.");
-        }
-    }
-
-    public function hasActiveTransaction(): bool
-    {
-        return $this->hasActiveTransaction;
-    }
-
     public function execute($sql, $array = null)
     {
         $stmt = $this->getDBStatement($sql, $array);
@@ -405,26 +335,6 @@ abstract class DbPdoDriver implements DbDriverInterface
         $this->supportMultRowset = $multipleRowSet;
     }
 
-    /**
-     * @return int
-     */
-    public function getMaxStmtCache()
-    {
-        return $this->maxStmtCache;
-    }
-
-    public function getCountStmtCache()
-    {
-        return count($this->stmtCache);
-    }
-
-    /**
-     * @param int $maxStmtCache
-     */
-    public function setMaxStmtCache($maxStmtCache)
-    {
-        $this->maxStmtCache = $maxStmtCache;
-    }
 
     public function isConnected($softCheck = false, $throwError = false)
     {
@@ -465,5 +375,27 @@ abstract class DbPdoDriver implements DbDriverInterface
     public function log($message, $context = [])
     {
         $this->logger->debug($message, $context);
+    }
+
+    protected function array_map_assoc($callback, $array)
+    {
+        $r = array();
+        foreach ($array as $key=>$value) {
+            $r[$key] = $callback($key, $value);
+        }
+        return $r;
+    }
+
+    protected function getQueryKey($sql, $array)
+    {
+        $key1 = md5($sql);
+        $key2 = "";
+
+        // Check which parameter exists in the SQL
+        if (is_array($array)) {
+            $key2 = md5(":" . implode(',', $this->array_map_assoc(function($k,$v){return "$k:$v";},$array)));
+        }
+
+        return  "qry:" . $key1 . $key2;
     }
 }
