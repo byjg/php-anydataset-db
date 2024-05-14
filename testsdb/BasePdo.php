@@ -6,7 +6,10 @@ use ByJG\AnyDataset\Core\Exception\NotImplementedException;
 use ByJG\AnyDataset\Db\DbDriverInterface;
 use ByJG\AnyDataset\Db\DbPdoDriver;
 use ByJG\AnyDataset\Db\Exception\DbDriverNotConnected;
+use ByJG\AnyDataset\Db\Exception\TransactionNotStartedException;
+use ByJG\AnyDataset\Db\Exception\TransactionStartedException;
 use ByJG\AnyDataset\Db\Factory;
+use ByJG\AnyDataset\Db\IsolationLevelEnum;
 use ByJG\Cache\Psr16\ArrayCacheEngine;
 use PHPUnit\Framework\TestCase;
 
@@ -441,5 +444,78 @@ abstract class BasePdo extends TestCase
         $this->assertTrue($this->dbDriver->reconnect(true));
         $iterator = $this->dbDriver->getIterator('select Id, Breed, Name, Age from Dogs where id = 1');
     }
+
+    public function testCommitTransaction()
+    {
+        $this->dbDriver->beginTransaction(IsolationLevelEnum::SERIALIZABLE);
+        $idInserted = $this->dbDriver->executeAndGetId(
+            "INSERT INTO Dogs (Breed, Name, Age) VALUES ('Cat', 'Doris', 7);"
+        );
+        $this->dbDriver->commitTransaction();
+
+        $this->assertEquals(4, $idInserted);
+
+        $iterator = $this->dbDriver->getIterator('select Id, Breed, Name, Age from Dogs where id = 4');
+        $row = $iterator->toArray();
+
+        $this->assertEquals(4, $row[0]["id"]);
+        $this->assertEquals('Cat', $row[0]["breed"]);
+        $this->assertEquals('Doris', $row[0]["name"]);
+        $this->assertEquals(7, $row[0]["age"]);
+    }
+
+    public function testRollbackTransaction()
+    {
+        $this->dbDriver->beginTransaction(IsolationLevelEnum::REPEATABLE_READ);
+        $idInserted = $this->dbDriver->executeAndGetId(
+            "INSERT INTO Dogs (Breed, Name, Age) VALUES ('Cat', 'Doris', 7);"
+        );
+        $this->dbDriver->rollbackTransaction();
+
+        $this->assertEquals(4, $idInserted);
+
+        $iterator = $this->dbDriver->getIterator('select Id, Breed, Name, Age from Dogs where id = 4');
+        $row = $iterator->toArray();
+
+        $this->assertEmpty($row);
+    }
+
+    public function testCommitWithoutTransaction()
+    {
+        $this->expectException(TransactionNotStartedException::class);
+        $this->dbDriver->commitTransaction();
+    }
+
+    public function testRollbackWithoutTransaction()
+    {
+        $this->expectException(TransactionNotStartedException::class);
+        $this->dbDriver->rollbackTransaction();
+    }
+
+    public function testRequiresTransaction()
+    {
+        $this->dbDriver->beginTransaction(IsolationLevelEnum::READ_COMMITTED);
+        $this->dbDriver->requiresTransaction();
+        $this->dbDriver->commitTransaction();
+    }
+
+    public function testRequiresTransactionWithoutTransaction()
+    {
+        $this->expectException(TransactionNotStartedException::class);
+        $this->dbDriver->requiresTransaction();
+    }
+
+    public function testBeginTransactionTwice()
+    {
+        $this->dbDriver->beginTransaction(IsolationLevelEnum::READ_UNCOMMITTED);
+        $this->expectException(TransactionStartedException::class);
+        try {
+            $this->dbDriver->beginTransaction();
+        } finally {
+            $this->dbDriver->rollbackTransaction();
+        }
+    }
+
+
 }
 

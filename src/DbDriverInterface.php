@@ -32,11 +32,15 @@ interface DbDriverInterface
      */
     public function getDbHelper();
 
-    public function beginTransaction();
+    public function beginTransaction(IsolationLevelEnum $isolationLevel = null);
 
     public function commitTransaction();
 
     public function rollbackTransaction();
+
+    public function hasActiveTransaction(): bool;
+
+    public function requiresTransaction();
 
     /**
      * @return PDO
