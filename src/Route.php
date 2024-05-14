@@ -402,7 +402,7 @@ class Route implements DbDriverInterface
 
     public function hasActiveTransaction()
     {
-        throw new ('Feature not available');
+        throw new NotImplementedException('Feature not available');
     }
 
     public function requiresTransaction()
