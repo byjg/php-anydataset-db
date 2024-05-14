@@ -28,7 +28,7 @@ class IteratorFilterSqlFormatter extends IteratorFilterFormatter
         );
     }
 
-    public function getRelation(string $name, string $relation, array|string $value, array &$param): string
+    public function getRelation(string $name, string $relation, mixed $value, array &$param): string
     {
         $paramName = $name;
         $counter = 0;
