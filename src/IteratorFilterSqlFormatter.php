@@ -8,7 +8,7 @@ use ByJG\AnyDataset\Db\Helpers\SqlHelper;
 
 class IteratorFilterSqlFormatter extends IteratorFilterFormatter
 {
-    public function format($filters, $tableName = null, &$params = [], $returnFields = "*")
+    public function format(array $filters, string $tableName = null, array &$params = [], string $returnFields = "*"): string
     {
         $params = array();
 
@@ -28,7 +28,7 @@ class IteratorFilterSqlFormatter extends IteratorFilterFormatter
         );
     }
 
-    public function getRelation($name, $relation, $value, &$param)
+    public function getRelation(string $name, string $relation, array|string $value, array &$param): string
     {
         $paramName = $name;
         $counter = 0;
