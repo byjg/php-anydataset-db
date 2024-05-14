@@ -26,7 +26,7 @@ class IteratorFilterTest extends TestCase
 
     public function testGetSql()
     {
-        $params = null;
+        $params = [];
         $returnFields = '*';
         $sql = $this->object->format(
             new IteratorFilterSqlFormatter(),
@@ -72,7 +72,7 @@ class IteratorFilterTest extends TestCase
     {
         $literalObject = new LiteralSample(10);
 
-        $params = null;
+        $params = [];
         $returnFields = '*';
         $sql = $this->object->format(
             new IteratorFilterSqlFormatter(),
@@ -109,7 +109,7 @@ class IteratorFilterTest extends TestCase
         $this->object->addRelation('field', Relation::EQUAL, 'test');
         $this->object->addRelationOr('field2', Relation::EQUAL, 'test2');
 
-        $params = null;
+        $params = [];
         $returnFields = '*';
         $sql = $this->object->format(
             new IteratorFilterSqlFormatter(),
@@ -129,7 +129,7 @@ class IteratorFilterTest extends TestCase
         $this->object->endGroup();
         $this->object->addRelationOr('field3', Relation::EQUAL, 'test3');
 
-        $params = null;
+        $params = [];
         $returnFields = '*';
         $sql = $this->object->format(
             new IteratorFilterSqlFormatter(),
