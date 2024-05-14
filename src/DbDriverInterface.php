@@ -3,11 +3,13 @@
 namespace ByJG\AnyDataset\Db;
 
 use ByJG\AnyDataset\Core\GenericIterator;
+use ByJG\AnyDataset\Db\Interfaces\DbCacheInterface;
+use ByJG\AnyDataset\Db\Interfaces\DbTransactionInterface;
 use ByJG\Util\Uri;
 use PDO;
 use Psr\Log\LoggerInterface;
 
-interface DbDriverInterface
+interface DbDriverInterface extends DbTransactionInterface, DbCacheInterface
 {
 
     public static function schema();
@@ -32,16 +34,6 @@ interface DbDriverInterface
      */
     public function getDbHelper();
 
-    public function beginTransaction($isolationLevel = null);
-
-    public function commitTransaction();
-
-    public function rollbackTransaction();
-
-    public function hasActiveTransaction();
-
-    public function requiresTransaction();
-
     /**
      * @return PDO
      */
@@ -60,19 +52,10 @@ interface DbDriverInterface
 
     public function setSupportMultRowset($multipleRowSet);
 
-    public function getMaxStmtCache();
-
-    public function getCountStmtCache();
-
     public function isConnected($softCheck = false, $throwError = false);
     public function reconnect($force = false);
 
     public function disconnect();
-
-    /**
-     * @param int $maxStmtCache
-     */
-    public function setMaxStmtCache($maxStmtCache);
 
     public function enableLogger(LoggerInterface $logger);
 
