@@ -59,6 +59,7 @@ trait TransactionTrait
             throw new TransactionNotStartedException("There is no active transaction");
         }
         $this->getInstance()->rollBack();
+        $this->transactionCount = 0;
         $this->isolationLevel = null;
     }
 

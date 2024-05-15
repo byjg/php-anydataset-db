@@ -447,11 +447,18 @@ abstract class BasePdo extends TestCase
 
     public function testCommitTransaction()
     {
+        $this->assertFalse($this->dbDriver->hasActiveTransaction());
+        $this->assertNull($this->dbDriver->activeIsolationLevel());
         $this->dbDriver->beginTransaction(IsolationLevelEnum::SERIALIZABLE);
+        $this->assertTrue($this->dbDriver->hasActiveTransaction());
+        $this->assertEquals(IsolationLevelEnum::SERIALIZABLE, $this->dbDriver->activeIsolationLevel());
+
         $idInserted = $this->dbDriver->executeAndGetId(
             "INSERT INTO Dogs (Breed, Name, Age) VALUES ('Cat', 'Doris', 7);"
         );
         $this->dbDriver->commitTransaction();
+        $this->assertFalse($this->dbDriver->hasActiveTransaction());
+        $this->assertNull($this->dbDriver->activeIsolationLevel());
 
         $this->assertEquals(4, $idInserted);
 
@@ -466,11 +473,18 @@ abstract class BasePdo extends TestCase
 
     public function testRollbackTransaction()
     {
+        $this->assertFalse($this->dbDriver->hasActiveTransaction());
+        $this->assertNull($this->dbDriver->activeIsolationLevel());
         $this->dbDriver->beginTransaction(IsolationLevelEnum::REPEATABLE_READ);
+        $this->assertTrue($this->dbDriver->hasActiveTransaction());
+        $this->assertEquals(IsolationLevelEnum::REPEATABLE_READ, $this->dbDriver->activeIsolationLevel());
+
         $idInserted = $this->dbDriver->executeAndGetId(
             "INSERT INTO Dogs (Breed, Name, Age) VALUES ('Cat', 'Doris', 7);"
         );
         $this->dbDriver->rollbackTransaction();
+        $this->assertFalse($this->dbDriver->hasActiveTransaction());
+        $this->assertNull($this->dbDriver->activeIsolationLevel());
 
         $this->assertEquals(4, $idInserted);
 
@@ -494,9 +508,24 @@ abstract class BasePdo extends TestCase
 
     public function testRequiresTransaction()
     {
+        $this->assertFalse($this->dbDriver->hasActiveTransaction());
+        $this->assertNull($this->dbDriver->activeIsolationLevel());
+        $this->assertEquals(0, $this->dbDriver->remainingCommits());
+
         $this->dbDriver->beginTransaction(IsolationLevelEnum::READ_COMMITTED);
+        $this->assertTrue($this->dbDriver->hasActiveTransaction());
+        $this->assertEquals(IsolationLevelEnum::READ_COMMITTED, $this->dbDriver->activeIsolationLevel());
+        $this->assertEquals(1, $this->dbDriver->remainingCommits());
+
         $this->dbDriver->requiresTransaction();
+        $this->assertTrue($this->dbDriver->hasActiveTransaction());
+        $this->assertEquals(IsolationLevelEnum::READ_COMMITTED, $this->dbDriver->activeIsolationLevel());
+        $this->assertEquals(1, $this->dbDriver->remainingCommits());
+
         $this->dbDriver->commitTransaction();
+        $this->assertFalse($this->dbDriver->hasActiveTransaction());
+        $this->assertNull($this->dbDriver->activeIsolationLevel());
+        $this->assertEquals(0, $this->dbDriver->remainingCommits());
     }
 
     public function testRequiresTransactionWithoutTransaction()
@@ -513,6 +542,9 @@ abstract class BasePdo extends TestCase
             $this->dbDriver->beginTransaction();
         } finally {
             $this->dbDriver->rollbackTransaction();
+            $this->assertFalse($this->dbDriver->hasActiveTransaction());
+            $this->assertNull($this->dbDriver->activeIsolationLevel());
+            $this->assertEquals(0, $this->dbDriver->remainingCommits());
         }
     }
 
@@ -520,17 +552,21 @@ abstract class BasePdo extends TestCase
     {
         $this->dbDriver->beginTransaction(IsolationLevelEnum::READ_UNCOMMITTED);
         $this->assertEquals(1, $this->dbDriver->remainingCommits());
+        $this->assertEquals(IsolationLevelEnum::READ_UNCOMMITTED, $this->dbDriver->activeIsolationLevel());
 
         $this->dbDriver->beginTransaction(IsolationLevelEnum::READ_UNCOMMITTED, true);
         $this->assertEquals(2, $this->dbDriver->remainingCommits());
+        $this->assertEquals(IsolationLevelEnum::READ_UNCOMMITTED, $this->dbDriver->activeIsolationLevel());
 
         $this->dbDriver->commitTransaction();
         $this->assertEquals(1, $this->dbDriver->remainingCommits());
         $this->assertTrue($this->dbDriver->hasActiveTransaction());
+        $this->assertEquals(IsolationLevelEnum::READ_UNCOMMITTED, $this->dbDriver->activeIsolationLevel());
 
         $this->dbDriver->commitTransaction();
         $this->assertEquals(0, $this->dbDriver->remainingCommits());
         $this->assertFalse($this->dbDriver->hasActiveTransaction());
+        $this->assertNull($this->dbDriver->activeIsolationLevel());
     }
 }
 
