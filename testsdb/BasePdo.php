@@ -28,7 +28,7 @@ abstract class BasePdo extends TestCase
      */
     public function setUp(): void
     {
-        $this->createInstance();
+        $this->dbDriver = $this->createInstance();
         $this->createDatabase();
         $this->populateData();
     }
@@ -567,6 +567,44 @@ abstract class BasePdo extends TestCase
         $this->assertEquals(0, $this->dbDriver->remainingCommits());
         $this->assertFalse($this->dbDriver->hasActiveTransaction());
         $this->assertNull($this->dbDriver->activeIsolationLevel());
+    }
+
+    public function testTwoDifferentTransactions()
+    {
+        $dbDriver1 = $this->createInstance();
+        $dbDriver2 = $this->createInstance();
+
+        // Make sure there is no record in the database
+        $iterator = $dbDriver1->getIterator('select Id, Breed, Name, Age from Dogs where id = 4');
+        $row = $iterator->toArray();
+        $this->assertEmpty($row);
+        $iterator = $dbDriver2->getIterator('select Id, Breed, Name, Age from Dogs where id = 4');
+        $row = $iterator->toArray();
+        $this->assertEmpty($row);
+
+        // Start a transaction on the first connection
+        $dbDriver1->beginTransaction(IsolationLevelEnum::SERIALIZABLE);
+        $idInserted = $dbDriver1->executeAndGetId(
+            "INSERT INTO Dogs (Breed, Name, Age) VALUES ('Cat', 'Doris', 7);"
+        );
+
+        // Check if the record is there
+        $iterator = $dbDriver1->getIterator('select Id, Breed, Name, Age from Dogs where id = 4');
+        $row = $iterator->toArray();
+        $this->assertNotEmpty($row);
+
+        // Check if the record is not there on the second connection (due to isolation level)
+        $iterator = $dbDriver2->getIterator('select Id, Breed, Name, Age from Dogs where id = 4');
+        $row = $iterator->toArray();
+        $this->assertEmpty($row);
+
+        // Commit the transaction
+        $dbDriver1->commitTransaction();
+
+        // Check if the second transaction can read
+        $iterator = $dbDriver2->getIterator('select Id, Breed, Name, Age from Dogs where id = 4');
+        $row = $iterator->toArray();
+        $this->assertNotEmpty($row);
     }
 }
 

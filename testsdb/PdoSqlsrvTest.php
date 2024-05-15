@@ -20,7 +20,7 @@ class PdoSqlsrvTest extends PdoDblibTest
             $password = 'Pa55word';
         }
 
-        $this->dbDriver = Factory::getDbRelationalInstance("sqlsrv://sa:$password@$host/tempdb");
+        return Factory::getDbRelationalInstance("sqlsrv://sa:$password@$host/tempdb");
     }
 
     public function testGetDate() {

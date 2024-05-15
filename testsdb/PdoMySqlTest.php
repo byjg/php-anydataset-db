@@ -25,9 +25,9 @@ class PdoMySqlTest extends BasePdo
             $password = "";
         }
 
-        $this->dbDriver = Factory::getDbRelationalInstance("mysql://root:$password@$host");
-        $this->dbDriver->execute('CREATE DATABASE IF NOT EXISTS test');
-        $this->dbDriver = Factory::getDbRelationalInstance("mysql://root:$password@$host/test");
+        $dbDriver = Factory::getDbRelationalInstance("mysql://root:$password@$host");
+        $dbDriver->execute('CREATE DATABASE IF NOT EXISTS test');
+        return Factory::getDbRelationalInstance("mysql://root:$password@$host/test");
     }
 
     protected function createDatabase()

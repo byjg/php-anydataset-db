@@ -24,16 +24,16 @@ class PdoPdoTest extends PdoPostgresTest
             $password = "";
         }
 
-        $this->dbDriver = Factory::getDbRelationalInstance(
+        $dbDriver = Factory::getDbRelationalInstance(
             Uri::getInstanceFromString("pdo://postgres:$password@pgsql")
                 ->withQueryKeyValue("host", $host));
 
-        $exists = $this->dbDriver->getScalar('select count(1) from pg_catalog.pg_database where datname = \'testpdo\'');
+        $exists = $dbDriver->getScalar('select count(1) from pg_catalog.pg_database where datname = \'testpdo\'');
         if ($exists == 0) {
-            $this->dbDriver->execute('CREATE DATABASE testpdo');
+            $dbDriver->execute('CREATE DATABASE testpdo');
         }
 
-        $this->dbDriver = Factory::getDbRelationalInstance(
+        return Factory::getDbRelationalInstance(
             Uri::getInstanceFromString("pdo://postgres:$password@pgsql")
                 ->withQueryKeyValue("host", $host)
                 ->withQueryKeyValue("dbname", "testpdo"));
