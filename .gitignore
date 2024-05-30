@@ -3,7 +3,10 @@ nbproject/private
 composer.lock
 vendor
 
-.idea
+.idea/*
+!.idea/runConfigurations
 
 node_modules
 .usdocker
+.phpunit.result.cache
+test.php

@@ -7,9 +7,24 @@ use ByJG\AnyDataset\Core\Exception\NotImplementedException;
 use ByJG\AnyDataset\Db\Helpers\SqlBind;
 use ByJG\AnyDataset\Db\Helpers\SqlHelper;
 use ByJG\Util\Uri;
+use Psr\Log\LoggerInterface;
+use Psr\Log\NullLogger;
 
 class DbOci8Driver implements DbDriverInterface
 {
+
+    private LoggerInterface $logger;
+
+    public function getMaxStmtCache() { }
+
+    public function getCountStmtCache() { }
+
+    public function setMaxStmtCache($maxStmtCache) { }
+
+    public static function schema()
+    {
+        return ['oci8'];
+    }
 
     /**
      * Enter description here...
@@ -32,6 +47,7 @@ class DbOci8Driver implements DbDriverInterface
      */
     public function __construct(Uri $connectionString)
     {
+        $this->logger = new NullLogger();
         $this->connectionUri = $connectionString;
 
         $codePage = $this->connectionUri->getQueryPart("codepage");
@@ -89,6 +105,8 @@ class DbOci8Driver implements DbDriverInterface
     protected function getOci8Cursor($sql, $array = null)
     {
         list($query, $array) = SqlBind::parseSQL($this->connectionUri, $sql, $array);
+
+        $this->logger->debug("SQL: $query, Params: " . json_encode($array));
 
         // Prepare the statement
         $stid = oci_parse($this->conn, $query);
@@ -173,6 +191,7 @@ class DbOci8Driver implements DbDriverInterface
 
     public function beginTransaction()
     {
+        $this->logger->debug("SQL: Begin Transaction");
         $this->transaction = OCI_NO_AUTO_COMMIT;
     }
 
@@ -181,6 +200,7 @@ class DbOci8Driver implements DbDriverInterface
      */
     public function commitTransaction()
     {
+        $this->logger->debug("SQL: Commit Transaction");
         if ($this->transaction == OCI_COMMIT_ON_SUCCESS) {
             throw new DatabaseException('No transaction for commit');
         }
@@ -199,6 +219,7 @@ class DbOci8Driver implements DbDriverInterface
      */
     public function rollbackTransaction()
     {
+        $this->logger->debug("SQL: Rollback Transaction");
         if ($this->transaction == OCI_COMMIT_ON_SUCCESS) {
             throw new DatabaseException('No transaction for rollback');
         }
@@ -291,5 +312,30 @@ class DbOci8Driver implements DbDriverInterface
     public function setSupportMultRowset($multipleRowSet)
     {
         throw new NotImplementedException('Method not implemented for OCI Driver');
+    }
+
+    public function reconnect($force = false)
+    {
+        throw new NotImplementedException('Method not implemented for OCI Driver');
+    }
+
+    public function disconnect()
+    {
+        throw new NotImplementedException('Method not implemented for OCI Driver');
+    }
+
+    public function isConnected($softCheck = false, $throwError = false)
+    {
+        throw new NotImplementedException('Method not implemented for OCI Driver');
+    }
+
+    public function enableLogger(LoggerInterface $logger)
+    {
+        $this->logger = $logger;
+    }
+
+    public function log($message, $context = [])
+    {
+        $this->logger->debug($message, $context);
     }
 }

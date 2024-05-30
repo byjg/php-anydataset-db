@@ -23,7 +23,7 @@ class DbSqliteFunctions extends DbBaseFunctions
      */
     public function concat($str1, $str2 = null)
     {
-        return implode(func_get_args(), ' || ');
+        return implode(' || ', func_get_args());
     }
 
     /**
@@ -145,5 +145,27 @@ class DbSqliteFunctions extends DbBaseFunctions
     public function hasForUpdate()
     {
         return false;
+    }
+
+    public function getTableMetadata(DbDriverInterface $dbdataset, $tableName)
+    {
+        $sql = "PRAGMA table_info(" . $this->deliTableLeft . $tableName . $this->deliTableRight . ")";
+        return $this->getTableMetadataFromSql($dbdataset, $sql);
+    }
+
+    protected function parseColumnMetadata($metadata)
+    {
+        $return = [];
+
+        foreach ($metadata as $key => $value) {
+            $return[strtolower($value['name'])] = [
+                'name' => $value['name'],
+                'dbType' => strtolower($value['type']),
+                'required' => $value['notnull'] == 1,
+                'default' => $value['dflt_value'],
+            ] + $this->parseTypeMetadata(strtolower($value['type']));
+        }
+
+        return $return;
     }
 }

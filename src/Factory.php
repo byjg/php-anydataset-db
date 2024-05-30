@@ -3,54 +3,74 @@
 namespace ByJG\AnyDataset\Db;
 
 use ByJG\Util\Uri;
+use InvalidArgumentException;
 
 class Factory
 {
+    private static $config = [];
+
+    /**
+     * @param string $class
+     * @return void
+     */
+    public static function registerDbDriver($class)
+    {
+        if (!in_array(DbDriverInterface::class, class_implements($class))) {
+            throw new InvalidArgumentException(
+                "The class '$class' is not a instance of DbDriverInterface"
+            );
+        }
+
+        if (empty($class::schema())) {
+            throw new InvalidArgumentException(
+                "The class '$class' must implement the static method schema()"
+            );
+        }
+
+        $protocolList = $class::schema();
+        foreach ((array)$protocolList as $item) {
+            self::$config[$item] = $class;
+        }
+    }
+
     /**
      * @param $connectionString
-     * @param $schemesAlternative
-     * @return \ByJG\AnyDataset\Db\DbDriverInterface
+     * @return DbDriverInterface
      */
-    public static function getDbRelationalInstance($connectionString, $schemesAlternative = null)
+    public static function getDbRelationalInstance($connectionString)
     {
-        return self::getDbInstance(new Uri($connectionString), $schemesAlternative);
+        return self::getDbInstance(new Uri($connectionString));
     }
 
 
     /**
      * @param $connectionUri Uri
-     * @param $schemesAlternative
      * @return mixed
      */
-    public static function getDbInstance($connectionUri, $schemesAlternative = null)
+    public static function getDbInstance($connectionUri)
     {
-        $scheme = $connectionUri->getScheme();
 
-        $prefix = '\\ByJG\\AnyDataset\\Db\\';
-        $validSchemes =  array_merge(
-            [
-                "oci8" => $prefix . "DbOci8Driver",
-                "dblib" => $prefix . "PdoDblib",
-                "mysql" => $prefix . "PdoMysql",
-                "pgsql" => $prefix . "PdoPgsql",
-                "oci" => $prefix . "PdoOci",
-                "odbc" => $prefix . "PdoOdbc",
-                "sqlite" => $prefix . "PdoSqlite",
-            ],
-            (array)$schemesAlternative
-        );
-
-        $class = isset($validSchemes[$scheme]) ? $validSchemes[$scheme] : PdoLiteral::class;
-
-        $instance = new $class($connectionUri);
-
-        if (!($instance instanceof DbDriverInterface)) {
-            throw new \InvalidArgumentException(
-                "The class '$class' is not a instance of DbDriverInterface"
-            );
+        if (empty(self::$config)) {
+            self::registerDbDriver(PdoMysql::class);
+            self::registerDbDriver(PdoPgsql::class);
+            self::registerDbDriver(PdoSqlite::class);
+            self::registerDbDriver(PdoDblib::class);
+            self::registerDbDriver(PdoSqlsrv::class);
+            self::registerDbDriver(PdoOdbc::class);
+            self::registerDbDriver(PdoPdo::class);
+            self::registerDbDriver(PdoOci::class);
+            self::registerDbDriver(DbOci8Driver::class);
         }
 
-        return $instance;
+        $scheme = $connectionUri->getScheme();
+
+        if (!isset(self::$config[$scheme])) {
+            throw new InvalidArgumentException("The '$scheme' scheme does not exist.");
+        }
+
+        $class = self::$config[$scheme];
+
+        return new $class($connectionUri);
     }
 
     /**

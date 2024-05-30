@@ -11,12 +11,12 @@ class DbSqliteFunctionsTest extends \PHPUnit\Framework\TestCase
      */
     private $object;
 
-    protected function setUp()
+    protected function setUp(): void
     {
         $this->object = new DbSqliteFunctions();
     }
 
-    protected function tearDown()
+    protected function tearDown(): void
     {
         $this->object = null;
     }
@@ -100,13 +100,11 @@ class DbSqliteFunctionsTest extends \PHPUnit\Framework\TestCase
         $this->assertEquals('`db`.`table`', $tableDb);
     }
 
-    /**
-     * @expectedException \ByJG\AnyDataset\Core\Exception\NotAvailableException
-     */
     public function testForUpdate()
     {
+        $this->expectException(\ByJG\AnyDataset\Core\Exception\NotAvailableException::class);
+        
         $this->assertFalse($this->object->hasForUpdate());
-
         $this->object->forUpdate('select * from table');
     }
 }

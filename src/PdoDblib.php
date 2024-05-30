@@ -2,20 +2,39 @@
 
 namespace ByJG\AnyDataset\Db;
 
+use ByJG\AnyDataset\Core\Exception\NotAvailableException;
+use ByJG\Util\Uri;
+
 class PdoDblib extends DbPdoDriver
 {
+    public static function schema()
+    {
+        return ['dblib'];
+    }
+
 
     /**
      * PdoDblib constructor.
      *
-     * @param $connUri
-     * @throws \ByJG\AnyDataset\Core\Exception\NotAvailableException
+     * @param Uri $connUri
+     * @throws NotAvailableException
      */
     public function __construct($connUri)
     {
         $this->setSupportMultRowset(true);
 
-        parent::__construct($connUri, null, null);
+        $uri = Uri::getInstanceFromString("pdo://")
+            ->withUserInfo($connUri->getUsername(), $connUri->getPassword())
+            ->withHost($connUri->getScheme())
+            ->withQueryKeyValue("server" , $connUri->getHost() . (!empty($connUri->getPort()) ? "," . $connUri->getPort() : ""))
+            ->withQueryKeyValue("Database", ltrim($connUri->getPath(), "/"));
+
+        parent::__construct($uri);
+    }
+
+    protected function createPdoInstance()
+    {
+        parent::createPdoInstance();
 
         // Solve the error:
         // SQLSTATE[HY000]: General error: 1934 General SQL Server error: Check messages from the SQL Server [1934]

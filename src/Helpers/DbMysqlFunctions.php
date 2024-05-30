@@ -17,7 +17,7 @@ class DbMysqlFunctions extends DbBaseFunctions
 
     public function concat($str1, $str2 = null)
     {
-        return "concat(" . implode(func_get_args(), ', ') . ")";
+        return "concat(" . implode(', ', func_get_args()) . ")";
     }
 
     /**
@@ -95,7 +95,7 @@ class DbMysqlFunctions extends DbBaseFunctions
             'Q' => "",
             'q' => "",
             'D' => "%d",
-            'd' => "%d",
+            'd' => "%e",
             'h' => "%I",
             'H' => "%H",
             'i' => "%i",
@@ -135,5 +135,27 @@ class DbMysqlFunctions extends DbBaseFunctions
     public function hasForUpdate()
     {
         return true;
+    }
+
+    public function getTableMetadata(DbDriverInterface $dbdataset, $tableName)
+    {
+        $sql = "EXPLAIN " . $this->deliTableLeft . $tableName . $this->deliTableRight;
+        return $this->getTableMetadataFromSql($dbdataset, $sql);
+    }
+
+    protected function parseColumnMetadata($metadata)
+    {
+        $return = [];
+
+        foreach ($metadata as $key => $value) {
+            $return[strtolower($value['field'])] = [
+                'name' => $value['field'],
+                'dbType' => strtolower($value['type']),
+                'required' => $value['null'] == 'NO',
+                'default' => $value['default'],
+            ] + $this->parseTypeMetadata(strtolower($value['type']));
+        }
+
+        return $return;
     }
 }

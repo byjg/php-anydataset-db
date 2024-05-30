@@ -4,9 +4,13 @@ namespace ByJG\AnyDataset\Db;
 
 use ByJG\AnyDataset\Core\GenericIterator;
 use ByJG\Util\Uri;
+use PDO;
+use Psr\Log\LoggerInterface;
 
 interface DbDriverInterface
 {
+
+    public static function schema();
 
     /**
      * @param string $sql
@@ -35,7 +39,7 @@ interface DbDriverInterface
     public function rollbackTransaction();
 
     /**
-     * @return \PDO
+     * @return PDO
      */
     public function getDbConnection();
 
@@ -51,4 +55,23 @@ interface DbDriverInterface
     public function isSupportMultRowset();
 
     public function setSupportMultRowset($multipleRowSet);
+
+    public function getMaxStmtCache();
+
+    public function getCountStmtCache();
+
+    public function isConnected($softCheck = false, $throwError = false);
+    public function reconnect($force = false);
+
+    public function disconnect();
+
+    /**
+     * @param int $maxStmtCache
+     */
+    public function setMaxStmtCache($maxStmtCache);
+
+    public function enableLogger(LoggerInterface $logger);
+
+    public function log($message, $context = []);
+
 }

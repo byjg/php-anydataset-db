@@ -2,6 +2,7 @@
 
 namespace TestsDb\AnyDataset;
 
+use ByJG\AnyDataset\Db\DbPdoDriver;
 use ByJG\AnyDataset\Db\Factory;
 use ByJG\Util\Uri;
 
@@ -9,11 +10,17 @@ require_once 'BasePdo.php';
 
 class PdoSqliteTest extends BasePdo
 {
+    protected $host;
 
     protected function createInstance()
     {
-        $uri = Uri::getInstanceFromString("sqlite:///tmp/test.db")
-            ->withQueryKeyValue("stmtcache", "true");
+        $this->host = getenv('SQLITE_TEST_HOST');
+        if (empty($host)) {
+            $this->host = "/tmp/test.db";
+        }
+
+        $uri = Uri::getInstanceFromString("sqlite://" . $this->host)
+            ->withQueryKeyValue(DbPdoDriver::STATEMENT_CACHE, "true");
 
         $this->dbDriver = Factory::getDbInstance($uri);
     }
@@ -21,23 +28,22 @@ class PdoSqliteTest extends BasePdo
     protected function createDatabase()
     {
         //create the database
-        $this->dbDriver->execute("CREATE TABLE Dogs (Id INTEGER PRIMARY KEY, Breed VARCHAR(50), Name VARCHAR(50), Age INTEGER)");
+        $this->dbDriver->execute("CREATE TABLE Dogs (Id INTEGER NOT NULL PRIMARY KEY, Breed VARCHAR(50), Name VARCHAR(50), Age INTEGER, Weight NUMERIC(10,2))");
     }
 
     public function deleteDatabase()
     {
-        unlink('/tmp/test.db');
+        unlink($this->host);
     }
 
     public function testGetAllFields()
     {
-        $this->markTestSkipped('SqlLite does not have this method');
+        $this->markTestSkipped('Skipped: SqlLite does not support get all fields');
     }
-
 
     public function testStatementCache()
     {
-        $this->assertEquals("true", $this->dbDriver->getUri()->getQueryPart("stmtcache"));
+        $this->assertEquals("true", $this->dbDriver->getUri()->getQueryPart(DbPdoDriver::STATEMENT_CACHE));
         $this->assertEquals(2, $this->dbDriver->getCountStmtCache()); // because of createDatabase() and populateData()
 
         $i = 3;
@@ -55,5 +61,13 @@ class PdoSqliteTest extends BasePdo
         $it = $this->dbDriver->getIterator("select 30 as name");
         $this->assertEquals(10, $this->dbDriver->getCountStmtCache()); // because of createDatabase() and populateData()
         $this->assertEquals([["name" => 30]], $it->toArray());
+    }
+
+    public function testGetDate() {
+        $data = $this->dbDriver->getScalar("SELECT DATE('2018-07-26') ");
+        $this->assertEquals("2018-07-26", $data);
+
+        $data = $this->dbDriver->getScalar("SELECT DATETIME('2018-07-26 20:02:03') ");
+        $this->assertEquals("2018-07-26 20:02:03", $data);
     }
 }
