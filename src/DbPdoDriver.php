@@ -37,9 +37,9 @@ abstract class DbPdoDriver implements DbDriverInterface
     const STATEMENT_CACHE = "stmtcache";
 
     /**
-     * @var Uri
+     * @var PdoObj
      */
-    protected $connectionUri;
+    protected $pdoObj;
 
     protected $preOptions;
 
@@ -60,10 +60,9 @@ abstract class DbPdoDriver implements DbDriverInterface
     public function __construct(Uri $connUri, $preOptions = null, $postOptions = null)
     {
         $this->logger = new NullLogger();
-        $this->connectionUri = $connUri;
+        $this->pdoObj = new PdoObj($connUri);
         $this->preOptions = $preOptions;
         $this->postOptions = $postOptions;
-        $this->validateConnUri();
         $this->reconnect();
     }
 
@@ -77,7 +76,7 @@ abstract class DbPdoDriver implements DbDriverInterface
         $this->disconnect();
 
         // Connect
-        $this->createPdoInstance();
+        $this->instance = $this->pdoObj->createInstance();
 
         return true;
     }
@@ -88,98 +87,6 @@ abstract class DbPdoDriver implements DbDriverInterface
         $this->instance = null;
     }
 
-    protected function createPdoInstance()
-    {
-        $pdoConnectionString = $this->createPdoConnStr($this->connectionUri);
-
-        // Create Connection
-        $this->instance = new PDO(
-            $pdoConnectionString,
-            $this->connectionUri->getUsername(),
-            $this->connectionUri->getPassword(),
-            (array)$this->preOptions
-        );
-
-        $this->connectionUri = $this->connectionUri->withScheme($this->getInstance()->getAttribute(PDO::ATTR_DRIVER_NAME));
-
-        $this->setPdoDefaultParams($this->postOptions);
-    }
-
-    /**
-     * @throws NotAvailableException
-     */
-    protected function validateConnUri()
-    {
-        if (!defined('PDO::ATTR_DRIVER_NAME')) {
-            throw new NotAvailableException("Extension 'PDO' is not loaded");
-        }
-
-        $scheme = $this->connectionUri->getScheme();
-
-        if ($this->connectionUri->getScheme() != "pdo" && !extension_loaded('pdo_' . strtolower($scheme))) {
-            throw new NotAvailableException("Extension 'pdo_" . strtolower($this->connectionUri->getScheme()) . "' is not loaded");
-        }
-
-        if ($this->connectionUri->getQueryPart(self::STATEMENT_CACHE) == "true") {
-            $this->enableCache();
-        }
-    }
-
-    protected function setPdoDefaultParams($postOptions = [])
-    {
-        // Set Specific Attributes
-        $defaultPostOptions = [
-            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-            PDO::ATTR_CASE => PDO::CASE_LOWER,
-            PDO::ATTR_EMULATE_PREPARES => true,
-            PDO::ATTR_STRINGIFY_FETCHES => false,
-        ];
-        $defaultPostOptions = $defaultPostOptions + (array)$postOptions;
-
-        foreach ((array) $defaultPostOptions as $key => $value) {
-            $this->getInstance()->setAttribute($key, $value);
-        }
-    }
-    
-    protected function createPdoConnStr(Uri $connUri)
-    {
-        if ($connUri->getScheme() == "pdo") {
-            return $this->preparePdoConnectionStr($connUri->getHost(), ".", null, null, $connUri->getQuery());
-        } else {
-            return $this->preparePdoConnectionStr($connUri->getScheme(), $connUri->getHost(), $connUri->getPath(), $connUri->getPort(), $connUri->getQuery());
-        }
-    }
-
-    public function preparePdoConnectionStr($scheme, $host, $database, $port, $query)
-    {
-        if (empty($host)) {
-            return $scheme . ":" . $database;
-        }
-
-        $database = ltrim(empty($database) ? "" : $database, '/');
-        if (!empty($database)) {
-            $database = ";dbname=$database";
-        }
-
-        $pdoConnectionStr = $scheme . ":"
-            . ($host != "." ? "host=" . $host : "")
-            . $database;
-
-        if (!empty($port)) {
-            $pdoConnectionStr .= ";port=" . $port;
-        }
-
-        parse_str($query, $queryArr);
-        unset($queryArr[self::DONT_PARSE_PARAM]);
-        unset($queryArr[self::STATEMENT_CACHE]);
-        if ($pdoConnectionStr[-1] != ":") {
-            $pdoConnectionStr .= ";";
-        }
-        $pdoConnectionStr .= http_build_query($queryArr, "", ";");
-
-        return $pdoConnectionStr;
-    }
-    
     public function __destruct()
     {
         $this->disconnect();
@@ -193,11 +100,11 @@ abstract class DbPdoDriver implements DbDriverInterface
      */
     protected function getDBStatement($sql, $array = null)
     {
-        if (is_null($this->connectionUri->getQueryPart(self::DONT_PARSE_PARAM))) {
-            list($sql, $array) = SqlBind::parseSQL($this->connectionUri, $sql, $array);
+        if (is_null($this->getUri()->getQueryPart(self::DONT_PARSE_PARAM))) {
+            list($sql, $array) = SqlBind::parseSQL($this->pdoObj->getUri(), $sql, $array);
         }
 
-        if ($this->isCachingStmt()) {
+        if ($this->pdoObj->expectToCacheResults()) {
             $this->isConnected(true, true);
             $stmt = $this->getOrSetSqlCacheStmt($sql);
         } else {
@@ -319,14 +226,14 @@ abstract class DbPdoDriver implements DbDriverInterface
     public function getDbHelper()
     {
         if (empty($this->dbHelper)) {
-            $this->dbHelper = Factory::getDbFunctions($this->connectionUri);
+            $this->dbHelper = Factory::getDbFunctions($this->pdoObj->getUri());
         }
         return $this->dbHelper;
     }
 
     public function getUri()
     {
-        return $this->connectionUri;
+        return $this->pdoObj->getUri();
     }
 
     /**

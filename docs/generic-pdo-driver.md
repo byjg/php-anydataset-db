@@ -9,6 +9,10 @@ That are the steps to get it working:
 2. Adapt the connection string URI to the generic PDO format.
 3. Use the `Factory::getDbRelationalInstance` to get the database instance.
 
+**IMPORTANT**:
+
+Avoid to use Generic PDO Driver if there is a specific `Anydataset` driver for your database.
+The specific driver will have more features and better performance. 
 
 ## Adapt the PDO connection string to URI format
 
@@ -42,3 +46,12 @@ To:
 ```text
 pdo://<user>:<password>@<pdo-driver>?<pdo-arguments>
 ```
+
+## Using Generic PDO to connect with Unix Socket
+
+If you want to connect to a MySQL database using Unix Socket you can use the following URI:
+
+```php
+$uri = new Uri("pdo://root:password@mysql?unix_socket=/var/run/mysqld/mysqld.sock&dname=mydatabase");
+```
+

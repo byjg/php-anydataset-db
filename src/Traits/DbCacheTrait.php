@@ -8,8 +8,6 @@ trait DbCacheTrait
 
     protected $maxStmtCache = 10;
 
-    protected $useCache = false;
-
     /**
      * @return int
      */
@@ -31,19 +29,9 @@ trait DbCacheTrait
         $this->maxStmtCache = $maxStmtCache;
     }
 
-    protected function enableCache()
-    {
-        $this->useCache = true;
-    }
-
     protected function clearCache()
     {
         $this->stmtCache = [];
-    }
-
-    protected function isCachingStmt()
-    {
-        return $this->useCache;
     }
 
     protected function getOrSetSqlCacheStmt($sql)
