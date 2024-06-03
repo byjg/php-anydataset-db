@@ -212,7 +212,7 @@ abstract class BasePdo extends TestCase
         $escapeQuote = $this->escapeQuote;
 
         $this->dbDriver->execute(
-            "INSERT INTO Dogs (Breed, Name, Age) VALUES ('Dog', 'Puppy${escapeQuote}s Master', 6);"
+            "INSERT INTO Dogs (Breed, Name, Age) VALUES ('Dog', 'Puppy{$escapeQuote}s Master', 6);"
         );
 
         $iterator = $this->dbDriver->getIterator('select Id, Breed, Name, Age from Dogs where id = 4');
@@ -249,7 +249,7 @@ abstract class BasePdo extends TestCase
         $escapeQuote = $this->escapeQuote;
 
         $this->dbDriver->execute(
-            "INSERT INTO Dogs (Breed, Name, Age) VALUES (:breed, 'Puppy${escapeQuote}s Master', :age);",
+            "INSERT INTO Dogs (Breed, Name, Age) VALUES (:breed, 'Puppy{$escapeQuote}s Master', :age);",
             [
                 "breed" => 'Dog',
                 "age" => 6
