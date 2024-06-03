@@ -2,8 +2,9 @@
 
 namespace ByJG\AnyDataset\Db\Helpers;
 
-use ByJG\AnyDataset\Db\DbDriverInterface;
 use ByJG\AnyDataset\Core\Exception\NotAvailableException;
+use ByJG\AnyDataset\Db\DbDriverInterface;
+use ByJG\AnyDataset\Db\IsolationLevelEnum;
 
 class DbSqliteFunctions extends DbBaseFunctions
 {
@@ -146,4 +147,40 @@ class DbSqliteFunctions extends DbBaseFunctions
     {
         return false;
     }
+
+    public function getTableMetadata(DbDriverInterface $dbdataset, $tableName)
+    {
+        $sql = "PRAGMA table_info(" . $this->deliTableLeft . $tableName . $this->deliTableRight . ")";
+        return $this->getTableMetadataFromSql($dbdataset, $sql);
+    }
+
+    protected function parseColumnMetadata($metadata)
+    {
+        $return = [];
+
+        foreach ($metadata as $key => $value) {
+            $return[strtolower($value['name'])] = [
+                'name' => $value['name'],
+                'dbType' => strtolower($value['type']),
+                'required' => $value['notnull'] == 1,
+                'default' => $value['dflt_value'],
+            ] + $this->parseTypeMetadata(strtolower($value['type']));
+        }
+
+        return $return;
+    }
+
+    public function getIsolationLevelCommand($isolationLevel)
+    {
+        switch ($isolationLevel) {
+            case IsolationLevelEnum::READ_UNCOMMITTED:
+                return "PRAGMA read_uncommitted = true;";
+            case IsolationLevelEnum::READ_COMMITTED:
+            case IsolationLevelEnum::REPEATABLE_READ:
+            case IsolationLevelEnum::SERIALIZABLE:
+            default:
+                return "";
+        }
+    }
+    
 }

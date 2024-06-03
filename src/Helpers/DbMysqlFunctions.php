@@ -3,6 +3,7 @@
 namespace ByJG\AnyDataset\Db\Helpers;
 
 use ByJG\AnyDataset\Db\DbDriverInterface;
+use ByJG\AnyDataset\Db\IsolationLevelEnum;
 
 class DbMysqlFunctions extends DbBaseFunctions
 {
@@ -135,5 +136,43 @@ class DbMysqlFunctions extends DbBaseFunctions
     public function hasForUpdate()
     {
         return true;
+    }
+
+    public function getTableMetadata(DbDriverInterface $dbdataset, $tableName)
+    {
+        $sql = "EXPLAIN " . $this->deliTableLeft . $tableName . $this->deliTableRight;
+        return $this->getTableMetadataFromSql($dbdataset, $sql);
+    }
+
+    protected function parseColumnMetadata($metadata)
+    {
+        $return = [];
+
+        foreach ($metadata as $key => $value) {
+            $return[strtolower($value['field'])] = [
+                'name' => $value['field'],
+                'dbType' => strtolower($value['type']),
+                'required' => $value['null'] == 'NO',
+                'default' => $value['default'],
+            ] + $this->parseTypeMetadata(strtolower($value['type']));
+        }
+
+        return $return;
+    }
+
+    public function getIsolationLevelCommand($isolationLevel)
+    {
+        switch ($isolationLevel) {
+            case IsolationLevelEnum::READ_UNCOMMITTED:
+                return "SET SESSION TRANSACTION ISOLATION LEVEL READ UNCOMMITTED";
+            case IsolationLevelEnum::READ_COMMITTED:
+                return "SET SESSION TRANSACTION ISOLATION LEVEL READ COMMITTED";
+            case IsolationLevelEnum::REPEATABLE_READ:
+                return "SET SESSION TRANSACTION ISOLATION LEVEL REPEATABLE READ";
+            case IsolationLevelEnum::SERIALIZABLE:
+                return "SET SESSION TRANSACTION ISOLATION LEVEL SERIALIZABLE";
+            default:
+                return "";
+        }
     }
 }

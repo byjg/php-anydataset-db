@@ -2,9 +2,10 @@
 
 namespace ByJG\AnyDataset\Db\Helpers;
 
-use ByJG\AnyDataset\Db\DbFunctionsInterface;
 use ByJG\AnyDataset\Db\DbDriverInterface;
+use ByJG\AnyDataset\Db\DbFunctionsInterface;
 use DateTime;
+use Exception;
 
 abstract class DbBaseFunctions implements DbFunctionsInterface
 {
@@ -186,4 +187,63 @@ abstract class DbBaseFunctions implements DbFunctionsInterface
     }
 
     abstract public function hasForUpdate();
+
+    public function getTableMetadata(DbDriverInterface $dbdataset, $tableName)
+    {
+        throw new Exception("Not implemented");
+    }
+
+    protected function getTableMetadataFromSql(DbDriverInterface $dbdataset, $sql)
+    {
+        $metadata = $dbdataset->getIterator($sql)->toArray();
+        return $this->parseColumnMetadata($metadata);
+    }
+
+    protected function parseColumnMetadata($metadata)
+    {
+        throw new Exception("Not implemented");
+    }
+
+    protected function parseTypeMetadata($type)
+    {
+        $matches = [];
+        if (!preg_match('/(?<type>[a-z\s]+)(\((?<len>\d+)(,(?<precision>\d+))?\))?/i', $type, $matches)) {
+            return [ 'phpType' => 'string', 'length' => null, 'precision' => null ];
+        }
+
+        if (isset($matches['len'])) {
+            $matches['len'] = intval($matches['len']);
+        } else {
+            $matches['len'] = null;
+        }
+
+        if (isset($matches['precision'])) {
+            $matches['precision'] = intval($matches['precision']);
+        } else {
+            $matches['precision'] = null;
+        }
+
+        if (strpos($matches['type'], 'int') !== false) {
+            return [ 'phpType' => 'integer', 'length' => null, 'precision' => null ];
+        }
+
+        if (strpos($matches['type'], 'char') !== false || strpos($matches['type'], 'text') !== false) {
+            return [ 'phpType' => 'string', 'length' => $matches['len'], 'precision' => null ];
+        }
+
+        if (strpos($matches['type'], 'real') !== false || strpos($matches['type'], 'double') !== false || strpos($matches['type'], 'float') !== false || strpos($matches['type'], 'num') !== false || strpos($matches['type'], 'dec') !== false) {
+            return [ 'phpType' => 'float', 'length' => $matches['len'], 'precision' => $matches['precision'] ];
+        }
+
+        if (strpos($matches['type'], 'bool') !== false) {
+            return [ 'phpType' => 'bool', 'length' => null, 'precision' => null ];
+        }
+
+        return [ 'phpType' => 'string', 'length' => null, 'precision' => null ];
+    }
+
+    public function getIsolationLevelCommand($isolationLevel)
+    {
+        return null;
+    }
 }

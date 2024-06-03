@@ -4,7 +4,7 @@ namespace ByJG\AnyDataset\Db\Exception;
 
 use Exception;
 
-class RouteNotMatchedException extends Exception
+class DbDriverNotConnected extends Exception
 {
 
 }

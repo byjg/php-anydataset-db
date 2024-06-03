@@ -20,13 +20,13 @@ class PdoDblibTest extends BasePdo
             $password = 'Pa55word';
         }
 
-        $this->dbDriver = Factory::getDbRelationalInstance("dblib://sa:$password@$host/tempdb");
+        return Factory::getDbRelationalInstance("dblib://sa:$password@$host/tempdb");
     }
 
     protected function createDatabase()
     {
         //create the database
-        $this->dbDriver->execute("CREATE TABLE Dogs (Id INT NOT NULL IDENTITY(1,1) PRIMARY KEY, Breed VARCHAR(50), Name VARCHAR(50), Age INTEGER)");
+        $this->dbDriver->execute("CREATE TABLE Dogs (Id INT NOT NULL IDENTITY(1,1) PRIMARY KEY, Breed VARCHAR(50), Name VARCHAR(50), Age INTEGER, Weight FLOAT)");
     }
 
     public function deleteDatabase()
@@ -44,7 +44,7 @@ class PdoDblibTest extends BasePdo
 
     public function testDontParseParam_3() {
         $this->expectException(\PDOException::class);
-        
+
         parent::testDontParseParam_3();
     }
 }

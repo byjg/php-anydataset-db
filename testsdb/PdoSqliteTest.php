@@ -22,13 +22,13 @@ class PdoSqliteTest extends BasePdo
         $uri = Uri::getInstanceFromString("sqlite://" . $this->host)
             ->withQueryKeyValue(DbPdoDriver::STATEMENT_CACHE, "true");
 
-        $this->dbDriver = Factory::getDbInstance($uri);
+        return Factory::getDbInstance($uri);
     }
 
     protected function createDatabase()
     {
         //create the database
-        $this->dbDriver->execute("CREATE TABLE Dogs (Id INTEGER PRIMARY KEY, Breed VARCHAR(50), Name VARCHAR(50), Age INTEGER)");
+        $this->dbDriver->execute("CREATE TABLE Dogs (Id INTEGER NOT NULL PRIMARY KEY, Breed VARCHAR(50), Name VARCHAR(50), Age INTEGER, Weight NUMERIC(10,2))");
     }
 
     public function deleteDatabase()
@@ -40,7 +40,6 @@ class PdoSqliteTest extends BasePdo
     {
         $this->markTestSkipped('Skipped: SqlLite does not support get all fields');
     }
-
 
     public function testStatementCache()
     {

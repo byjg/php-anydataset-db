@@ -3,10 +3,14 @@
 namespace ByJG\AnyDataset\Db;
 
 use ByJG\Util\Uri;
-use PDO;
 
 class PdoLiteral extends DbPdoDriver
 {
+
+    public static function schema()
+    {
+        return null;
+    }
 
     /**
      * PdoLiteral constructor.
@@ -19,16 +23,13 @@ class PdoLiteral extends DbPdoDriver
      */
     public function __construct($pdoConnStr, $username = "", $password = "", $preOptions = null, $postOptions = null)
     {
-        if (empty($postOptions)) {
-            $postOptions = [
-                PDO::ATTR_EMULATE_PREPARES => true
-            ];
+        $parts = explode(":", $pdoConnStr, 2);
+
+        $credential = "";
+        if (!empty($username)) {
+            $credential = "$username:$password@";
         }
 
-        $parts = explode(":", $pdoConnStr);
-
-        $this->connectionUri = new Uri($parts[0] . "://$username:$password@literal");
-
-        $this->createPdoInstance($pdoConnStr, $preOptions, $postOptions);
+        parent::__construct(new Uri("literal://{$credential}{$parts[0]}?connection=" . urlencode($parts[1]), $preOptions, $postOptions));
     }
 }

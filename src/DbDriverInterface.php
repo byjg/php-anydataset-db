@@ -3,10 +3,16 @@
 namespace ByJG\AnyDataset\Db;
 
 use ByJG\AnyDataset\Core\GenericIterator;
+use ByJG\AnyDataset\Db\Interfaces\DbCacheInterface;
+use ByJG\AnyDataset\Db\Interfaces\DbTransactionInterface;
 use ByJG\Util\Uri;
+use PDO;
+use Psr\Log\LoggerInterface;
 
-interface DbDriverInterface
+interface DbDriverInterface extends DbTransactionInterface, DbCacheInterface
 {
+
+    public static function schema();
 
     /**
      * @param string $sql
@@ -28,14 +34,8 @@ interface DbDriverInterface
      */
     public function getDbHelper();
 
-    public function beginTransaction();
-
-    public function commitTransaction();
-
-    public function rollbackTransaction();
-
     /**
-     * @return \PDO
+     * @return PDO
      */
     public function getDbConnection();
 
@@ -51,4 +51,14 @@ interface DbDriverInterface
     public function isSupportMultRowset();
 
     public function setSupportMultRowset($multipleRowSet);
+
+    public function isConnected($softCheck = false, $throwError = false);
+    public function reconnect($force = false);
+
+    public function disconnect();
+
+    public function enableLogger(LoggerInterface $logger);
+
+    public function log($message, $context = []);
+
 }

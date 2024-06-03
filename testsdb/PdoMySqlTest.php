@@ -25,15 +25,15 @@ class PdoMySqlTest extends BasePdo
             $password = "";
         }
 
-        $this->dbDriver = Factory::getDbRelationalInstance("mysql://root:$password@$host");
-        $this->dbDriver->execute('CREATE DATABASE IF NOT EXISTS test');
-        $this->dbDriver = Factory::getDbRelationalInstance("mysql://root:$password@$host/test");
+        $dbDriver = Factory::getDbRelationalInstance("mysql://root:$password@$host");
+        $dbDriver->execute('CREATE DATABASE IF NOT EXISTS test');
+        return Factory::getDbRelationalInstance("mysql://root:$password@$host/test");
     }
 
     protected function createDatabase()
     {
         //create the database
-        $this->dbDriver->execute("CREATE TABLE Dogs (Id INTEGER PRIMARY KEY auto_increment, Breed VARCHAR(50), Name VARCHAR(50), Age INTEGER)");
+        $this->dbDriver->execute("CREATE TABLE Dogs (Id INTEGER PRIMARY KEY auto_increment, Breed VARCHAR(50), Name VARCHAR(50), Age INTEGER, Weight NUMERIC(10,2))");
     }
 
     public function deleteDatabase()

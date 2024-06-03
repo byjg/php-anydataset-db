@@ -3,14 +3,21 @@
 namespace ByJG\AnyDataset\Db;
 
 use ByJG\AnyDataset\Core\Exception\NotImplementedException;
+use ByJG\AnyDataset\Core\GenericIterator;
 use ByJG\AnyDataset\Db\Exception\RouteNotFoundException;
 use ByJG\AnyDataset\Db\Exception\RouteNotMatchedException;
+use PDO;
+use Psr\Log\LoggerInterface;
 
 class Route implements DbDriverInterface
 {
+    public static function schema()
+    {
+        return null;
+    }
 
     /**
-     * @var DbDriverInterface[]
+     * @var array(DbDriverInterface[])
      */
     protected $dbDriverInterface = [];
 
@@ -211,7 +218,7 @@ class Route implements DbDriverInterface
     /**
      * @param string $sql
      * @param null $params
-     * @return \ByJG\AnyDataset\Core\GenericIterator
+     * @return GenericIterator
      * @throws \ByJG\AnyDataset\Db\Exception\RouteNotMatchedException
      */
     public function getIterator($sql, $params = null)
@@ -254,9 +261,10 @@ class Route implements DbDriverInterface
     }
 
     /**
+     * @param $isolationLevel
      * @throws NotImplementedException
      */
-    public function beginTransaction()
+    public function beginTransaction($isolationLevel = null, $allowJoin = false)
     {
         throw new NotImplementedException('Feature not available');
     }
@@ -278,7 +286,7 @@ class Route implements DbDriverInterface
     }
 
     /**
-     * @return \PDO|void
+     * @return PDO|void
      * @throws NotImplementedException
      */
     public function getDbConnection()
@@ -351,5 +359,64 @@ class Route implements DbDriverInterface
     {
         throw new NotImplementedException('Feature not available');
     }
+
+    public function getMaxStmtCache()
+    {
+        throw new NotImplementedException('Feature not available');
+    }
+
+    public function setMaxStmtCache($maxStmtCache)
+    {
+        throw new NotImplementedException('Feature not available');
+    }
+
+    public function getCountStmtCache()
+    {
+        throw new NotImplementedException('Feature not available');
+    }
     //</editor-fold>
+    public function reconnect($force = false)
+    {
+        throw new NotImplementedException('Feature not available');
+    }
+
+    public function disconnect()
+    {
+        throw new NotImplementedException('Feature not available');
+    }
+
+    public function isConnected($softCheck = false, $throwError = false)
+    {
+        throw new NotImplementedException('Feature not available');
+    }
+
+    public function enableLogger(LoggerInterface $logger)
+    {
+        throw new NotImplementedException('Feature not available');
+    }
+
+    public function log($message, $context = [])
+    {
+        throw new NotImplementedException('Feature not available');
+    }
+
+    public function hasActiveTransaction()
+    {
+        throw new NotImplementedException('Feature not available');
+    }
+
+    public function requiresTransaction()
+    {
+        throw new NotImplementedException('Feature not available');
+    }
+
+    public function activeIsolationLevel()
+    {
+        // TODO: Implement activeIsolationLevel() method.
+    }
+
+    public function remainingCommits()
+    {
+        // TODO: Implement remainingCommits() method.
+    }
 }

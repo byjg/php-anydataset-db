@@ -3,25 +3,45 @@
 namespace ByJG\AnyDataset\Db;
 
 use ByJG\Util\Uri;
-use PDO;
 
 class PdoOci extends DbPdoDriver
 {
 
+    public static function schema()
+    {
+        return ['oci'];
+    }
+
     public function __construct(Uri $connUri)
     {
-        $this->connectionUri = $connUri;
-        $strconn = $connUri->getScheme(). ":dbname=" . DbOci8Driver::getTnsString($connUri);
+        parent::__construct($connUri);
+    }
 
-        // Create Connection
-        $this->instance = new PDO(
-            $strconn,
-            $this->connectionUri->getUsername(),
-            $this->connectionUri->getPassword()
-        );
+    protected function createPdoConnStr(Uri $connUri)
+    {
+        return $connUri->getScheme(). ":dbname=" . self::getTnsString($connUri);
+    }
 
-        $this->instance->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-        $this->instance->setAttribute(PDO::ATTR_CASE, PDO::CASE_LOWER);
-        $this->instance->setAttribute(PDO::ATTR_EMULATE_PREPARES, true);
+    /**
+     *
+     * @param Uri $connUri
+     * @return string
+     */
+    public static function getTnsString(Uri $connUri)
+    {
+        $protocol = $connUri->getQueryPart("protocol");
+        $protocol = ($protocol == "") ? 'TCP' : $protocol;
+
+        $port = $connUri->getPort();
+        $port = ($port == "") ? 1521 : $port;
+
+        $svcName = preg_replace('~^/~', '', $connUri->getPath());
+
+        $host = $connUri->getHost();
+
+        return "(DESCRIPTION = " .
+            "    (ADDRESS = (PROTOCOL = $protocol)(HOST = $host)(PORT = $port)) " .
+            "        (CONNECT_DATA = (SERVICE_NAME = $svcName)) " .
+            ")";
     }
 }
