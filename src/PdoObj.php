@@ -48,7 +48,7 @@ class PdoObj
         return $this->useStmtCache;
     }
 
-    public function createInstance($preOptions = [], $postOptions = []): PDO
+    public function createInstance($preOptions = [], $postOptions = [], $executeAfterConnect = []): PDO
     {
         $pdoConnectionString = $this->getConnStr();
 
@@ -63,6 +63,10 @@ class PdoObj
         $this->uri = $this->uri->withScheme($instance->getAttribute(PDO::ATTR_DRIVER_NAME));
 
         $this->setPdoDefaultParams($instance, $postOptions);
+
+        foreach ($executeAfterConnect as $sql) {
+            $instance->exec($sql);
+        }
 
         return $instance;
     }

@@ -4,7 +4,7 @@ namespace ByJG\AnyDataset\Db;
 
 use ByJG\Util\Uri;
 
-class PdoOci extends DbPdoDriver
+class PdoOci extends PdoLiteral
 {
 
     public static function schema()
@@ -14,7 +14,7 @@ class PdoOci extends DbPdoDriver
 
     public function __construct(Uri $connUri)
     {
-        parent::__construct($connUri);
+        parent::__construct($this->createPdoConnStr($connUri), $connUri->getUsername(), $connUri->getPassword(), [], []);
     }
 
     protected function createPdoConnStr(Uri $connUri)

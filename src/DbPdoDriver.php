@@ -35,6 +35,7 @@ abstract class DbPdoDriver implements DbDriverInterface
 
     const DONT_PARSE_PARAM = "dont_parse_param";
     const STATEMENT_CACHE = "stmtcache";
+    const UNIX_SOCKET = "unix_socket";
 
     /**
      * @var PdoObj
@@ -44,6 +45,8 @@ abstract class DbPdoDriver implements DbDriverInterface
     protected $preOptions;
 
     protected $postOptions;
+
+    protected $executeAfterConnect;
     /**
      * @var LoggerInterface
      */
@@ -57,12 +60,13 @@ abstract class DbPdoDriver implements DbDriverInterface
      * @param array $postOptions
      * @throws NotAvailableException
      */
-    public function __construct(Uri $connUri, $preOptions = null, $postOptions = null)
+    public function __construct(Uri $connUri, $preOptions = null, $postOptions = null, $executeAfterConnect = [])
     {
         $this->logger = new NullLogger();
         $this->pdoObj = new PdoObj($connUri);
         $this->preOptions = $preOptions;
         $this->postOptions = $postOptions;
+        $this->executeAfterConnect = $executeAfterConnect;
         $this->reconnect();
     }
 
@@ -76,7 +80,7 @@ abstract class DbPdoDriver implements DbDriverInterface
         $this->disconnect();
 
         // Connect
-        $this->instance = $this->pdoObj->createInstance();
+        $this->instance = $this->pdoObj->createInstance($this->preOptions, $this->postOptions, $this->executeAfterConnect);
 
         return true;
     }

@@ -15,11 +15,11 @@ $db = Factory::getDbRelationalInstance($uri);
 
 AnyDatasetDB has some special parameters:
 
-| Parameter                      | Value     | Description                                                                                                                |
-|--------------------------------|-----------|----------------------------------------------------------------------------------------------------------------------------|
-| DbPdoDriver::STATEMENT_CACHE   | true      | If this parameter is set with "true", anydataset will cache the last prepared queries.                                     |
-| DbPdoDriver::DONT_PARSE_PARAM  | any value | Is this parameter is set with any value, anydataset won't try to parse the SQL to find the values to bind the parameters.  |
-
+| Parameter                      | Value     | Description                                                                                                               |
+|--------------------------------|-----------|---------------------------------------------------------------------------------------------------------------------------|
+| DbPdoDriver::STATEMENT_CACHE   | true      | If this parameter is set with "true", anydataset will cache the last prepared queries.                                    |
+| DbPdoDriver::DONT_PARSE_PARAM  | any value | Is this parameter is set with any value, anydataset won't try to parse the SQL to find the values to bind the parameters. |
+| DbPdoDriver::UNIX_SOCKET       | path      | PDO will use "unix_socket=" instead of "host=".                                                                           |
 e.g.
 
 ```php
@@ -28,3 +28,10 @@ $uri = Uri::getInstanceFromString("sqlite://" . $this->host)
     ->withQueryKeyValue(DbPdoDriver::DONT_PARSE_PARAM, "");
 ```
 
+If using UNIX_SOCKET:
+
+```php
+# Note: there is 3 slashes after the protocol, the first one is the separator between the protocol and the host
+$uri = Uri::getInstanceFromString("mysql:///" . $this->dbname)
+    ->withQueryKeyValue(DbPdoDriver::UNIX_SOCKET, "/run/mysql.sock");
+```

@@ -67,11 +67,11 @@ class DbPdoUriTest extends TestCase
                 "sqlite:/path/to/db.sqlite"
             ],
             [
-                new Uri("pdo://mysql?unix_socket=/path/to/socket&dbname=dbname"),
+                new Uri("pdo://mysql?" . DbPdoDriver::UNIX_SOCKET . "=/path/to/socket&dbname=dbname"),
                 "mysql:unix_socket=/path/to/socket;dbname=dbname"
             ],
             [
-                new Uri("mysql://dbname?unix_socket=/path/to/socket"),
+                new Uri("mysql:///dbname?" . DbPdoDriver::UNIX_SOCKET . "=/path/to/socket"),
                 "mysql:unix_socket=/path/to/socket;dbname=dbname"
             ],
             [
@@ -148,7 +148,7 @@ class DbPdoUriTest extends TestCase
                 "sqlite:/path/to/db.sqlite"
             ],
             [
-                new Uri("mysql:///dbname?unix_socket=/path/to/socket"),
+                new Uri("mysql:///dbname?" . DbPdoDriver::UNIX_SOCKET . "=/path/to/socket"),
                 "mysql:unix_socket=/path/to/socket;dbname=dbname"
             ],
             [

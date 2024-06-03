@@ -29,23 +29,21 @@ class PdoDblib extends DbPdoDriver
             ->withQueryKeyValue("server" , $connUri->getHost() . (!empty($connUri->getPort()) ? "," . $connUri->getPort() : ""))
             ->withQueryKeyValue("Database", ltrim($connUri->getPath(), "/"));
 
-        parent::__construct($uri);
-    }
-
-    protected function createPdoInstance()
-    {
-        parent::createPdoInstance();
-
+        // Run after instance is created
         // Solve the error:
         // SQLSTATE[HY000]: General error: 1934 General SQL Server error: Check messages from the SQL Server [1934]
         // (severity 16) [(null)]
         //
         // http://gullele.wordpress.com/2010/12/15/accessing-xml-column-of-sql-server-from-php-pdo/
         // http://stackoverflow.com/questions/5499128/error-when-using-xml-in-stored-procedure-pdo-ms-sql-2008
-        $this->getDbConnection()->exec('SET QUOTED_IDENTIFIER ON');
-        $this->getDbConnection()->exec('SET ANSI_WARNINGS ON');
-        $this->getDbConnection()->exec('SET ANSI_PADDING ON');
-        $this->getDbConnection()->exec('SET ANSI_NULLS ON');
-        $this->getDbConnection()->exec('SET CONCAT_NULL_YIELDS_NULL ON');
+        $executeAfterConnect = [
+            'SET QUOTED_IDENTIFIER ON',
+            'SET ANSI_WARNINGS ON',
+            'SET ANSI_PADDING ON',
+            'SET ANSI_NULLS ON',
+            'SET CONCAT_NULL_YIELDS_NULL ON',
+        ];
+
+        parent::__construct($uri, [], [], $executeAfterConnect);
     }
 }

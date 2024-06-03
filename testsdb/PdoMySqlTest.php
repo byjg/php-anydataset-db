@@ -54,4 +54,11 @@ class PdoMySqlTest extends BasePdo
         
         parent::testDontParseParam_3();
     }
+
+    public function testCheckInitialParameters()
+    {
+        $this->assertStringStartsWith('utf8', $this->dbDriver->getScalar("SELECT @@character_set_client"));
+        $this->assertStringStartsWith('utf8', $this->dbDriver->getScalar("SELECT @@character_set_results"));
+        $this->assertStringStartsWith('utf8', $this->dbDriver->getScalar("SELECT @@character_set_connection"));
+    }
 }

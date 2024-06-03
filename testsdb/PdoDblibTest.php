@@ -47,4 +47,13 @@ class PdoDblibTest extends BasePdo
 
         parent::testDontParseParam_3();
     }
+
+    public function testCheckInitialCommands()
+    {
+        $this->assertEquals('ON', $this->dbDriver->getScalar('SELECT @QUOTED_IDENTIFIER'));
+        $this->assertEquals('ON', $this->dbDriver->getScalar('SELECT @ANSI_WARN'));
+        $this->assertEquals('ON', $this->dbDriver->getScalar('SELECT @ANSI_PADDING'));
+        $this->assertEquals('ON', $this->dbDriver->getScalar('SELECT @ANSI_NULLS'));
+        $this->assertEquals('ON', $this->dbDriver->getScalar('SELECT @CONCAT_SETTING'));
+    }
 }
