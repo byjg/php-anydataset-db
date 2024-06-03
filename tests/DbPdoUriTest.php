@@ -71,6 +71,10 @@ class DbPdoUriTest extends TestCase
                 "mysql:unix_socket=/path/to/socket;dbname=dbname"
             ],
             [
+                new Uri("mysql://dbname?unix_socket=/path/to/socket"),
+                "mysql:unix_socket=/path/to/socket;dbname=dbname"
+            ],
+            [
                 new Uri("literal://sqlite?connection=:memory:"),
                 "sqlite::memory:"
             ],
