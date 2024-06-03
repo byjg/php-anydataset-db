@@ -100,7 +100,7 @@ abstract class DbPdoDriver implements DbDriverInterface
      */
     protected function getDBStatement($sql, $array = null)
     {
-        if (is_null($this->getUri()->getQueryPart(self::DONT_PARSE_PARAM))) {
+        if (!$this->getUri()->hasQueryKey(self::DONT_PARSE_PARAM)) {
             list($sql, $array) = SqlBind::parseSQL($this->pdoObj->getUri(), $sql, $array);
         }
 
