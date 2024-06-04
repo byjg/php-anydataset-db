@@ -70,23 +70,4 @@ class PdoDblibTest extends BasePdo
     {
         $this->markTestSkipped('SQLServer locks the table make the test inviable');
     }
-
-    public function testInsertSpecialChars()
-    {
-        if (PHP_MAJOR_VERSION == 8 && PHP_MINOR_VERSION == 0) {
-            // @fixme: Remove this in version 5.0
-            $this->markTestSkipped('This test is not working on PHP 8.0');
-        }
-        parent::testInsertSpecialChars();
-    }
-
-    public function testGetBuggyUT8()
-    {
-        if (PHP_MAJOR_VERSION == 8 && PHP_MINOR_VERSION == 0) {
-            // @fixme: Remove this in version 5.0
-            $this->markTestSkipped('This test is not working on PHP 8.0');
-        }
-        parent::testGetBuggyUT8();
-    }
-
 }
