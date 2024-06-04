@@ -23,4 +23,13 @@ class PdoSqlsrv extends PdoDblib
     {
         parent::__construct($connUri);
     }
+
+    protected function getMssqlUri(Uri $connUri): Uri
+    {
+        return Uri::getInstanceFromString("pdo://")
+            ->withUserInfo($connUri->getUsername(), $connUri->getPassword())
+            ->withHost($connUri->getScheme())
+            ->withQueryKeyValue("Server" , $connUri->getHost() . (!empty($connUri->getPort()) ? "," . $connUri->getPort() : ""))
+            ->withQueryKeyValue("Database", ltrim($connUri->getPath(), "/"));
+    }
 }

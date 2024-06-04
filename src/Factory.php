@@ -59,7 +59,6 @@ class Factory
             self::registerDbDriver(PdoOdbc::class);
             self::registerDbDriver(PdoPdo::class);
             self::registerDbDriver(PdoOci::class);
-            self::registerDbDriver(DbOci8Driver::class);
         }
 
         $scheme = $connectionUri->getScheme();

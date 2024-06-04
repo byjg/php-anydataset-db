@@ -31,12 +31,14 @@ class PdoMysql extends DbPdoDriver
      */
     public function __construct(Uri $connUri)
     {
-        $preOptions = [
-            PDO::MYSQL_ATTR_INIT_COMMAND => "SET NAMES utf8"
-        ];
+        $preOptions = [];
 
         $postOptions = [
             PDO::MYSQL_ATTR_USE_BUFFERED_QUERY => true,
+        ];
+
+        $executeAfterConnect = [
+            "SET NAMES utf8"
         ];
 
         if (!empty($connUri->getQuery())) {
@@ -56,6 +58,6 @@ class PdoMysql extends DbPdoDriver
 
         $this->setSupportMultRowset(true);
 
-        parent::__construct($connUri, $preOptions, $postOptions);
+        parent::__construct($connUri, $preOptions, $postOptions, $executeAfterConnect);
     }
 }

@@ -45,7 +45,7 @@ $id = $dbDriver->executeAndGetId(
 ```php
 <?php
 $dbDriver = \ByJG\AnyDataset\Db\Factory::getDbRelationalInstance('mysql://username:password@host/database');
-$dbDriver->beginTransaction();
+$dbDriver->beginTransaction(null);
 
 // ... Do your queries
 

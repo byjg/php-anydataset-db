@@ -241,4 +241,9 @@ abstract class DbBaseFunctions implements DbFunctionsInterface
 
         return [ 'phpType' => 'string', 'length' => null, 'precision' => null ];
     }
+
+    public function getIsolationLevelCommand($isolationLevel)
+    {
+        return null;
+    }
 }

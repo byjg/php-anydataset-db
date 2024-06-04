@@ -3,6 +3,7 @@
 namespace ByJG\AnyDataset\Db\Helpers;
 
 use ByJG\AnyDataset\Db\DbDriverInterface;
+use ByJG\AnyDataset\Db\IsolationLevelEnum;
 
 class DbMysqlFunctions extends DbBaseFunctions
 {
@@ -157,5 +158,21 @@ class DbMysqlFunctions extends DbBaseFunctions
         }
 
         return $return;
+    }
+
+    public function getIsolationLevelCommand($isolationLevel)
+    {
+        switch ($isolationLevel) {
+            case IsolationLevelEnum::READ_UNCOMMITTED:
+                return "SET SESSION TRANSACTION ISOLATION LEVEL READ UNCOMMITTED";
+            case IsolationLevelEnum::READ_COMMITTED:
+                return "SET SESSION TRANSACTION ISOLATION LEVEL READ COMMITTED";
+            case IsolationLevelEnum::REPEATABLE_READ:
+                return "SET SESSION TRANSACTION ISOLATION LEVEL REPEATABLE READ";
+            case IsolationLevelEnum::SERIALIZABLE:
+                return "SET SESSION TRANSACTION ISOLATION LEVEL SERIALIZABLE";
+            default:
+                return "";
+        }
     }
 }

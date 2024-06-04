@@ -2,8 +2,9 @@
 
 namespace ByJG\AnyDataset\Db\Helpers;
 
-use ByJG\AnyDataset\Db\DbDriverInterface;
 use ByJG\AnyDataset\Core\Exception\NotAvailableException;
+use ByJG\AnyDataset\Db\DbDriverInterface;
+use ByJG\AnyDataset\Db\IsolationLevelEnum;
 
 class DbDblibFunctions extends DbBaseFunctions
 {
@@ -144,5 +145,50 @@ class DbDblibFunctions extends DbBaseFunctions
     public function hasForUpdate()
     {
         return false;
+    }
+
+    public function getTableMetadata(DbDriverInterface $dbdataset, $tableName)
+    {
+        $sql = "select * from INFORMATION_SCHEMA.COLUMNS where TABLE_NAME = '$tableName'";
+        return $this->getTableMetadataFromSql($dbdataset, $sql);
+    }
+
+    protected function parseColumnMetadata($metadata)
+    {
+        $return = [];
+
+
+        foreach ($metadata as $key => $value) {
+            if (!empty($value['character_maximum_length'])) {
+                $dataType = strtolower($value['data_type']) . '(' . $value['character_maximum_length'] . ')';
+            } else {
+                $dataType = strtolower($value['data_type']) . '(' . $value["numeric_precision"] . ',' . $value['numeric_precision_radix'] . ')';
+            }
+
+            $return[strtolower($value['column_name'])] = [
+                    'name' => $value['column_name'],
+                    'dbType' => strtolower($value['data_type']),
+                    'required' => $value['is_nullable'] == 'NO',
+                    'default' => $value['column_default'],
+                ] + $this->parseTypeMetadata($dataType);
+        }
+
+        return $return;
+    }
+
+    public function getIsolationLevelCommand($isolationLevel)
+    {
+        switch ($isolationLevel) {
+            case IsolationLevelEnum::READ_UNCOMMITTED:
+                return "SET TRANSACTION ISOLATION LEVEL READ UNCOMMITTED";
+            case IsolationLevelEnum::READ_COMMITTED:
+                return "SET TRANSACTION ISOLATION LEVEL READ COMMITTED";
+            case IsolationLevelEnum::REPEATABLE_READ:
+                return "SET TRANSACTION ISOLATION LEVEL REPEATABLE READ";
+            case IsolationLevelEnum::SERIALIZABLE:
+                return "SET TRANSACTION ISOLATION LEVEL SERIALIZABLE";
+            default:
+                return "";
+        }
     }
 }

@@ -28,5 +28,8 @@
     "ext-oci8": "*",
     "byjg/cache-engine": "4.9.*"
   },
+  "provide": {
+    "byjg/anydataset-implementation": "1.0"
+  },
   "license": "MIT"
 }

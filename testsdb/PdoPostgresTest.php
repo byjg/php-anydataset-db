@@ -23,12 +23,12 @@ class PdoPostgresTest extends BasePdo
             $password = "";
         }
 
-        $this->dbDriver = Factory::getDbRelationalInstance("pgsql://postgres:$password@$host");
-        $exists = $this->dbDriver->getScalar('select count(1) from pg_catalog.pg_database where datname = \'test\'');
+        $dbDriver = Factory::getDbRelationalInstance("pgsql://postgres:$password@$host");
+        $exists = $dbDriver->getScalar('select count(1) from pg_catalog.pg_database where datname = \'test\'');
         if ($exists == 0) {
-            $this->dbDriver->execute('CREATE DATABASE test');
+            $dbDriver->execute('CREATE DATABASE test');
         }
-        $this->dbDriver = Factory::getDbRelationalInstance("pgsql://postgres:$password@$host/test");
+        return Factory::getDbRelationalInstance("pgsql://postgres:$password@$host/test");
     }
 
     protected function createDatabase()

@@ -3,6 +3,7 @@
 namespace ByJG\AnyDataset\Db\Helpers;
 
 use ByJG\AnyDataset\Db\DbDriverInterface;
+use ByJG\AnyDataset\Db\IsolationLevelEnum;
 
 class DbPgsqlFunctions extends DbBaseFunctions
 {
@@ -39,7 +40,7 @@ class DbPgsqlFunctions extends DbBaseFunctions
 
         return preg_replace(
             '~(\s[Ll][Ii][Mm][Ii][Tt])\s.*?\s([Oo][Ff][Ff][Ss][Ee][Tt])\s.*~',
-            '$1 ' . $qty .' $2 ' .$start,
+            '$1 ' . $qty . ' $2 ' . $start,
             $sql
         );
     }
@@ -141,13 +142,29 @@ class DbPgsqlFunctions extends DbBaseFunctions
 
         foreach ($metadata as $key => $value) {
             $return[strtolower($value['column_name'])] = [
-                'name' => $value['column_name'],
-                'dbType' => strtolower($value['type']),
-                'required' => $value['is_nullable'] == 'NO',
-                'default' => $value['column_default'],
-            ] + $this->parseTypeMetadata(strtolower($value['type']));
+                    'name' => $value['column_name'],
+                    'dbType' => strtolower($value['type']),
+                    'required' => $value['is_nullable'] == 'NO',
+                    'default' => $value['column_default'],
+                ] + $this->parseTypeMetadata(strtolower($value['type']));
         }
 
         return $return;
+    }
+
+    public function getIsolationLevelCommand($isolationLevel)
+    {
+        switch ($isolationLevel) {
+            case IsolationLevelEnum::READ_UNCOMMITTED:
+                return "SET SESSION CHARACTERISTICS AS TRANSACTION ISOLATION LEVEL READ UNCOMMITTED";
+            case IsolationLevelEnum::READ_COMMITTED:
+                return "SET SESSION CHARACTERISTICS AS TRANSACTION ISOLATION LEVEL READ COMMITTED";
+            case IsolationLevelEnum::REPEATABLE_READ:
+                return "SET SESSION CHARACTERISTICS AS TRANSACTION ISOLATION LEVEL REPEATABLE READ";
+            case IsolationLevelEnum::SERIALIZABLE:
+                return "SET SESSION CHARACTERISTICS AS TRANSACTION ISOLATION LEVEL SERIALIZABLE";
+            default:
+                return "";
+        }
     }
 }

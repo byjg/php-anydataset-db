@@ -102,4 +102,6 @@ interface DbFunctionsInterface
     public function hasForUpdate();
 
     public function getTableMetadata(DbDriverInterface $dbdataset, $tableName);
+
+    public function getIsolationLevelCommand($isolationLevel);
 }

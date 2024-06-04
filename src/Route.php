@@ -261,9 +261,10 @@ class Route implements DbDriverInterface
     }
 
     /**
+     * @param $isolationLevel
      * @throws NotImplementedException
      */
-    public function beginTransaction()
+    public function beginTransaction($isolationLevel = null, $allowJoin = false)
     {
         throw new NotImplementedException('Feature not available');
     }
@@ -397,5 +398,25 @@ class Route implements DbDriverInterface
     public function log($message, $context = [])
     {
         throw new NotImplementedException('Feature not available');
+    }
+
+    public function hasActiveTransaction()
+    {
+        throw new NotImplementedException('Feature not available');
+    }
+
+    public function requiresTransaction()
+    {
+        throw new NotImplementedException('Feature not available');
+    }
+
+    public function activeIsolationLevel()
+    {
+        // TODO: Implement activeIsolationLevel() method.
+    }
+
+    public function remainingCommits()
+    {
+        // TODO: Implement remainingCommits() method.
     }
 }

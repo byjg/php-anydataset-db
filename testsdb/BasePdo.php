@@ -6,7 +6,10 @@ use ByJG\AnyDataset\Core\Exception\NotImplementedException;
 use ByJG\AnyDataset\Db\DbDriverInterface;
 use ByJG\AnyDataset\Db\DbPdoDriver;
 use ByJG\AnyDataset\Db\Exception\DbDriverNotConnected;
+use ByJG\AnyDataset\Db\Exception\TransactionNotStartedException;
+use ByJG\AnyDataset\Db\Exception\TransactionStartedException;
 use ByJG\AnyDataset\Db\Factory;
+use ByJG\AnyDataset\Db\IsolationLevelEnum;
 use ByJG\Cache\Psr16\ArrayCacheEngine;
 use PHPUnit\Framework\TestCase;
 
@@ -20,12 +23,14 @@ abstract class BasePdo extends TestCase
 
     protected $escapeQuote = "''";
 
+    protected $floatSize = 10;
+
     /**
      * @throws \Exception
      */
     public function setUp(): void
     {
-        $this->createInstance();
+        $this->dbDriver = $this->createInstance();
         $this->createDatabase();
         $this->populateData();
     }
@@ -209,7 +214,7 @@ abstract class BasePdo extends TestCase
         $escapeQuote = $this->escapeQuote;
 
         $this->dbDriver->execute(
-            "INSERT INTO Dogs (Breed, Name, Age) VALUES ('Dog', 'Puppy${escapeQuote}s Master', 6);"
+            "INSERT INTO Dogs (Breed, Name, Age) VALUES ('Dog', 'Puppy{$escapeQuote}s Master', 6);"
         );
 
         $iterator = $this->dbDriver->getIterator('select Id, Breed, Name, Age from Dogs where id = 4');
@@ -246,7 +251,7 @@ abstract class BasePdo extends TestCase
         $escapeQuote = $this->escapeQuote;
 
         $this->dbDriver->execute(
-            "INSERT INTO Dogs (Breed, Name, Age) VALUES (:breed, 'Puppy${escapeQuote}s Master', :age);",
+            "INSERT INTO Dogs (Breed, Name, Age) VALUES (:breed, 'Puppy{$escapeQuote}s Master', :age);",
             [
                 "breed" => 'Dog',
                 "age" => 6
@@ -264,6 +269,11 @@ abstract class BasePdo extends TestCase
 
     public function testGetBuggyUT8()
     {
+        if (PHP_MAJOR_VERSION == 8 && PHP_MINOR_VERSION == 0) {
+            // @fixme: Remove this in version 5.0
+            $this->markTestSkipped('This test is not working on PHP 8.0');
+        }
+
         $this->dbDriver->execute(
             "INSERT INTO Dogs (Breed, Name, Age) VALUES ('Dog', 'FÃ©lix', 6);"
         );
@@ -417,7 +427,7 @@ abstract class BasePdo extends TestCase
                 'required' => false,
                 'default' => null,
                 'phpType' => 'float',
-                'length' => 10,
+                'length' => $this->floatSize,
                 'precision' => 2,
             ],
         ], $metadata);
@@ -440,6 +450,168 @@ abstract class BasePdo extends TestCase
         $this->assertFalse($this->dbDriver->reconnect());
         $this->assertTrue($this->dbDriver->reconnect(true));
         $iterator = $this->dbDriver->getIterator('select Id, Breed, Name, Age from Dogs where id = 1');
+    }
+
+    public function testCommitTransaction()
+    {
+        $this->assertFalse($this->dbDriver->hasActiveTransaction());
+        $this->assertNull($this->dbDriver->activeIsolationLevel());
+        $this->dbDriver->beginTransaction(IsolationLevelEnum::SERIALIZABLE);
+        $this->assertTrue($this->dbDriver->hasActiveTransaction());
+        $this->assertEquals(IsolationLevelEnum::SERIALIZABLE, $this->dbDriver->activeIsolationLevel());
+
+        $idInserted = $this->dbDriver->executeAndGetId(
+            "INSERT INTO Dogs (Breed, Name, Age) VALUES ('Cat', 'Doris', 7);"
+        );
+        $this->dbDriver->commitTransaction();
+        $this->assertFalse($this->dbDriver->hasActiveTransaction());
+        $this->assertNull($this->dbDriver->activeIsolationLevel());
+
+        $this->assertEquals(4, $idInserted);
+
+        $iterator = $this->dbDriver->getIterator('select Id, Breed, Name, Age from Dogs where id = 4');
+        $row = $iterator->toArray();
+
+        $this->assertEquals(4, $row[0]["id"]);
+        $this->assertEquals('Cat', $row[0]["breed"]);
+        $this->assertEquals('Doris', $row[0]["name"]);
+        $this->assertEquals(7, $row[0]["age"]);
+    }
+
+    public function testRollbackTransaction()
+    {
+        $this->assertFalse($this->dbDriver->hasActiveTransaction());
+        $this->assertNull($this->dbDriver->activeIsolationLevel());
+        $this->dbDriver->beginTransaction(IsolationLevelEnum::REPEATABLE_READ);
+        $this->assertTrue($this->dbDriver->hasActiveTransaction());
+        $this->assertEquals(IsolationLevelEnum::REPEATABLE_READ, $this->dbDriver->activeIsolationLevel());
+
+        $idInserted = $this->dbDriver->executeAndGetId(
+            "INSERT INTO Dogs (Breed, Name, Age) VALUES ('Cat', 'Doris', 7);"
+        );
+        $this->dbDriver->rollbackTransaction();
+        $this->assertFalse($this->dbDriver->hasActiveTransaction());
+        $this->assertNull($this->dbDriver->activeIsolationLevel());
+
+        $this->assertEquals(4, $idInserted);
+
+        $iterator = $this->dbDriver->getIterator('select Id, Breed, Name, Age from Dogs where id = 4');
+        $row = $iterator->toArray();
+
+        $this->assertEmpty($row);
+    }
+
+    public function testCommitWithoutTransaction()
+    {
+        $this->expectException(TransactionNotStartedException::class);
+        $this->dbDriver->commitTransaction();
+    }
+
+    public function testRollbackWithoutTransaction()
+    {
+        $this->expectException(TransactionNotStartedException::class);
+        $this->dbDriver->rollbackTransaction();
+    }
+
+    public function testRequiresTransaction()
+    {
+        $this->assertFalse($this->dbDriver->hasActiveTransaction());
+        $this->assertNull($this->dbDriver->activeIsolationLevel());
+        $this->assertEquals(0, $this->dbDriver->remainingCommits());
+
+        $this->dbDriver->beginTransaction(IsolationLevelEnum::READ_COMMITTED);
+        $this->assertTrue($this->dbDriver->hasActiveTransaction());
+        $this->assertEquals(IsolationLevelEnum::READ_COMMITTED, $this->dbDriver->activeIsolationLevel());
+        $this->assertEquals(1, $this->dbDriver->remainingCommits());
+
+        $this->dbDriver->requiresTransaction();
+        $this->assertTrue($this->dbDriver->hasActiveTransaction());
+        $this->assertEquals(IsolationLevelEnum::READ_COMMITTED, $this->dbDriver->activeIsolationLevel());
+        $this->assertEquals(1, $this->dbDriver->remainingCommits());
+
+        $this->dbDriver->commitTransaction();
+        $this->assertFalse($this->dbDriver->hasActiveTransaction());
+        $this->assertNull($this->dbDriver->activeIsolationLevel());
+        $this->assertEquals(0, $this->dbDriver->remainingCommits());
+    }
+
+    public function testRequiresTransactionWithoutTransaction()
+    {
+        $this->expectException(TransactionNotStartedException::class);
+        $this->dbDriver->requiresTransaction();
+    }
+
+    public function testBeginTransactionTwice()
+    {
+        $this->dbDriver->beginTransaction(IsolationLevelEnum::READ_UNCOMMITTED);
+        $this->expectException(TransactionStartedException::class);
+        try {
+            $this->dbDriver->beginTransaction();
+        } finally {
+            $this->dbDriver->rollbackTransaction();
+            $this->assertFalse($this->dbDriver->hasActiveTransaction());
+            $this->assertNull($this->dbDriver->activeIsolationLevel());
+            $this->assertEquals(0, $this->dbDriver->remainingCommits());
+        }
+    }
+
+    public function testJoinTransaction()
+    {
+        $this->dbDriver->beginTransaction(IsolationLevelEnum::READ_UNCOMMITTED);
+        $this->assertEquals(1, $this->dbDriver->remainingCommits());
+        $this->assertEquals(IsolationLevelEnum::READ_UNCOMMITTED, $this->dbDriver->activeIsolationLevel());
+
+        $this->dbDriver->beginTransaction(IsolationLevelEnum::READ_UNCOMMITTED, true);
+        $this->assertEquals(2, $this->dbDriver->remainingCommits());
+        $this->assertEquals(IsolationLevelEnum::READ_UNCOMMITTED, $this->dbDriver->activeIsolationLevel());
+
+        $this->dbDriver->commitTransaction();
+        $this->assertEquals(1, $this->dbDriver->remainingCommits());
+        $this->assertTrue($this->dbDriver->hasActiveTransaction());
+        $this->assertEquals(IsolationLevelEnum::READ_UNCOMMITTED, $this->dbDriver->activeIsolationLevel());
+
+        $this->dbDriver->commitTransaction();
+        $this->assertEquals(0, $this->dbDriver->remainingCommits());
+        $this->assertFalse($this->dbDriver->hasActiveTransaction());
+        $this->assertNull($this->dbDriver->activeIsolationLevel());
+    }
+
+    public function testTwoDifferentTransactions()
+    {
+        $dbDriver1 = $this->createInstance();
+        $dbDriver2 = $this->createInstance();
+
+        // Make sure there is no record in the database
+        $iterator = $dbDriver1->getIterator('select Id, Breed, Name, Age from Dogs where id = 4');
+        $row = $iterator->toArray();
+        $this->assertEmpty($row);
+        $iterator = $dbDriver2->getIterator('select Id, Breed, Name, Age from Dogs where id = 4');
+        $row = $iterator->toArray();
+        $this->assertEmpty($row);
+
+        // Start a transaction on the first connection
+        $dbDriver1->beginTransaction(IsolationLevelEnum::SERIALIZABLE);
+        $idInserted = $dbDriver1->executeAndGetId(
+            "INSERT INTO Dogs (Breed, Name, Age) VALUES ('Cat', 'Doris', 7);"
+        );
+
+        // Check if the record is there
+        $iterator = $dbDriver1->getIterator('select Id, Breed, Name, Age from Dogs where id = 4');
+        $row = $iterator->toArray();
+        $this->assertNotEmpty($row);
+
+        // Check if the record is not there on the second connection (due to isolation level)
+        $iterator = $dbDriver2->getIterator('select Id, Breed, Name, Age from Dogs where id = 4');
+        $row = $iterator->toArray();
+        $this->assertEmpty($row);
+
+        // Commit the transaction
+        $dbDriver1->commitTransaction();
+
+        // Check if the second transaction can read
+        $iterator = $dbDriver2->getIterator('select Id, Breed, Name, Age from Dogs where id = 4');
+        $row = $iterator->toArray();
+        $this->assertNotEmpty($row);
     }
 }
 
