@@ -24,8 +24,6 @@ The connection string for databases is based on URL.
 
 See below the current implemented drivers:
 
-{:.table}
-
 | Database            | Connection String                                 | Factory                   |
 |---------------------|---------------------------------------------------|---------------------------|
 | Sqlite              | sqlite:///path/to/file                            | getDbRelationalInstance() |
@@ -44,19 +42,19 @@ $conn = \ByJG\AnyDataset\Db\Factory::getDbRelationalInstance("mysql://root:passw
 
 ## Examples
 
-- [Basic Query and Update](docs/basic-query.md)
-- [Cache results](docs/cache.md)
-- [Database Transaction](docs/transaction.md)
-- [Load Balance and Connection Pooling](docs/load-balance.md)
-- [Database Helper](docs/helper.md)
+- [Basic Query and Update](basic-query.md)
+- [Cache results](cache.md)
+- [Database Transaction](transaction.md)
+- [Load Balance and Connection Pooling](load-balance.md)
+- [Database Helper](helper.md)
 
 ## Advanced Topics
 
-- [Passing Parameters to PDODriver](docs/parameters.md)
-- [MySQL SSL Connection](docs/mysql-ssl.md)
-- [FreeTDS/Dblib Date Issue](docs/freetds.md)
-- [Generic PDO Driver](docs/generic-pdo-driver.md)
-- [Running Tests](docs/tests.md)
+- [Passing Parameters to PDODriver](parameters.md)
+- [MySQL SSL Connection](mysql-ssl.md)
+- [FreeTDS/Dblib Date Issue](freetds.md)
+- [Generic PDO Driver](generic-pdo-driver.md)
+- [Running Tests](tests.md)
 
 
 ## Install

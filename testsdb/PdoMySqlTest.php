@@ -23,9 +23,9 @@ class PdoMySqlTest extends BasePdo
             $password = "";
         }
 
-        $this->dbDriver = Factory::getDbRelationalInstance("mysql://root:$password@$host");
-        $this->dbDriver->execute('CREATE DATABASE IF NOT EXISTS test');
-        $this->dbDriver = Factory::getDbRelationalInstance("mysql://root:$password@$host/test");
+        $dbDriver = Factory::getDbRelationalInstance("mysql://root:$password@$host");
+        $dbDriver->execute('CREATE DATABASE IF NOT EXISTS test');
+        return Factory::getDbRelationalInstance("mysql://root:$password@$host/test");
     }
 
     protected function createDatabase()
@@ -51,5 +51,12 @@ class PdoMySqlTest extends BasePdo
         $this->expectException(\PDOException::class);
         
         parent::testDontParseParam_3();
+    }
+
+    public function testCheckInitialParameters()
+    {
+        $this->assertStringStartsWith('utf8', $this->dbDriver->getScalar("SELECT @@character_set_client"));
+        $this->assertStringStartsWith('utf8', $this->dbDriver->getScalar("SELECT @@character_set_results"));
+        $this->assertStringStartsWith('utf8', $this->dbDriver->getScalar("SELECT @@character_set_connection"));
     }
 }

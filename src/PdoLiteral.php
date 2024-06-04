@@ -21,20 +21,15 @@ class PdoLiteral extends DbPdoDriver
      * @param array $preOptions
      * @param array $postOptions
      */
-    public function __construct($pdoConnStr, $username = "", $password = "", $preOptions = null, $postOptions = null)
+    public function __construct($pdoConnStr, $username = "", $password = "", $preOptions = null, $postOptions = null, $executeAfterConnect = [])
     {
-        $parts = explode(":", $pdoConnStr);
+        $parts = explode(":", $pdoConnStr, 2);
 
         $credential = "";
         if (!empty($username)) {
             $credential = "$username:$password@";
         }
 
-        parent::__construct(new Uri("{$parts[0]}://{$credential}pdo?connection=" . urlencode($pdoConnStr)), $preOptions, $postOptions);
-    }
-
-    public function createPdoConnStr(Uri $connUri)
-    {
-        return $this->connectionUri->getQueryPart("connection");
+        parent::__construct(new Uri("literal://{$credential}{$parts[0]}?connection=" . urlencode($parts[1])), $preOptions, $postOptions, $executeAfterConnect);
     }
 }

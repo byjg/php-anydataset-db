@@ -21,8 +21,8 @@ class PdoPdo extends DbPdoDriver
      * @param array $postOptions
      * @throws NotAvailableException
      */
-    public function __construct(Uri $connUri, $preOptions = [], $postOptions = [])
+    public function __construct(Uri $connUri, $preOptions = [], $postOptions = [], $executeAfterConnect = [])
     {
-        parent::__construct($connUri, $preOptions, $postOptions);
+        parent::__construct($connUri, $preOptions, $postOptions, $executeAfterConnect);
     }
 }

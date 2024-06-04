@@ -10,8 +10,6 @@ trait DbCacheTrait
 
     protected int $maxStmtCache = 10;
 
-    protected bool $useCache = false;
-
     /**
      * @return int
      */
@@ -48,7 +46,7 @@ trait DbCacheTrait
         return $this->useCache;
     }
 
-    protected function getOrSetSqlCacheStmt($sql): PDOStatement
+    protected function getOrSetSqlCacheStmt(string $sql): PDOStatement
     {
         if (!isset($this->stmtCache[$sql])) {
             $this->stmtCache[$sql] = $this->getInstance()->prepare($sql);

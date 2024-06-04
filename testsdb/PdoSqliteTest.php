@@ -21,7 +21,7 @@ class PdoSqliteTest extends BasePdo
         $uri = Uri::getInstanceFromString("sqlite://" . $this->host)
             ->withQueryKeyValue(DbPdoDriver::STATEMENT_CACHE, "true");
 
-        $this->dbDriver = Factory::getDbInstance($uri);
+        return Factory::getDbInstance($uri);
     }
 
     protected function createDatabase()

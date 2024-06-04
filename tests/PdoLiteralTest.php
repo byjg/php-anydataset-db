@@ -11,13 +11,15 @@ class PdoLiteralTest extends BasePdo
 
     protected function createInstance()
     {
-        $this->dbDriver = new PdoLiteral("sqlite::memory:");
+        $dbDriver = new PdoLiteral("sqlite::memory:");
+        $dbDriver->execute("CREATE TABLE Dogs (Id INTEGER NOT NULL PRIMARY KEY, Breed VARCHAR(50), Name VARCHAR(50), Age INTEGER, Weight NUMERIC(10,2))");
+
+        return $dbDriver;
     }
 
     protected function createDatabase()
     {
         //create the database
-        $this->dbDriver->execute("CREATE TABLE Dogs (Id INTEGER NOT NULL PRIMARY KEY, Breed VARCHAR(50), Name VARCHAR(50), Age INTEGER, Weight NUMERIC(10,2))");
     }
 
     public function deleteDatabase()
@@ -62,5 +64,10 @@ class PdoLiteralTest extends BasePdo
         $this->expectException(\PDOException::class);
         $this->expectExceptionMessageMatches('/no such table/');
         $iterator = $this->dbDriver->getIterator('select Id, Breed, Name, Age from Dogs where id = 1');
+    }
+
+    public function testTwoDifferentTransactions()
+    {
+        $this->markTestSkipped('Databases are in memory, so the transaction with two different connections is not possible');
     }
 }
