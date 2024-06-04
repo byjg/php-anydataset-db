@@ -5,7 +5,7 @@ namespace ByJG\AnyDataset\Db;
 use ByJG\AnyDataset\Core\Exception\NotAvailableException;
 use ByJG\Util\Uri;
 
-class PdoDblib extends DbPdoDriver
+class PdoDblib extends PdoPdo
 {
     public static function schema()
     {
@@ -23,12 +23,6 @@ class PdoDblib extends DbPdoDriver
     {
         $this->setSupportMultRowset(true);
 
-        $uri = Uri::getInstanceFromString("pdo://")
-            ->withUserInfo($connUri->getUsername(), $connUri->getPassword())
-            ->withHost($connUri->getScheme())
-            ->withQueryKeyValue("server" , $connUri->getHost() . (!empty($connUri->getPort()) ? "," . $connUri->getPort() : ""))
-            ->withQueryKeyValue("Database", ltrim($connUri->getPath(), "/"));
-
         // Run after instance is created
         // Solve the error:
         // SQLSTATE[HY000]: General error: 1934 General SQL Server error: Check messages from the SQL Server [1934]
@@ -44,6 +38,15 @@ class PdoDblib extends DbPdoDriver
             'SET CONCAT_NULL_YIELDS_NULL ON',
         ];
 
-        parent::__construct($uri, [], [], $executeAfterConnect);
+        parent::__construct($this->getMssqlUri($connUri), [], [], $executeAfterConnect);
+    }
+
+    protected function getMssqlUri(Uri $connUri): Uri
+    {
+        return Uri::getInstanceFromString("pdo://")
+            ->withUserInfo($connUri->getUsername(), $connUri->getPassword())
+            ->withHost($connUri->getScheme())
+            ->withQueryKeyValue("host" , $connUri->getHost() . (!empty($connUri->getPort()) ? "," . $connUri->getPort() : ""))
+            ->withQueryKeyValue("dbname", ltrim($connUri->getPath(), "/"));
     }
 }

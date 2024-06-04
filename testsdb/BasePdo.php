@@ -23,6 +23,8 @@ abstract class BasePdo extends TestCase
 
     protected $escapeQuote = "''";
 
+    protected $floatSize = 10;
+
     /**
      * @throws \Exception
      */
@@ -420,7 +422,7 @@ abstract class BasePdo extends TestCase
                 'required' => false,
                 'default' => null,
                 'phpType' => 'float',
-                'length' => 10,
+                'length' => $this->floatSize,
                 'precision' => 2,
             ],
         ], $metadata);
