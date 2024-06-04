@@ -28,7 +28,7 @@ class PdoDblibTest extends BasePdo
     protected function createDatabase()
     {
         // create the database
-        $this->dbDriver->execute("CREATE TABLE Dogs (Id INT NOT NULL IDENTITY(1,1) PRIMARY KEY, Breed VARCHAR(50) null, Name VARCHAR(50) null, Age INTEGER null, Weight FLOAT NULL)");
+        $this->dbDriver->execute("CREATE TABLE Dogs (Id INT NOT NULL IDENTITY(1,1) PRIMARY KEY, Breed VARCHAR(50) null, Name VARCHAR(50) COLLATE LATIN1_GENERAL_100_CI_AS_SC_UTF8 null, Age INTEGER null, Weight FLOAT NULL)");
         // $this->dbDriver->execute("ALTER DATABASE tempdb SET ALLOW_SNAPSHOT_ISOLATION ON");
         // $this->dbDriver->execute("ALTER DATABASE tempdb SET READ_COMMITTED_SNAPSHOT ON");
     }
