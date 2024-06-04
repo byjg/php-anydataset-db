@@ -22,12 +22,13 @@ class DbPdoUriTest extends TestCase
         return [
             [
                 new Uri("mysql://user:pass@localhost/dbname"),
-                "mysql:host=localhost;dbname=dbname;",
+                "mysql:host=localhost;dbname=dbname",
                 "user",
-                "pass"            ],
+                "pass"
+            ],
             [
                 new Uri("mysql://user:pass@localhost:3306/dbname"),
-                "mysql:host=localhost;dbname=dbname;port=3306;"
+                "mysql:host=localhost;dbname=dbname;port=3306"
             ],
             [
                 new Uri("mysql://user:pass@localhost:3306/dbname?charset=utf8"),
@@ -72,7 +73,7 @@ class DbPdoUriTest extends TestCase
             ],
             [
                 new Uri("mysql:///dbname?" . DbPdoDriver::UNIX_SOCKET . "=/path/to/socket"),
-                "mysql:unix_socket=/path/to/socket;dbname=dbname"
+                "mysql:dbname=dbname;unix_socket=/path/to/socket"
             ],
             [
                 new Uri("literal://sqlite?connection=:memory:"),

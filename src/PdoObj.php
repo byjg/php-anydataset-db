@@ -80,7 +80,7 @@ class PdoObj
             PDO::ATTR_EMULATE_PREPARES => true,
             PDO::ATTR_STRINGIFY_FETCHES => false,
         ];
-        $defaultPostOptions = $defaultPostOptions + $postOptions;
+        $defaultPostOptions = $defaultPostOptions + (array)$postOptions;
 
         foreach ($defaultPostOptions as $key => $value) {
             $instance->setAttribute($key, $value);
@@ -110,32 +110,34 @@ class PdoObj
 
     protected function preparePdoConnectionStr($scheme, $host, $database, $port, $query)
     {
-        if (empty($host)) {
+        if (empty($host) && strpos($query, DbPdoDriver::UNIX_SOCKET) === false) {
             return $scheme . ":" . $database;
         }
 
         $database = ltrim(empty($database) ? "" : $database, '/');
-        if (!empty($database)) {
-            $database = ";dbname=$database";
+
+        $pdoAr = [];
+        if (!empty($host) && $host != ".") {
+            $pdoAr[] = "host=" . $host;
         }
 
-        $pdoConnectionStr = $scheme . ":"
-            . ($host != "." ? "host=" . $host : "")
-            . $database;
+        if (!empty($database)) {
+            $pdoAr[] = "dbname=$database";
+        }
 
         if (!empty($port)) {
-            $pdoConnectionStr .= ";port=" . $port;
+            $pdoAr[] = "port=" . $port;
         }
 
         parse_str($query, $queryArr);
         unset($queryArr[DbPdoDriver::DONT_PARSE_PARAM]);
         unset($queryArr[DbPdoDriver::STATEMENT_CACHE]);
-        if ($pdoConnectionStr[-1] != ":") {
-            $pdoConnectionStr .= ";";
-        }
-        $pdoConnectionStr .= urldecode(http_build_query($queryArr, "", ";"));
 
-        return $pdoConnectionStr;
+        $pdoAr = array_merge($pdoAr, array_map(function ($k, $v) {
+            return "$k=" . urldecode($v);
+        }, array_keys($queryArr), $queryArr));
+
+        return $scheme . ":" . implode(";", $pdoAr);
     }
 
     public static function getUriFromPdoConnStr($connStr, $username = "", $password = ""): Uri
