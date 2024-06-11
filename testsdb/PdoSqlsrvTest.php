@@ -11,6 +11,7 @@ class PdoSqlsrvTest extends PdoDblibTest
 
     protected function createInstance()
     {
+        $this->floatSize = 53;
         $host = getenv('MSSQL_TEST_HOST');
         if (empty($host)) {
             $host = "127.0.0.1";
