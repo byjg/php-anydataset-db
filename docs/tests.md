@@ -20,10 +20,11 @@ docker-compose up -d postgres mysql
 ### Running the tests against the databases
 
 ```bash
-phpunit testsdb/PdoMySqlTest.php 
-phpunit testsdb/PdoSqliteTest.php 
-phpunit testsdb/PdoPostgresTest.php 
-phpunit testsdb/PdoDblibTest.php 
+vendor/bin/testsdb/PdoMySqlTest.php 
+vendor/bin/testsdb/PdoSqliteTest.php 
+vendor/bin/testsdb/PdoPostgresTest.php 
+vendor/bin/testsdb/PdoDblibTest.php 
+vendor/bin/testsdb/PdoSqlsrvTest.php 
 ```
 
 Optionally you can set the host and password used by the unit tests

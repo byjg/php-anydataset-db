@@ -30,6 +30,8 @@ class PdoSqlsrv extends PdoDblib
             ->withUserInfo($connUri->getUsername(), $connUri->getPassword())
             ->withHost($connUri->getScheme())
             ->withQueryKeyValue("Server" , $connUri->getHost() . (!empty($connUri->getPort()) ? "," . $connUri->getPort() : ""))
-            ->withQueryKeyValue("Database", ltrim($connUri->getPath(), "/"));
+            ->withQueryKeyValue("Database", ltrim($connUri->getPath(), "/"))
+            ->withQueryKeyValue('TrustServerCertificate', 'true')
+        ;
     }
 }

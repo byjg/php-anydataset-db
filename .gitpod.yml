@@ -2,6 +2,10 @@ tasks:
   - name: Run Composer
     command: |
       composer install
+      sudo ln -s /etc/php/8.2/mods-available/sqlsrv.ini /etc/php/8.2/cli/conf.d/20-sqlsrv.ini
+      sudo ln -s /etc/php/8.2/mods-available/pdo_sqlsrv.ini /etc/php/8.2/cli/conf.d/30-pdo_sqlsrv.ini
+      sudo ln -s /etc/php/8.2/mods-available/oci8.ini /etc/php/8.2/cli/conf.d/20-oci8.ini
+      docker compose -f docker-compose.yml up -d
 
 image: byjg/gitpod-image:full
 
