@@ -11,7 +11,7 @@ class PdoOciTest extends BasePdo
 
     protected function createInstance()
     {
-        $this->escapeQuote = "\'";
+        $this->escapeQuote = "''";
 
         $host = getenv('MYSQL_TEST_HOST');
         if (empty($host)) {
@@ -31,7 +31,13 @@ class PdoOciTest extends BasePdo
     protected function createDatabase()
     {
         //create the database
-        $this->dbDriver->execute("CREATE TABLE Dogs (Id NUMBER GENERATED ALWAYS as IDENTITY(START with 1 INCREMENT by 1), Breed varchar2(50), Name varchar2(50), Age number(10), Weight number(10,2), CONSTRAINT dogs_pk PRIMARY KEY (Id))");
+        $this->dbDriver->execute("CREATE TABLE Dogs (
+            Id NUMBER GENERATED ALWAYS as IDENTITY(START with 1 INCREMENT by 1), 
+            Breed varchar2(50), 
+            Name varchar2(50), 
+            Age number(10), 
+            Weight number(10,2), 
+            CONSTRAINT dogs_pk PRIMARY KEY (Id))");
     }
 
     public function deleteDatabase()

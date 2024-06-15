@@ -4,22 +4,23 @@ namespace ByJG\AnyDataset\Db;
 
 use ByJG\AnyDataset\Core\Exception\DatabaseException;
 use ByJG\AnyDataset\Core\Exception\NotImplementedException;
+use ByJG\AnyDataset\Db\Exception\DbDriverNotConnected;
 use ByJG\AnyDataset\Db\Helpers\SqlBind;
 use ByJG\AnyDataset\Db\Helpers\SqlHelper;
+use ByJG\AnyDataset\Db\Traits\DbCacheTrait;
 use ByJG\Util\Uri;
+use Exception;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
+use Psr\SimpleCache\CacheInterface;
 
 class DbOci8Driver implements DbDriverInterface
 {
+    use DbCacheTrait;
 
     private LoggerInterface $logger;
 
-    public function getMaxStmtCache() { }
-
-    public function getCountStmtCache() { }
-
-    public function setMaxStmtCache($maxStmtCache) { }
+    private DbFunctionsInterface $dbHelper;
 
     public static function schema()
     {
@@ -49,24 +50,7 @@ class DbOci8Driver implements DbDriverInterface
     {
         $this->logger = new NullLogger();
         $this->connectionUri = $connectionString;
-
-        $codePage = $this->connectionUri->getQueryPart("codepage");
-        $codePage = ($codePage == "") ? 'UTF8' : $codePage;
-
-        $tns = DbOci8Driver::getTnsString($this->connectionUri);
-
-        $this->conn = oci_connect(
-            $this->connectionUri->getUsername(),
-            $this->connectionUri->getPassword(),
-            $tns,
-            $codePage,
-            OCI_SYSDBA
-        );
-
-        if (!$this->conn) {
-            $error = oci_error();
-            throw new DatabaseException($error['message']);
-        }
+        $this->reconnect();
     }
 
     /**
@@ -105,6 +89,9 @@ class DbOci8Driver implements DbDriverInterface
      */
     protected function getOci8Cursor($sql, $array = null)
     {
+        if (is_null($this->conn)) {
+            throw new DbDriverNotConnected('Instance not connected');
+        }
         list($query, $array) = SqlBind::parseSQL($this->connectionUri, $sql, $array);
 
         $this->logger->debug("SQL: $query, Params: " . json_encode($array));
@@ -120,7 +107,7 @@ class DbOci8Driver implements DbDriverInterface
         // Bind the parameters
         if (is_array($array)) {
             foreach ($array as $key => $value) {
-                oci_bind_by_name($stid, ":$key", $value);
+                oci_bind_by_name($stid, ":$key", $array[$key], -1);
             }
         }
 
@@ -142,10 +129,12 @@ class DbOci8Driver implements DbDriverInterface
      * @return Oci8Iterator
      * @throws DatabaseException
      */
-    public function getIterator($sql, $params = null)
+    public function getIterator($sql, $params = null, CacheInterface $cache = null, $ttl = 60)
     {
-        $cur = $this->getOci8Cursor($sql, $params);
-        return new Oci8Iterator($cur);
+        return $this->getIteratorUsingCache($sql, $params, $cache, $ttl, function ($sql, $params) {
+            $cur = $this->getOci8Cursor($sql, $params);
+            return new Oci8Iterator($cur);
+        });
     }
 
     /**
@@ -279,7 +268,7 @@ class DbOci8Driver implements DbDriverInterface
      */
     public function executeAndGetId($sql, $array = null)
     {
-        throw new NotImplementedException('Method not implemented for OCI Driver');
+        return $this->getDbHelper()->executeAndGetInsertedId($this, $sql, $array);
     }
 
     /**
@@ -288,7 +277,10 @@ class DbOci8Driver implements DbDriverInterface
      */
     public function getDbHelper()
     {
-        throw new NotImplementedException('Method not implemented for OCI Driver');
+        if (empty($this->dbHelper)) {
+            $this->dbHelper = Factory::getDbFunctions($this->getUri());
+        }
+        return $this->dbHelper;
     }
 
     /**
@@ -304,7 +296,7 @@ class DbOci8Driver implements DbDriverInterface
      */
     public function isSupportMultRowset()
     {
-        throw new NotImplementedException('Method not implemented for OCI Driver');
+        return false;
     }
 
     /**
@@ -318,17 +310,63 @@ class DbOci8Driver implements DbDriverInterface
 
     public function reconnect($force = false)
     {
-//        throw new NotImplementedException('Method not implemented for OCI Driver');
+        if ($this->isConnected() && !$force) {
+            return false;
+        }
+
+        // Release old instance
+        $this->disconnect();
+
+        // Connect
+        $codePage = $this->connectionUri->getQueryPart("codepage");
+        $codePage = ($codePage == "") ? 'UTF8' : $codePage;
+        $tns = DbOci8Driver::getTnsString($this->connectionUri);
+
+        $this->conn = oci_connect(
+            $this->connectionUri->getUsername(),
+            $this->connectionUri->getPassword(),
+            $tns,
+            $codePage,
+            OCI_SYSDBA
+        );
+
+        if (!$this->conn) {
+            $error = oci_error();
+            throw new DatabaseException($error['message']);
+        }
+
+        return true;
     }
 
     public function disconnect()
     {
-        throw new NotImplementedException('Method not implemented for OCI Driver');
+        $this->clearCache();
+        $this->conn = null;
     }
 
     public function isConnected($softCheck = false, $throwError = false)
     {
-        throw new NotImplementedException('Method not implemented for OCI Driver');
+        if (empty($this->conn)) {
+            if ($throwError) {
+                throw new DbDriverNotConnected('DbDriver not connected');
+            }
+            return false;
+        }
+
+        if ($softCheck) {
+            return true;
+        }
+
+        try {
+            oci_parse($this->conn, "SELECT 1 FROM DUAL"); // Do not use $this->getInstance()
+        } catch (Exception $ex) {
+            if ($throwError) {
+                throw new DbDriverNotConnected('DbDriver not connected');
+            }
+            return false;
+        }
+
+        return true;
     }
 
     public function enableLogger(LoggerInterface $logger)
