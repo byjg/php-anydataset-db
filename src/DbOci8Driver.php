@@ -8,6 +8,7 @@ use ByJG\AnyDataset\Db\Exception\DbDriverNotConnected;
 use ByJG\AnyDataset\Db\Helpers\SqlBind;
 use ByJG\AnyDataset\Db\Helpers\SqlHelper;
 use ByJG\AnyDataset\Db\Traits\DbCacheTrait;
+use ByJG\AnyDataset\Db\Traits\TransactionTrait;
 use ByJG\Util\Uri;
 use Exception;
 use Psr\Log\LoggerInterface;
@@ -16,6 +17,7 @@ use Psr\SimpleCache\CacheInterface;
 
 class DbOci8Driver implements DbDriverInterface
 {
+    use TransactionTrait;
     use DbCacheTrait;
 
     private LoggerInterface $logger;
@@ -36,12 +38,12 @@ class DbOci8Driver implements DbDriverInterface
 
     /** Used for OCI8 connections * */
     protected $conn;
-    protected $transaction = OCI_COMMIT_ON_SUCCESS;
+    protected $ociAutoCommit;
 
     /**
      * Ex.
      *
-     *    oci8://username:password@host:1521/servicename?protocol=TCP&codepage=WE8MSWIN1252
+     *    oci8://username:password@host:1521/servicename?protocol=TCP&codepage=WE8MSWIN1252&conntype=persistent|new|default
      *
      * @param Uri $connectionString
      * @throws DatabaseException
@@ -50,6 +52,7 @@ class DbOci8Driver implements DbDriverInterface
     {
         $this->logger = new NullLogger();
         $this->connectionUri = $connectionString;
+        $this->ociAutoCommit = OCI_COMMIT_ON_SUCCESS;
         $this->reconnect();
     }
 
@@ -72,7 +75,9 @@ class DbOci8Driver implements DbDriverInterface
 
         return "(DESCRIPTION = " .
             "    (ADDRESS = (PROTOCOL = $protocol)(HOST = $host)(PORT = $port)) " .
-            "        (CONNECT_DATA = (SERVICE_NAME = $svcName)) " .
+            "        (CONNECT_DATA = ".
+            "            (SERVICE_NAME = $svcName) " .
+            "        ) " .
             ")";
     }
 
@@ -112,7 +117,7 @@ class DbOci8Driver implements DbDriverInterface
         }
 
         // Perform the logic of the query
-        $result = oci_execute($stid, $this->transaction);
+        $result = oci_execute($stid, $this->ociAutoCommit);
 
         // Check if is OK;
         if (!$result) {
@@ -180,46 +185,40 @@ class DbOci8Driver implements DbDriverInterface
         return $fields;
     }
 
-    public function beginTransaction($isolationLevel = null, $allowJoin = false)
+    protected function transactionHandler($action, $isolLevelCommand = "")
     {
-        $this->logger->debug("SQL: Begin Transaction");
-        $this->transaction = OCI_NO_AUTO_COMMIT;
-    }
+        switch ($action) {
+            case 'begin':
+                $this->ociAutoCommit = OCI_NO_AUTO_COMMIT;
+                $this->execute($isolLevelCommand);
+                break;
 
-    /**
-     * @throws DatabaseException
-     */
-    public function commitTransaction()
-    {
-        $this->logger->debug("SQL: Commit Transaction");
-        if ($this->transaction == OCI_COMMIT_ON_SUCCESS) {
-            throw new DatabaseException('No transaction for commit');
+            case 'commit':
+                if ($this->ociAutoCommit == OCI_COMMIT_ON_SUCCESS) {
+                    throw new DatabaseException('No transaction for commit');
+                }
+
+                $this->ociAutoCommit = OCI_COMMIT_ON_SUCCESS;
+
+                $result = oci_commit($this->conn);
+                if (!$result) {
+                    $error = oci_error($this->conn);
+                    throw new DatabaseException($error['message']);
+                }
+                break;
+
+            case 'rollback':
+                if ($this->ociAutoCommit == OCI_COMMIT_ON_SUCCESS) {
+                    throw new DatabaseException('No transaction for rollback');
+                }
+
+                $this->ociAutoCommit = OCI_COMMIT_ON_SUCCESS;
+
+                oci_rollback($this->conn);
+                break;
         }
-
-        $this->transaction = OCI_COMMIT_ON_SUCCESS;
-
-        $result = oci_commit($this->conn);
-        if (!$result) {
-            $error = oci_error($this->conn);
-            throw new DatabaseException($error['message']);
-        }
     }
-
-    /**
-     * @throws DatabaseException
-     */
-    public function rollbackTransaction()
-    {
-        $this->logger->debug("SQL: Rollback Transaction");
-        if ($this->transaction == OCI_COMMIT_ON_SUCCESS) {
-            throw new DatabaseException('No transaction for rollback');
-        }
-
-        $this->transaction = OCI_COMMIT_ON_SUCCESS;
-
-        oci_rollback($this->conn);
-    }
-
+    
     /**
      * @param $sql
      * @param null $array
@@ -321,13 +320,25 @@ class DbOci8Driver implements DbDriverInterface
         $codePage = $this->connectionUri->getQueryPart("codepage");
         $codePage = ($codePage == "") ? 'UTF8' : $codePage;
         $tns = DbOci8Driver::getTnsString($this->connectionUri);
+        $connType = $this->connectionUri->getQueryPart("conntype");
+        switch ($connType) {
+            case "persistent":
+                $connectMethod = "oci_pconnect";
+                break;
+            case "new":
+                $connectMethod = "oci_new_connect";
+                break;
+            default:
+                $connectMethod = "oci_connect";
+                break;
+        }
 
-        $this->conn = oci_connect(
+        $this->conn = $connectMethod(
             $this->connectionUri->getUsername(),
             $this->connectionUri->getPassword(),
             $tns,
             $codePage,
-            OCI_SYSDBA
+            $this->connectionUri->getQueryPart('session_mode') ?? OCI_DEFAULT
         );
 
         if (!$this->conn) {
@@ -377,25 +388,5 @@ class DbOci8Driver implements DbDriverInterface
     public function log($message, $context = [])
     {
         $this->logger->debug($message, $context);
-    }
-
-    public function hasActiveTransaction()
-    {
-        // TODO: Implement hasActiveTransaction() method.
-    }
-
-    public function activeIsolationLevel()
-    {
-        // TODO: Implement activeIsolationLevel() method.
-    }
-
-    public function remainingCommits()
-    {
-        // TODO: Implement remainingCommits() method.
-    }
-
-    public function requiresTransaction()
-    {
-        // TODO: Implement requiresTransaction() method.
     }
 }

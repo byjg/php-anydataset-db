@@ -278,4 +278,22 @@ abstract class DbPdoDriver implements DbDriverInterface
     {
         $this->logger->debug($message, $context);
     }
+
+    protected function transactionHandler($action, $isolLevelCommand = "")
+    {
+        switch ($action) {
+            case 'begin':
+                if (!empty($isolLevelCommand)) {
+                    $this->getInstance()->exec($isolLevelCommand);
+                }
+                $this->getInstance()->beginTransaction();
+                break;
+            case 'commit':
+                $this->getInstance()->commit();
+                break;
+            case 'rollback':
+                $this->getInstance()->rollBack();
+                break;
+        }
+    }
 }

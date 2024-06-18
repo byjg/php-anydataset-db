@@ -159,13 +159,12 @@ class DbOci8Functions extends DbBaseFunctions
     {
         switch ($isolationLevel) {
             case IsolationLevelEnum::READ_UNCOMMITTED:
-                return "SET SESSION CHARACTERISTICS AS TRANSACTION ISOLATION LEVEL READ UNCOMMITTED";
+                return "SET TRANSACTION READ WRITE";
             case IsolationLevelEnum::READ_COMMITTED:
-                return "SET SESSION CHARACTERISTICS AS TRANSACTION ISOLATION LEVEL READ COMMITTED";
             case IsolationLevelEnum::REPEATABLE_READ:
-                return "SET SESSION CHARACTERISTICS AS TRANSACTION ISOLATION LEVEL REPEATABLE READ";
+                return "SET TRANSACTION ISOLATION LEVEL READ COMMITTED";
             case IsolationLevelEnum::SERIALIZABLE:
-                return "SET SESSION CHARACTERISTICS AS TRANSACTION ISOLATION LEVEL SERIALIZABLE";
+                return "SET TRANSACTION ISOLATION LEVEL SERIALIZABLE";
             default:
                 return "";
         }
