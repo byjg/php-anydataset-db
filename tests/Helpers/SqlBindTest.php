@@ -1,6 +1,6 @@
 <?php
 
-namespace Tests\AnyDataset\Store\Helpers;
+namespace Test\Helpers;
 
 use ByJG\AnyDataset\Db\Helpers\SqlBind;
 use ByJG\Util\Uri;

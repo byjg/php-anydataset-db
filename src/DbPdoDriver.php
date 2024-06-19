@@ -22,31 +22,24 @@ abstract class DbPdoDriver implements DbDriverInterface
     use TransactionTrait;
     use DbCacheTrait;
 
-    /**
-     * @var PDO
-     */
-    protected $instance = null;
+    protected ?PDO $instance = null;
 
-    /**
-     * @var PDOStatement[]
-     */
-    protected $supportMultRowset = false;
+    protected bool $supportMultRowset = false;
+
 
 
     const DONT_PARSE_PARAM = "dont_parse_param";
     const STATEMENT_CACHE = "stmtcache";
     const UNIX_SOCKET = "unix_socket";
 
-    /**
-     * @var PdoObj
-     */
-    protected $pdoObj;
+    protected PdoObj $pdoObj;
 
-    protected $preOptions;
+    protected ?array $preOptions;
 
-    protected $postOptions;
+    protected ?array $postOptions;
 
-    protected $executeAfterConnect;
+    protected ?array $executeAfterConnect;
+
     /**
      * @var LoggerInterface
      */

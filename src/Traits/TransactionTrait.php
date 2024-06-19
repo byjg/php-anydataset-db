@@ -4,6 +4,7 @@ namespace ByJG\AnyDataset\Db\Traits;
 
 use ByJG\AnyDataset\Db\Exception\TransactionNotStartedException;
 use ByJG\AnyDataset\Db\Exception\TransactionStartedException;
+use ByJG\AnyDataset\Db\IsolationLevelEnum;
 
 /**
  * Trait TransactionTrait
@@ -12,11 +13,11 @@ use ByJG\AnyDataset\Db\Exception\TransactionStartedException;
  */
 trait TransactionTrait
 {
-    protected $isolationLevel = null;
+    protected IsolationLevelEnum|null $isolationLevel = null;
 
-    protected $transactionCount = 0;
+    protected int $transactionCount = 0;
 
-    public function beginTransaction($isolationLevel = null, $allowJoin = false)
+    public function beginTransaction(IsolationLevelEnum $isolationLevel = null, bool $allowJoin = false): void
     {
         if ($this->hasActiveTransaction()) {
             if (!$allowJoin) {
@@ -38,7 +39,7 @@ trait TransactionTrait
         $this->isolationLevel = $isolationLevel;
     }
 
-    public function commitTransaction()
+    public function commitTransaction(): void
     {
         $this->logger->debug("SQL: Commit transaction");
         if (!$this->hasActiveTransaction()) {
@@ -52,7 +53,7 @@ trait TransactionTrait
         $this->isolationLevel = null;
     }
 
-    public function rollbackTransaction()
+    public function rollbackTransaction(): void
     {
         $this->logger->debug("SQL: Rollback transaction");
         if (!$this->hasActiveTransaction()) {
@@ -63,24 +64,24 @@ trait TransactionTrait
         $this->isolationLevel = null;
     }
 
-    public function remainingCommits()
+    public function remainingCommits(): int
     {
         return $this->transactionCount;
     }
 
-    public function requiresTransaction()
+    public function requiresTransaction(): void
     {
         if (!$this->hasActiveTransaction()) {
             throw new TransactionNotStartedException("A transaction is required.");
         }
     }
 
-    public function hasActiveTransaction()
+    public function hasActiveTransaction(): bool
     {
         return $this->remainingCommits() > 0;
     }
 
-    public function activeIsolationLevel()
+    public function activeIsolationLevel(): ?IsolationLevelEnum
     {
         return $this->isolationLevel;
     }

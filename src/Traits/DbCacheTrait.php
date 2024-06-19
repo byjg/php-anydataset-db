@@ -2,21 +2,23 @@
 
 namespace ByJG\AnyDataset\Db\Traits;
 
+use PDOStatement;
+
 trait DbCacheTrait
 {
-    protected $stmtCache = [];
+    protected array $stmtCache = [];
 
-    protected $maxStmtCache = 10;
+    protected int $maxStmtCache = 10;
 
     /**
      * @return int
      */
-    public function getMaxStmtCache()
+    public function getMaxStmtCache(): int
     {
         return $this->maxStmtCache;
     }
 
-    public function getCountStmtCache()
+    public function getCountStmtCache(): int
     {
         return count($this->stmtCache);
     }
@@ -24,17 +26,27 @@ trait DbCacheTrait
     /**
      * @param int $maxStmtCache
      */
-    public function setMaxStmtCache($maxStmtCache)
+    public function setMaxStmtCache(int $maxStmtCache): void
     {
         $this->maxStmtCache = $maxStmtCache;
     }
 
-    protected function clearCache()
+    protected function enableCache(): void
+    {
+        $this->useCache = true;
+    }
+
+    protected function clearCache(): void
     {
         $this->stmtCache = [];
     }
 
-    protected function getOrSetSqlCacheStmt($sql)
+    protected function isCachingStmt(): bool
+    {
+        return $this->useCache;
+    }
+
+    protected function getOrSetSqlCacheStmt(string $sql): PDOStatement
     {
         if (!isset($this->stmtCache[$sql])) {
             $this->stmtCache[$sql] = $this->getInstance()->prepare($sql);

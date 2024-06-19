@@ -261,10 +261,10 @@ class Route implements DbDriverInterface
     }
 
     /**
-     * @param $isolationLevel
+     * @param IsolationLevelEnum|null $isolationLevel
      * @throws NotImplementedException
      */
-    public function beginTransaction($isolationLevel = null, $allowJoin = false)
+    public function beginTransaction(IsolationLevelEnum $isolationLevel = null, bool $allowJoin = false)
     {
         throw new NotImplementedException('Feature not available');
     }
@@ -272,7 +272,7 @@ class Route implements DbDriverInterface
     /**
      * @throws NotImplementedException
      */
-    public function commitTransaction()
+    public function commitTransaction(): void
     {
         throw new NotImplementedException('Feature not available');
     }
@@ -280,7 +280,7 @@ class Route implements DbDriverInterface
     /**
      * @throws NotImplementedException
      */
-    public function rollbackTransaction()
+    public function rollbackTransaction(): void
     {
         throw new NotImplementedException('Feature not available');
     }
@@ -360,17 +360,17 @@ class Route implements DbDriverInterface
         throw new NotImplementedException('Feature not available');
     }
 
-    public function getMaxStmtCache()
+    public function getMaxStmtCache(): int
     {
         throw new NotImplementedException('Feature not available');
     }
 
-    public function setMaxStmtCache($maxStmtCache)
+    public function setMaxStmtCache(int $maxStmtCache): void
     {
         throw new NotImplementedException('Feature not available');
     }
 
-    public function getCountStmtCache()
+    public function getCountStmtCache(): int
     {
         throw new NotImplementedException('Feature not available');
     }
@@ -400,23 +400,23 @@ class Route implements DbDriverInterface
         throw new NotImplementedException('Feature not available');
     }
 
-    public function hasActiveTransaction()
+    public function hasActiveTransaction(): bool
     {
         throw new NotImplementedException('Feature not available');
     }
 
-    public function requiresTransaction()
+    public function requiresTransaction(): void
     {
         throw new NotImplementedException('Feature not available');
     }
 
-    public function activeIsolationLevel()
+    public function activeIsolationLevel(): ?IsolationLevelEnum
     {
-        // TODO: Implement activeIsolationLevel() method.
+        throw new NotImplementedException('Feature not available');
     }
 
-    public function remainingCommits()
+    public function remainingCommits(): int
     {
-        // TODO: Implement remainingCommits() method.
+        throw new NotImplementedException('Feature not available');
     }
 }
