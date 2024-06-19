@@ -134,7 +134,18 @@ class DbOci8Functions extends DbBaseFunctions
     public function getTableMetadata(DbDriverInterface $dbdataset, $tableName)
     {
         $tableName = strtoupper($tableName);
-        $sql = "SELECT COLUMN_NAME, DATA_TYPE || '(' || COALESCE(CAST(DATA_LENGTH AS VARCHAR2(10)), CAST(DATA_PRECISION AS VARCHAR2(10)) || ',' || DATA_SCALE) || ')' AS TYPE, NULLABLE FROM ALL_TAB_COLUMNS WHERE TABLE_NAME = '{$tableName}'";
+        $sql = "SELECT
+                    COLUMN_NAME,
+                    DATA_TYPE ||
+                        CASE
+                            WHEN COALESCE(DATA_PRECISION, CHAR_LENGTH, 0) <> 0
+                                THEN '(' || COALESCE(DATA_PRECISION, CHAR_LENGTH) || (
+                                    CASE WHEN COALESCE(DATA_SCALE, 0) <> 0 THEN ',' || DATA_SCALE END
+                                ) || ')'
+                        END AS TYPE,
+                    DATA_DEFAULT AS COLUMN_DEFAULT,
+                    NULLABLE
+                FROM ALL_TAB_COLUMNS WHERE TABLE_NAME = '{$tableName}'";
 
         return $this->getTableMetadataFromSql($dbdataset, $sql);
     }
@@ -148,7 +159,7 @@ class DbOci8Functions extends DbBaseFunctions
                     'name' => $value['column_name'],
                     'dbType' => strtolower($value['type']),
                     'required' => $value['nullable'] == 'N',
-                    'default' => isset($value['column_default']) ? $value['column_default'] : "",
+                    'default' => isset($value['column_default']) ? $value['column_default'] : null,
                 ] + $this->parseTypeMetadata(strtolower($value['type']));
         }
 

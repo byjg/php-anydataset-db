@@ -44,10 +44,10 @@ class PdoOciTest extends BasePdo
     {
         //create the database
         $this->dbDriver->execute("CREATE TABLE Dogs (
-            Id NUMBER GENERATED ALWAYS as IDENTITY(START with 1 INCREMENT by 1), 
+            Id INT GENERATED ALWAYS as IDENTITY(START with 1 INCREMENT by 1), 
             Breed varchar2(50), 
             Name varchar2(50), 
-            Age number(10), 
+            Age INT, 
             Weight number(10,2), 
             CONSTRAINT dogs_pk PRIMARY KEY (Id))");
     }
@@ -63,6 +63,32 @@ class PdoOciTest extends BasePdo
 
         $data = $this->dbDriver->getScalar("SELECT TO_TIMESTAMP('2018-07-26 20:02:03', 'YYYY-MM-DD HH24:MI:SS') FROM DUAL ");
         $this->assertEquals("26-JUL-18 08.02.03.000000000 PM", $data);
+    }
+
+    public function testGetMetadata()
+    {
+        $metadata = $this->dbDriver->getDbHelper()->getTableMetadata($this->dbDriver, 'Dogs');
+
+        foreach ($metadata as $key => $field) {
+            unset($metadata[$key]['dbType']);
+        }
+        $this->assertStringContainsString('.nextval', $metadata['id']['default']);
+        $metadata['id']['default'] = null;
+
+        $this->assertEquals($this->getExpectedMetadata(), $metadata);
+    }
+
+    protected function getExpectedMetadata()
+    {
+        $expected = parent::getExpectedMetadata();
+
+        foreach ($expected as $key => $value) {
+            $expected[$key]["name"] = strtoupper($expected[$key]["name"]);
+        }
+        $expected['id']["phpType"] = "float";
+        $expected['age']["phpType"] = "float";
+
+        return $expected;
     }
 
     public function testTwoDifferentTransactions()

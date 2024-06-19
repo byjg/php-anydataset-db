@@ -204,7 +204,7 @@ abstract class DbBaseFunctions implements DbFunctionsInterface
     protected function parseTypeMetadata($type)
     {
         $matches = [];
-        if (!preg_match('/(?<type>[a-z\s]+)(\((?<len>\d+)(,(?<precision>\d+))?\))?/i', $type, $matches)) {
+        if (!preg_match('/(?<type>[a-z0-9\s]+)(\((?<len>\d+)(,(?<precision>\d+))?\))?/i', $type, $matches)) {
             return [ 'phpType' => 'string', 'length' => null, 'precision' => null ];
         }
 
