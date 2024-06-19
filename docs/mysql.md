@@ -1,4 +1,8 @@
-# Connecting To MySQL via SSL
+# Driver: MySQL
+
+The connection string can have special attributes to connect using SSL. 
+
+## Connecting To MySQL via SSL
 
 Read [here](https://gist.github.com/byjg/860065a828150caf29c20209ecbd5692) about create SSL mysql
 

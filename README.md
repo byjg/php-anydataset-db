@@ -31,7 +31,6 @@ See below the current implemented drivers:
 | Postgres            | psql://username:password@hostname:port/database   | getDbRelationalInstance() |
 | Sql Server (DbLib)  | dblib://username:password@hostname:port/database  | getDbRelationalInstance() |
 | Sql Server (Sqlsrv) | sqlsrv://username:password@hostname:port/database | getDbRelationalInstance() |
-| Oracle (OCI)        | oci://username:password@hostname:port/database    | getDbRelationalInstance() |
 | Oracle (OCI8)       | oci8://username:password@hostname:port/database   | getDbRelationalInstance() |
 | Generic PDO         | pdo://username:password@pdo_driver?PDO_PARAMETERS | getDbRelationalInstance() |
 
@@ -42,19 +41,23 @@ $conn = \ByJG\AnyDataset\Db\Factory::getDbRelationalInstance("mysql://root:passw
 
 ## Examples
 
-- [Basic Query and Update](basic-query.md)
-- [Cache results](cache.md)
-- [Database Transaction](transaction.md)
-- [Load Balance and Connection Pooling](load-balance.md)
-- [Database Helper](helper.md)
+- [Basic Query and Update](docs/basic-query.md)
+- [Cache results](docs/cache.md)
+- [Database Transaction](docs/transaction.md)
+- [Load Balance and Connection Pooling](docs/load-balance.md)
+- [Database Helper](docs/helper.md)
 
 ## Advanced Topics
 
-- [Passing Parameters to PDODriver](parameters.md)
-- [MySQL SSL Connection](mysql-ssl.md)
-- [FreeTDS/Dblib Date Issue](freetds.md)
-- [Generic PDO Driver](generic-pdo-driver.md)
-- [Running Tests](tests.md)
+- [Passing Parameters to PDODriver](docs/parameters.md)
+- [Generic PDO Driver](docs/generic-pdo-driver.md)
+- [Running Tests](docs/tests.md)
+
+## Database Specifics
+
+- [MySQL](docs/mysql.md)
+- [Oracle](docs/oracle.md)
+- [SQLServer](docs/sqlserver.md)
 
 
 ## Install
