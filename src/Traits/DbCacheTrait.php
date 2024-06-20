@@ -53,16 +53,51 @@ trait DbCacheTrait
     public function getIteratorUsingCache($sql, $params, ?CacheInterface $cache, $ttl, \Closure $closure): GenericIterator
     {
         $cacheKey = $this->getQueryKey($cache, $sql, $params);
-        $cachedResult = $this->getCachedResult($cacheKey, $cache);
-        if (!empty($cachedResult)) {
-            return $cachedResult;
-        }
 
-        $iterator = $closure($sql, $params);
+        do {
+            $lock = $this->mutexIsLocked($cache, $cacheKey);
+            if ($lock !== false) {
+                usleep(1000);
+                continue;
+            }
 
-        return $this->cacheResult($cacheKey, $iterator, $cache, $ttl);
+            $cachedResult = $this->getCachedResult($cacheKey, $cache);
+            if (!empty($cachedResult)) {
+                return $cachedResult;
+            }
+            $this->mutexLock($cache, $cacheKey);
+            try {
+                $iterator = $closure($sql, $params);
+                return $this->cacheResult($cacheKey, $iterator, $cache, $ttl);
+            } finally {
+                $this->mutexRelease($cache, $cacheKey);
+            }
+        } while (true);
     }
 
+    protected function mutexIsLocked(?CacheInterface $cache, ?string $cacheKey)
+    {
+        if (empty($cache)) {
+            return false;
+        }
+        return $cache->get($cacheKey . ".lock", false);
+    }
+
+    protected function mutexLock(?CacheInterface  $cache, ?string $cacheKey)
+    {
+        if (empty($cache)) {
+            return;
+        }
+        $cache->set($cacheKey . ".lock", time(), \DateInterval::createFromDateString('5 min'));;
+    }
+
+    protected function mutexRelease(?CacheInterface  $cache, ?string $cacheKey)
+    {
+        if (empty($cache)) {
+            return;
+        }
+        $cache->delete($cacheKey . ".lock");
+    }
 
     protected function getCachedResult($key, ?CacheInterface $cache): ?GenericIterator
     {

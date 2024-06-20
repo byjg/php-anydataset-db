@@ -295,7 +295,7 @@ class PdoSqliteTest extends TestCase
         );
     }
 
-    public function testCachedResultsNotFound()
+    public function testCachedResults1()
     {
         $cache = new ArrayCacheEngine();
 
@@ -305,28 +305,55 @@ class PdoSqliteTest extends TestCase
             [],
             $iterator->toArray()
         );
-        $iterator = $this->dbDriver->getIterator('select * from info where id = :id', ['id' => 1], $cache, 60);
+
+        // Add a new record to DB
+        $id = $this->dbDriver->execute("insert into info (iduser, number, property) values (2, 20, 40)");
+        $this->assertEquals(4, $id);
+        $iterator = $this->dbDriver->getIterator('select * from info where id = :id', ['id' => 4]);
         $this->assertEquals(
             [
-                [ "__id" => 0, "__key" => 0, 'id'=> 1, 'iduser' => 1, 'number' => 10.45, 'property' => 'xxx'],
+                ["id" => 4, "iduser" => 2, "number" => 20, "property" => '40'],
             ],
             $iterator->toArray()
         );
 
-        // Remove it from DB (Still in cache)
-        $this->dbDriver->execute("insert into users (name, createdate) values ('John Doe 2', '2018-01-02')");
-
-        // Try get from cache
-        $iterator = $this->dbDriver->getIterator('select * from info where id = :id', ['id' => 1], $cache, 60);
-        $this->assertEquals(
-            [
-                [ "__id" => 0, "__key" => 0, 'id'=> 1, 'iduser' => 1, 'number' => 10.45, 'property' => 'xxx'],
-            ],
-            $iterator->toArray()
-        );
+        // Get from cache, should return the same values as before the insert
         $iterator = $this->dbDriver->getIterator('select * from info where id = :id', ['id' => 4], $cache, 60);
         $this->assertEquals(
             [],
+            $iterator->toArray()
+        );
+    }
+
+    public function testCachedResults2()
+    {
+        $cache = new ArrayCacheEngine();
+
+        // Try get from cache (still return the same values)
+        $iterator = $this->dbDriver->getIterator('select * from info where id = :id', ['id' => 1], $cache, 60);
+        $this->assertEquals(
+            [
+                [ "__id" => 0, "__key" => 0, 'id'=> 1, 'iduser' => 1, 'number' => 10.45, 'property' => 'xxx'],
+            ],
+            $iterator->toArray()
+        );
+
+        // Update a record to DB
+        $id = $this->dbDriver->execute("update info set number = 1500 where id = :id", ["id" => 1]);
+        $iterator = $this->dbDriver->getIterator('select * from info where id = :id', ['id' => 1]);
+        $this->assertEquals(
+            [
+                ["id" => 1, "iduser" => 1, "number" => 1500, "property" => 'xxx'],
+            ],
+            $iterator->toArray()
+        );
+
+        // Get from cache, should return the same values as before the update
+        $iterator = $this->dbDriver->getIterator('select * from info where id = :id', ['id' => 1], $cache, 60);
+        $this->assertEquals(
+            [
+                [ "__id" => 0, "__key" => 0, 'id'=> 1, 'iduser' => 1, 'number' => 10.45, 'property' => 'xxx'],
+            ],
             $iterator->toArray()
         );
     }
