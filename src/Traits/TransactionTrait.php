@@ -30,10 +30,7 @@ trait TransactionTrait
 
         $this->logger->debug("SQL: Begin transaction");
         $isolLevelCommand = $this->getDbHelper()->getIsolationLevelCommand($isolationLevel);
-        if (!empty($isolLevelCommand)) {
-            $this->getInstance()->exec($isolLevelCommand);
-        }
-        $this->getInstance()->beginTransaction();
+        $this->transactionHandler('begin', $isolLevelCommand);
         $this->transactionCount = 1;
         $this->isolationLevel = $isolationLevel;
     }
@@ -48,7 +45,7 @@ trait TransactionTrait
         if ($this->transactionCount > 0) {
             return;
         }
-        $this->getInstance()->commit();
+        $this->transactionHandler('commit');
         $this->isolationLevel = null;
     }
 
@@ -58,7 +55,7 @@ trait TransactionTrait
         if (!$this->hasActiveTransaction()) {
             throw new TransactionNotStartedException("There is no active transaction");
         }
-        $this->getInstance()->rollBack();
+        $this->transactionHandler('rollback');
         $this->transactionCount = 0;
         $this->isolationLevel = null;
     }

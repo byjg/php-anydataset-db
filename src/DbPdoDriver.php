@@ -8,7 +8,6 @@ use ByJG\AnyDataset\Db\Helpers\SqlBind;
 use ByJG\AnyDataset\Db\Helpers\SqlHelper;
 use ByJG\AnyDataset\Db\Traits\DbCacheTrait;
 use ByJG\AnyDataset\Db\Traits\TransactionTrait;
-use ByJG\AnyDataset\Lists\ArrayDataset;
 use ByJG\Util\Uri;
 use Exception;
 use PDO;
@@ -128,29 +127,11 @@ abstract class DbPdoDriver implements DbDriverInterface
 
     public function getIterator($sql, $params = null, CacheInterface $cache = null, $ttl = 60)
     {
-        if (!empty($cache)) {
-            // Otherwise try to get from cache
-            $key = $this->getQueryKey($sql, $params);
-
-            // Get the CACHE
-            $cachedItem = $cache->get($key);
-            if (!is_null($cachedItem)) {
-                return (new ArrayDataset($cachedItem))->getIterator();
-            }
-        }
-
-
-        $stmt = $this->getDBStatement($sql, $params);
-        $stmt->execute();
-        $iterator = new DbIterator($stmt);
-
-        if (!empty($cache)) {
-            $cachedItem = $iterator->toArray();
-            $cache->set($key, $cachedItem, $ttl);
-            return (new ArrayDataset($cachedItem))->getIterator();
-        }
-
-        return $iterator;
+        return $this->getIteratorUsingCache($sql, $params, $cache, $ttl, function ($sql, $params) {
+            $stmt = $this->getDBStatement($sql, $params);
+            $stmt->execute();
+            return new DbIterator($stmt);
+        });
     }
 
     public function getScalar($sql, $array = null)
@@ -298,25 +279,21 @@ abstract class DbPdoDriver implements DbDriverInterface
         $this->logger->debug($message, $context);
     }
 
-    protected function array_map_assoc($callback, $array)
+    protected function transactionHandler($action, $isolLevelCommand = "")
     {
-        $r = array();
-        foreach ($array as $key=>$value) {
-            $r[$key] = $callback($key, $value);
+        switch ($action) {
+            case 'begin':
+                if (!empty($isolLevelCommand)) {
+                    $this->getInstance()->exec($isolLevelCommand);
+                }
+                $this->getInstance()->beginTransaction();
+                break;
+            case 'commit':
+                $this->getInstance()->commit();
+                break;
+            case 'rollback':
+                $this->getInstance()->rollBack();
+                break;
         }
-        return $r;
-    }
-
-    protected function getQueryKey($sql, $array)
-    {
-        $key1 = md5($sql);
-        $key2 = "";
-
-        // Check which parameter exists in the SQL
-        if (is_array($array)) {
-            $key2 = md5(":" . implode(',', $this->array_map_assoc(function($k,$v){return "$k:$v";},$array)));
-        }
-
-        return  "qry:" . $key1 . $key2;
     }
 }

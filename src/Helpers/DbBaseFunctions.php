@@ -199,15 +199,12 @@ abstract class DbBaseFunctions implements DbFunctionsInterface
         return $this->parseColumnMetadata($metadata);
     }
 
-    protected function parseColumnMetadata($metadata)
-    {
-        throw new Exception("Not implemented");
-    }
+    abstract protected function parseColumnMetadata($metadata);
 
     protected function parseTypeMetadata($type)
     {
         $matches = [];
-        if (!preg_match('/(?<type>[a-z\s]+)(\((?<len>\d+)(,(?<precision>\d+))?\))?/i', $type, $matches)) {
+        if (!preg_match('/(?<type>[a-z0-9\s]+)(\((?<len>\d+)(,(?<precision>\d+))?\))?/i', $type, $matches)) {
             return [ 'phpType' => 'string', 'length' => null, 'precision' => null ];
         }
 
