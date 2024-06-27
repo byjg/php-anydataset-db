@@ -120,10 +120,44 @@ class DbOci8Functions extends DbBaseFunctions
      */
     public function executeAndGetInsertedId(DbDriverInterface $dbdataset, $sql, $param)
     {
+        preg_match('/INSERT INTO ([a-zA-Z0-9_]+)/i', $sql, $matches);
+        $tableName = $matches[1] ?? null;
+
+        if (!empty($tableName)) {
+            $tableName = strtoupper($tableName);
+
+            // Get the primary key of the table
+            $primaryKeyResult = $dbdataset->getScalar("SELECT cols.column_name
+                FROM all_constraints cons, all_cons_columns cols
+                WHERE cols.table_name = '{$tableName}'
+                AND cons.constraint_type = 'P'
+                AND cons.constraint_name = cols.constraint_name
+                AND cons.owner = cols.owner
+                AND ROWNUM = 1");
+
+            // Get the default value of the primary key
+            $defaultValueResult = $dbdataset->getScalar("SELECT DATA_DEFAULT
+                FROM USER_TAB_COLUMNS
+                WHERE TABLE_NAME = '{$tableName}'
+                AND COLUMN_NAME = '{$primaryKeyResult}'");
+        }
+
         $dbdataset->execute($sql, $param);
-        return 4;
-//        oci_inse
-//        return $dbdataset->getScalar('select lastval()');
+
+        if (!empty($tableName) && !empty($defaultValueResult)) {
+
+            // Check if the default value is a sequence's nextval
+            if (strpos($defaultValueResult, '.nextval') !== false) {
+                // Extract the sequence name
+                $sequenceName = str_replace('.nextval', '', $defaultValueResult);
+
+                // Return the CURRVAL of the sequence
+                return $dbdataset->getScalar("SELECT {$sequenceName}.currval FROM DUAL");
+            }
+        }
+
+        return null;
+
     }
 
     public function hasForUpdate()
