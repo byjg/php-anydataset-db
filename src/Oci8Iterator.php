@@ -2,7 +2,6 @@
 
 namespace ByJG\AnyDataset\Db;
 
-use ByJG\AnyDataset\Core\Exception\IteratorException;
 use ByJG\AnyDataset\Core\GenericIterator;
 use ByJG\AnyDataset\Core\Row;
 use ByJG\Serializer\Exception\InvalidArgumentException;
@@ -86,18 +85,17 @@ class Oci8Iterator extends GenericIterator
 
     /**
      * @return mixed
-     * @throws IteratorException
      * @throws InvalidArgumentException
      */
     public function moveNext()
     {
         if (!$this->hasNext()) {
-            throw new IteratorException("No more records. Did you used hasNext() before moveNext()?");
-        } else {
-            $row = array_shift($this->rowBuffer);
-            $this->moveNextRow++;
-            return $row;
+            return null;
         }
+
+        $row = array_shift($this->rowBuffer);
+        $this->moveNextRow++;
+        return $row;
     }
 
     public function key()
