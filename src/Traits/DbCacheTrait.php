@@ -4,6 +4,7 @@ namespace ByJG\AnyDataset\Db\Traits;
 
 use ByJG\AnyDataset\Core\GenericIterator;
 use ByJG\AnyDataset\Lists\ArrayDataset;
+use PDOStatement;
 use Psr\SimpleCache\CacheInterface;
 
 trait DbCacheTrait
