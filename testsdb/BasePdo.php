@@ -384,7 +384,12 @@ abstract class BasePdo extends TestCase
             unset($metadata[$key]['dbType']);
         }
 
-        $this->assertEquals([
+        $this->assertEquals($this->getExpectedMetadata(), $metadata);
+    }
+
+    protected function getExpectedMetadata()
+    {
+        return [
             'id' => [
                 'name' => 'Id',
                 'required' => true,
@@ -425,7 +430,7 @@ abstract class BasePdo extends TestCase
                 'length' => $this->floatSize,
                 'precision' => 2,
             ],
-        ], $metadata);
+        ];
     }
 
     public function testDisconnect()

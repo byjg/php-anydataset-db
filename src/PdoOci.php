@@ -9,7 +9,7 @@ class PdoOci extends PdoLiteral
 
     public static function schema()
     {
-        return ['oci'];
+        return ['oracle'];
     }
 
     public function __construct(Uri $connUri)
@@ -32,8 +32,7 @@ class PdoOci extends PdoLiteral
         $protocol = $connUri->getQueryPart("protocol");
         $protocol = ($protocol == "") ? 'TCP' : $protocol;
 
-        $port = $connUri->getPort();
-        $port = ($port == "") ? 1521 : $port;
+        $port = $connUri->getPort() ?? 1521;
 
         $svcName = preg_replace('~^/~', '', $connUri->getPath());
 
