@@ -9,7 +9,7 @@ services:
     ports:
       - "1433:1433"
     healthcheck:
-      test: ["CMD", "/opt/mssql-tools/bin/sqlcmd", "-S", "localhost,1433", "-U", "sa", "-P", "Pa55word", "-Q", "SELECT 1"]
+      test: ["CMD", "/opt/mssql-tools18/bin/sqlcmd", "-C", "-S", "localhost,1433", "-U", "sa", "-P", "Pa55word", "-Q", "SELECT 1"]
       timeout: 20s
       interval: 10s
       retries: 10
