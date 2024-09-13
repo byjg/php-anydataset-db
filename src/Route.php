@@ -6,8 +6,10 @@ use ByJG\AnyDataset\Core\Exception\NotImplementedException;
 use ByJG\AnyDataset\Core\GenericIterator;
 use ByJG\AnyDataset\Db\Exception\RouteNotFoundException;
 use ByJG\AnyDataset\Db\Exception\RouteNotMatchedException;
-use PDO;
+use ByJG\Util\Uri;
+use DateInterval;
 use Psr\Log\LoggerInterface;
+use Psr\SimpleCache\CacheInterface;
 
 class Route implements DbDriverInterface
 {
@@ -217,44 +219,46 @@ class Route implements DbDriverInterface
 
     /**
      * @param string $sql
-     * @param null $params
+     * @param array|null $params
+     * @param CacheInterface|null $cache
+     * @param int|DateInterval $ttl
      * @return GenericIterator
      * @throws \ByJG\AnyDataset\Db\Exception\RouteNotMatchedException
      */
-    public function getIterator($sql, $params = null)
+    public function getIterator(string $sql, ?array $params = null, ?CacheInterface $cache = null, DateInterval|int $ttl = 60): GenericIterator
     {
         $dbDriver = $this->matchRoute($sql);
-        return $dbDriver->getIterator($sql, $params);
+        return $dbDriver->getIterator($sql, $params, $cache, $ttl);
     }
 
     /**
-     * @param $sql
-     * @param null $array
+     * @param string $sql
+     * @param array|null $array
      * @return mixed
      * @throws \ByJG\AnyDataset\Db\Exception\RouteNotMatchedException
      */
-    public function getScalar($sql, $array = null)
+    public function getScalar(string $sql, ?array $array = null): mixed
     {
         $dbDriver = $this->matchRoute($sql);
         return $dbDriver->getScalar($sql, $array);
     }
 
     /**
-     * @param $tablename
+     * @param string $tablename
      * @throws NotImplementedException
      */
-    public function getAllFields($tablename)
+    public function getAllFields(string $tablename): array
     {
         throw new NotImplementedException('Feature not available');
     }
 
     /**
-     * @param $sql
-     * @param null $array
-     * @return mixed
+     * @param string $sql
+     * @param array|null $array
+     * @return bool
      * @throws \ByJG\AnyDataset\Db\Exception\RouteNotMatchedException
      */
-    public function execute($sql, $array = null)
+    public function execute(string $sql, ?array $array = null): bool
     {
         $dbDriver = $this->matchRoute($sql);
         return $dbDriver->execute($sql, $array);
@@ -286,59 +290,59 @@ class Route implements DbDriverInterface
     }
 
     /**
-     * @return PDO|void
+     * @return mixed
      * @throws NotImplementedException
      */
-    public function getDbConnection()
+    public function getDbConnection(): mixed
     {
         throw new NotImplementedException('Feature not available');
     }
 
     /**
-     * @param $name
-     * @param $value
+     * @param string $name
+     * @param mixed $value
      * @throws NotImplementedException
      */
-    public function setAttribute($name, $value)
+    public function setAttribute(string $name, mixed $value): void
     {
         throw new NotImplementedException('Feature not available');
     }
 
     /**
-     * @param $name
+     * @param string $name
      * @throws NotImplementedException
      */
-    public function getAttribute($name)
+    public function getAttribute(string $name): mixed
     {
         throw new NotImplementedException('Feature not available');
     }
 
     /**
-     * @param $sql
-     * @param null $array
+     * @param string $sql
+     * @param array|null $array
      * @return mixed
      * @throws \ByJG\AnyDataset\Db\Exception\RouteNotMatchedException
      */
-    public function executeAndGetId($sql, $array = null)
+    public function executeAndGetId(string $sql, ?array $array = null): mixed
     {
         $dbDriver = $this->matchRoute($sql);
         return $dbDriver->executeAndGetId($sql, $array);
     }
 
     /**
-     * @return \ByJG\AnyDataset\Db\DbFunctionsInterface|void
+     * @return DbFunctionsInterface
      * @throws NotImplementedException
      */
-    public function getDbHelper()
+    public function getDbHelper(): DbFunctionsInterface
     {
         throw new NotImplementedException('Feature not available');
     }
 
     /**
-     * @return void
+     * @return Uri
      * @throws NotImplementedException
      */
-    public function getUri()
+    public function getUri(): Uri
     {
         throw new NotImplementedException('Feature not available');
     }
@@ -346,16 +350,16 @@ class Route implements DbDriverInterface
     /**
      * @throws NotImplementedException
      */
-    public function isSupportMultRowset()
+    public function isSupportMultiRowset(): bool
     {
         throw new NotImplementedException('Feature not available');
     }
 
     /**
-     * @param $multipleRowSet
+     * @param bool $multipleRowSet
      * @throws NotImplementedException
      */
-    public function setSupportMultRowset($multipleRowSet)
+    public function setSupportMultiRowset(bool $multipleRowSet): void
     {
         throw new NotImplementedException('Feature not available');
     }
@@ -375,27 +379,27 @@ class Route implements DbDriverInterface
         throw new NotImplementedException('Feature not available');
     }
     //</editor-fold>
-    public function reconnect($force = false)
+    public function reconnect(bool $force = false): bool
     {
         throw new NotImplementedException('Feature not available');
     }
 
-    public function disconnect()
+    public function disconnect(): void
     {
         throw new NotImplementedException('Feature not available');
     }
 
-    public function isConnected($softCheck = false, $throwError = false)
+    public function isConnected(bool $softCheck = false, bool $throwError = false): bool
     {
         throw new NotImplementedException('Feature not available');
     }
 
-    public function enableLogger(LoggerInterface $logger)
+    public function enableLogger(LoggerInterface $logger): void
     {
         throw new NotImplementedException('Feature not available');
     }
 
-    public function log($message, $context = [])
+    public function log(string $message, array $context = []): void
     {
         throw new NotImplementedException('Feature not available');
     }

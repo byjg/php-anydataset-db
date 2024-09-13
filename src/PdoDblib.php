@@ -21,7 +21,7 @@ class PdoDblib extends PdoPdo
      */
     public function __construct($connUri)
     {
-        $this->setSupportMultRowset(true);
+        $this->setSupportMultiRowset(true);
 
         // Run after instance is created
         // Solve the error:

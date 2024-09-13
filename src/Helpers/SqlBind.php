@@ -18,7 +18,7 @@ class SqlBind
      * @param Uri $connData
      * @return string
      */
-    public static function getParamModel(Uri $connData)
+    public static function getParamModel(Uri $connData): string
     {
         if ($connData->getQueryPart("parammodel") != "") {
             return $connData->getQueryPart("parammodel");
@@ -33,10 +33,10 @@ class SqlBind
      *
      * @param Uri $connData
      * @param string $sql
-     * @param array $params
+     * @param array|null $params
      * @return array An array with the adjusted SQL and PARAMs
      */
-    public static function parseSQL(Uri $connData, $sql, $params = null)
+    public static function parseSQL(Uri $connData, string $sql, array $params = null): array
     {
         $paramSubstName = SqlBind::getParamModel($connData);
 
@@ -92,7 +92,7 @@ class SqlBind
         return [$sql, $usedParams];
     }
 
-    public static function keyAdj($key)
+    public static function keyAdj(string $key): string
     {
         return str_replace(".", "_", $key);
     }

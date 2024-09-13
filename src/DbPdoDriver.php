@@ -3,12 +3,14 @@
 namespace ByJG\AnyDataset\Db;
 
 use ByJG\AnyDataset\Core\Exception\NotAvailableException;
+use ByJG\AnyDataset\Core\GenericIterator;
 use ByJG\AnyDataset\Db\Exception\DbDriverNotConnected;
 use ByJG\AnyDataset\Db\Helpers\SqlBind;
 use ByJG\AnyDataset\Db\Helpers\SqlHelper;
 use ByJG\AnyDataset\Db\Traits\DbCacheTrait;
 use ByJG\AnyDataset\Db\Traits\TransactionTrait;
 use ByJG\Util\Uri;
+use DateInterval;
 use Exception;
 use PDO;
 use PDOStatement;
@@ -62,7 +64,7 @@ abstract class DbPdoDriver implements DbDriverInterface
         $this->reconnect();
     }
 
-    public function reconnect($force = false)
+    public function reconnect(bool $force = false): bool
     {
         if ($this->isConnected() && !$force) {
             return false;
@@ -77,7 +79,7 @@ abstract class DbPdoDriver implements DbDriverInterface
         return true;
     }
 
-    public function disconnect()
+    public function disconnect(): void
     {
         $this->clearCache();
         $this->instance = null;
@@ -118,7 +120,7 @@ abstract class DbPdoDriver implements DbDriverInterface
         return $stmt;
     }
 
-    public function getIterator($sql, $params = null, CacheInterface $cache = null, $ttl = 60)
+    public function getIterator(string $sql, ?array $params = null, ?CacheInterface $cache = null, DateInterval|int $ttl = 60): GenericIterator
     {
         return $this->getIteratorUsingCache($sql, $params, $cache, $ttl, function ($sql, $params) {
             $stmt = $this->getDBStatement($sql, $params);
@@ -127,7 +129,7 @@ abstract class DbPdoDriver implements DbDriverInterface
         });
     }
 
-    public function getScalar($sql, $array = null)
+    public function getScalar(string $sql, ?array $array = null): mixed
     {
         $stmt = $this->getDBStatement($sql, $array);
         $stmt->execute();
@@ -139,7 +141,7 @@ abstract class DbPdoDriver implements DbDriverInterface
         return $scalar;
     }
 
-    public function getAllFields($tablename)
+    public function getAllFields(string $tablename): array
     {
         $fields = array();
         $statement = $this->getInstance()->query(
@@ -159,12 +161,12 @@ abstract class DbPdoDriver implements DbDriverInterface
     }
 
 
-    public function execute($sql, $array = null)
+    public function execute(string $sql, ?array $array = null): bool
     {
         $stmt = $this->getDBStatement($sql, $array);
         $result = $stmt->execute();
 
-        if ($this->isSupportMultRowset()) {
+        if ($this->isSupportMultiRowset()) {
             // Check error
             do {
                 // This loop is only to throw an error (if exists)
@@ -175,33 +177,33 @@ abstract class DbPdoDriver implements DbDriverInterface
         return $result;
     }
 
-    public function executeAndGetId($sql, $array = null)
+    public function executeAndGetId(string $sql, ?array $array = null): mixed
     {
         return $this->getDbHelper()->executeAndGetInsertedId($this, $sql, $array);
     }
 
     /**
      *
-     * @return PDO
+     * @return PDO|null
      */
-    public function getDbConnection()
+    public function getDbConnection(): ?PDO
     {
         return $this->instance;
     }
 
-    public function getAttribute($name)
+    public function getAttribute(string $name): mixed
     {
         $this->getInstance()->getAttribute($name);
     }
 
-    public function setAttribute($name, $value)
+    public function setAttribute(string $name, mixed $value): void
     {
         $this->getInstance()->setAttribute($name, $value);
     }
 
     protected $dbHelper;
 
-    public function getDbHelper()
+    public function getDbHelper(): DbFunctionsInterface
     {
         if (empty($this->dbHelper)) {
             $this->dbHelper = Factory::getDbFunctions($this->pdoObj->getUri());
@@ -209,7 +211,7 @@ abstract class DbPdoDriver implements DbDriverInterface
         return $this->dbHelper;
     }
 
-    public function getUri()
+    public function getUri(): Uri
     {
         return $this->pdoObj->getUri();
     }
@@ -217,7 +219,7 @@ abstract class DbPdoDriver implements DbDriverInterface
     /**
      * @return bool
      */
-    public function isSupportMultRowset()
+    public function isSupportMultiRowset(): bool
     {
         return $this->supportMultRowset;
     }
@@ -225,13 +227,13 @@ abstract class DbPdoDriver implements DbDriverInterface
     /**
      * @param bool $multipleRowSet
      */
-    public function setSupportMultRowset($multipleRowSet)
+    public function setSupportMultiRowset(bool $multipleRowSet): void
     {
         $this->supportMultRowset = $multipleRowSet;
     }
 
 
-    public function isConnected($softCheck = false, $throwError = false)
+    public function isConnected(bool $softCheck = false, bool $throwError = false): bool
     {
         if (empty($this->instance)) {
             if ($throwError) {
@@ -262,12 +264,12 @@ abstract class DbPdoDriver implements DbDriverInterface
         return $this->instance;
     }
 
-    public function enableLogger(LoggerInterface $logger)
+    public function enableLogger(LoggerInterface $logger): void
     {
         $this->logger = $logger;
     }
 
-    public function log($message, $context = [])
+    public function log(string $message, array $context = []): void
     {
         $this->logger->debug($message, $context);
     }

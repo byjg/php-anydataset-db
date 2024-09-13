@@ -4,12 +4,14 @@ namespace ByJG\AnyDataset\Db;
 
 use ByJG\AnyDataset\Core\Exception\DatabaseException;
 use ByJG\AnyDataset\Core\Exception\NotImplementedException;
+use ByJG\AnyDataset\Core\GenericIterator;
 use ByJG\AnyDataset\Db\Exception\DbDriverNotConnected;
 use ByJG\AnyDataset\Db\Helpers\SqlBind;
 use ByJG\AnyDataset\Db\Helpers\SqlHelper;
 use ByJG\AnyDataset\Db\Traits\DbCacheTrait;
 use ByJG\AnyDataset\Db\Traits\TransactionTrait;
 use ByJG\Util\Uri;
+use DateInterval;
 use Exception;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
@@ -129,12 +131,14 @@ class DbOci8Driver implements DbDriverInterface
     }
 
     /**
-     * @param $sql
-     * @param null $params
-     * @return Oci8Iterator
+     * @param string $sql
+     * @param array|null $params
+     * @param CacheInterface|null $cache
+     * @param int|DateInterval $ttl
+     * @return GenericIterator
      * @throws DatabaseException
      */
-    public function getIterator($sql, $params = null, CacheInterface $cache = null, $ttl = 60)
+    public function getIterator(string $sql, ?array $params = null, ?CacheInterface $cache = null, DateInterval|int $ttl = 60): GenericIterator
     {
         return $this->getIteratorUsingCache($sql, $params, $cache, $ttl, function ($sql, $params) {
             $cur = $this->getOci8Cursor($sql, $params);
@@ -143,12 +147,12 @@ class DbOci8Driver implements DbDriverInterface
     }
 
     /**
-     * @param $sql
-     * @param null $array
-     * @return null
+     * @param string $sql
+     * @param array|null $array
+     * @return mixed
      * @throws DatabaseException
      */
-    public function getScalar($sql, $array = null)
+    public function getScalar(string $sql, ?array $array = null): mixed
     {
         $cur = $this->getOci8Cursor($sql, $array);
 
@@ -165,11 +169,11 @@ class DbOci8Driver implements DbDriverInterface
     }
 
     /**
-     * @param $tablename
+     * @param string $tablename
      * @return array
      * @throws DatabaseException
      */
-    public function getAllFields($tablename)
+    public function getAllFields(string $tablename): array
     {
         $cur = $this->getOci8Cursor(SqlHelper::createSafeSQL("select * from :table", array(':table' => $tablename)));
 
@@ -220,12 +224,12 @@ class DbOci8Driver implements DbDriverInterface
     }
     
     /**
-     * @param $sql
-     * @param null $array
+     * @param string $sql
+     * @param array|null $array
      * @return bool
      * @throws DatabaseException
      */
-    public function execute($sql, $array = null)
+    public function execute(string $sql, ?array $array = null): bool
     {
         $cur = $this->getOci8Cursor($sql, $array);
         oci_free_cursor($cur);
@@ -234,47 +238,47 @@ class DbOci8Driver implements DbDriverInterface
 
     /**
      *
-     * @return resource
+     * @return mixed
      */
-    public function getDbConnection()
+    public function getDbConnection(): mixed
     {
         return $this->conn;
     }
 
     /**
-     * @param $name
+     * @param string $name
      * @throws NotImplementedException
      */
-    public function getAttribute($name)
+    public function getAttribute(string $name): mixed
     {
         throw new NotImplementedException('Method not implemented for OCI Driver');
     }
 
     /**
-     * @param $name
-     * @param $value
+     * @param string $name
+     * @param mixed $value
      * @throws NotImplementedException
      */
-    public function setAttribute($name, $value)
+    public function setAttribute(string $name, mixed $value): void
     {
         throw new NotImplementedException('Method not implemented for OCI Driver');
     }
 
     /**
-     * @param $sql
-     * @param null $array
+     * @param string $sql
+     * @param array|null $array
      * @throws NotImplementedException
      */
-    public function executeAndGetId($sql, $array = null)
+    public function executeAndGetId(string $sql, ?array $array = null): mixed
     {
         return $this->getDbHelper()->executeAndGetInsertedId($this, $sql, $array);
     }
 
     /**
-     * @return \ByJG\AnyDataset\Db\DbFunctionsInterface|void
+     * @return DbFunctionsInterface
      * @throws NotImplementedException
      */
-    public function getDbHelper()
+    public function getDbHelper(): DbFunctionsInterface
     {
         if (empty($this->dbHelper)) {
             $this->dbHelper = Factory::getDbFunctions($this->getUri());
@@ -285,7 +289,7 @@ class DbOci8Driver implements DbDriverInterface
     /**
      * @return Uri
      */
-    public function getUri()
+    public function getUri(): Uri
     {
         return $this->connectionUri;
     }
@@ -293,21 +297,21 @@ class DbOci8Driver implements DbDriverInterface
     /**
      * @throws NotImplementedException
      */
-    public function isSupportMultRowset()
+    public function isSupportMultiRowset(): bool
     {
         return false;
     }
 
     /**
-     * @param $multipleRowSet
+     * @param bool $multipleRowSet
      * @throws NotImplementedException
      */
-    public function setSupportMultRowset($multipleRowSet)
+    public function setSupportMultiRowset(bool $multipleRowSet): void
     {
         throw new NotImplementedException('Method not implemented for OCI Driver');
     }
 
-    public function reconnect($force = false)
+    public function reconnect(bool $force = false): bool
     {
         if ($this->isConnected() && !$force) {
             return false;
@@ -349,13 +353,13 @@ class DbOci8Driver implements DbDriverInterface
         return true;
     }
 
-    public function disconnect()
+    public function disconnect(): void
     {
         $this->clearCache();
         $this->conn = null;
     }
 
-    public function isConnected($softCheck = false, $throwError = false)
+    public function isConnected(bool $softCheck = false, bool $throwError = false): bool
     {
         if (empty($this->conn)) {
             if ($throwError) {
@@ -380,12 +384,12 @@ class DbOci8Driver implements DbDriverInterface
         return true;
     }
 
-    public function enableLogger(LoggerInterface $logger)
+    public function enableLogger(LoggerInterface $logger): void
     {
         $this->logger = $logger;
     }
 
-    public function log($message, $context = [])
+    public function log(string $message, array $context = []): void
     {
         $this->logger->debug($message, $context);
     }

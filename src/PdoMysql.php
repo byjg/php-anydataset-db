@@ -56,7 +56,7 @@ class PdoMysql extends DbPdoDriver
             }
         }
 
-        $this->setSupportMultRowset(true);
+        $this->setSupportMultiRowset(true);
 
         parent::__construct($connUri, $preOptions, $postOptions, $executeAfterConnect);
     }

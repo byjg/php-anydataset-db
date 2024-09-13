@@ -169,7 +169,7 @@ abstract class BasePdo extends TestCase
 
     public function testMultipleRowset()
     {
-        if (!$this->dbDriver->isSupportMultRowset()) {
+        if (!$this->dbDriver->isSupportMultiRowset()) {
             $this->markTestSkipped('Skipped: This DbDriver does not support multiple row set');
         }
 

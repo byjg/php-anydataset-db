@@ -266,7 +266,7 @@ class PdoSqliteTest extends TestCase
 
     public function testisSupportMultRowset()
     {
-        $this->assertFalse($this->dbDriver->isSupportMultRowset());
+        $this->assertFalse($this->dbDriver->isSupportMultiRowset());
     }
 
     public function testCachedResults()

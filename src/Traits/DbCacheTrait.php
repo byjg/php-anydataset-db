@@ -61,7 +61,7 @@ trait DbCacheTrait
         return $this->stmtCache[$sql];
     }
 
-    public function getIteratorUsingCache($sql, $params, ?CacheInterface $cache, $ttl, \Closure $closure): GenericIterator
+    public function getIteratorUsingCache($sql, $params, ?CacheInterface $cache, \DateInterval|int $ttl, \Closure $closure): GenericIterator
     {
         $cacheKey = $this->getQueryKey($cache, $sql, $params);
 
