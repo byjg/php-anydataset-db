@@ -66,6 +66,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - run: composer install
+      - run: ./vendor/bin/psalm
       - run: ./vendor/bin/phpunit
       - run: ./vendor/bin/phpunit testsdb/PdoMySqlTest.php 
       - run: ./vendor/bin/phpunit testsdb/PdoSqliteTest.php 

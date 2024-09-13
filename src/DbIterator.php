@@ -34,7 +34,7 @@ class DbIterator extends GenericIterator
      * @return int
      */
     #[\ReturnTypeWillChange]
-    public function count()
+    public function count(): int
     {
         return $this->statement->rowCount();
     }
@@ -43,7 +43,7 @@ class DbIterator extends GenericIterator
      * @return bool
      * @throws InvalidArgumentException
      */
-    public function hasNext()
+    public function hasNext(): bool
     {
         if (count($this->rowBuffer) >= DbIterator::RECORD_BUFFER) {
             return true;
@@ -75,7 +75,7 @@ class DbIterator extends GenericIterator
      * @return Row
      * @throws InvalidArgumentException
      */
-    public function moveNext()
+    public function moveNext(): ?Row
     {
         if (!$this->hasNext()) {
             return null;
@@ -86,7 +86,7 @@ class DbIterator extends GenericIterator
         return $singleRow;
     }
 
-    public function key()
+    public function key(): int
     {
         return $this->currentRow;
     }
