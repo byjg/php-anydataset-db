@@ -5,6 +5,7 @@ namespace ByJG\AnyDataset\Db\Traits;
 use ByJG\AnyDataset\Db\Exception\TransactionNotStartedException;
 use ByJG\AnyDataset\Db\Exception\TransactionStartedException;
 use ByJG\AnyDataset\Db\IsolationLevelEnum;
+use ByJG\AnyDataset\Db\TransactionStageEnum;
 
 /**
  * Trait TransactionTrait
@@ -31,7 +32,7 @@ trait TransactionTrait
 
         $this->logger->debug("SQL: Begin transaction");
         $isolLevelCommand = $this->getDbHelper()->getIsolationLevelCommand($isolationLevel);
-        $this->transactionHandler('begin', $isolLevelCommand);
+        $this->transactionHandler(TransactionStageEnum::begin, $isolLevelCommand);
         $this->transactionCount = 1;
         $this->isolationLevel = $isolationLevel;
     }
@@ -46,7 +47,7 @@ trait TransactionTrait
         if ($this->transactionCount > 0) {
             return;
         }
-        $this->transactionHandler('commit');
+        $this->transactionHandler(TransactionStageEnum::commit);
         $this->isolationLevel = null;
     }
 
@@ -56,7 +57,7 @@ trait TransactionTrait
         if (!$this->hasActiveTransaction()) {
             throw new TransactionNotStartedException("There is no active transaction");
         }
-        $this->transactionHandler('rollback');
+        $this->transactionHandler(TransactionStageEnum::rollback);
         $this->transactionCount = 0;
         $this->isolationLevel = null;
     }

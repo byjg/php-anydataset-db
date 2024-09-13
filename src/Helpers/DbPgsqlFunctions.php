@@ -154,17 +154,12 @@ class DbPgsqlFunctions extends DbBaseFunctions
 
     public function getIsolationLevelCommand(?IsolationLevelEnum $isolationLevel = null): string
     {
-        switch ($isolationLevel) {
-            case IsolationLevelEnum::READ_UNCOMMITTED:
-                return "SET SESSION CHARACTERISTICS AS TRANSACTION ISOLATION LEVEL READ UNCOMMITTED";
-            case IsolationLevelEnum::READ_COMMITTED:
-                return "SET SESSION CHARACTERISTICS AS TRANSACTION ISOLATION LEVEL READ COMMITTED";
-            case IsolationLevelEnum::REPEATABLE_READ:
-                return "SET SESSION CHARACTERISTICS AS TRANSACTION ISOLATION LEVEL REPEATABLE READ";
-            case IsolationLevelEnum::SERIALIZABLE:
-                return "SET SESSION CHARACTERISTICS AS TRANSACTION ISOLATION LEVEL SERIALIZABLE";
-            default:
-                return "";
-        }
+        return match ($isolationLevel) {
+            IsolationLevelEnum::READ_UNCOMMITTED => "SET SESSION CHARACTERISTICS AS TRANSACTION ISOLATION LEVEL READ UNCOMMITTED",
+            IsolationLevelEnum::READ_COMMITTED => "SET SESSION CHARACTERISTICS AS TRANSACTION ISOLATION LEVEL READ COMMITTED",
+            IsolationLevelEnum::REPEATABLE_READ => "SET SESSION CHARACTERISTICS AS TRANSACTION ISOLATION LEVEL REPEATABLE READ",
+            IsolationLevelEnum::SERIALIZABLE => "SET SESSION CHARACTERISTICS AS TRANSACTION ISOLATION LEVEL SERIALIZABLE",
+            default => "",
+        };
     }
 }

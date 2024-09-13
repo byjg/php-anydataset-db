@@ -13,7 +13,7 @@ class Factory
      * @param string $class
      * @return void
      */
-    public static function registerDbDriver($class)
+    public static function registerDbDriver(string $class): void
     {
         if (!in_array(DbDriverInterface::class, class_implements($class))) {
             throw new InvalidArgumentException(
@@ -21,6 +21,7 @@ class Factory
             );
         }
 
+        /** @var DbDriverInterface $class */
         if (empty($class::schema())) {
             throw new InvalidArgumentException(
                 "The class '$class' must implement the static method schema()"
@@ -34,21 +35,25 @@ class Factory
     }
 
     /**
-     * @param $connectionString
+     * @param string $connectionString
      * @return DbDriverInterface
+     * @deprecated Use getDbInstance instead
      */
-    public static function getDbRelationalInstance($connectionString)
+    public static function getDbRelationalInstance(string $connectionString): DbDriverInterface
     {
         return self::getDbInstance(new Uri($connectionString));
     }
 
 
     /**
-     * @param $connectionUri Uri
-     * @return mixed
+     * @param Uri|string $connectionUri Uri
+     * @return DbDriverInterface
      */
-    public static function getDbInstance($connectionUri)
+    public static function getDbInstance(Uri|string $connectionUri): DbDriverInterface
     {
+        if (is_string($connectionUri)) {
+            $connectionUri = new Uri($connectionUri);
+        }
 
         if (empty(self::$config)) {
             self::registerDbDriver(PdoMysql::class);
@@ -76,10 +81,10 @@ class Factory
     /**
      * Get a IDbFunctions class to execute Database specific operations.
      *
-     * @param \ByJG\Util\Uri $connectionUri
-     * @return \ByJG\AnyDataset\Db\DbFunctionsInterface
+     * @param Uri $connectionUri
+     * @return DbFunctionsInterface
      */
-    public static function getDbFunctions(Uri $connectionUri)
+    public static function getDbFunctions(Uri $connectionUri): DbFunctionsInterface
     {
         $dbFunc = "\\ByJG\\AnyDataset\\Db\\Helpers\\Db"
             . ucfirst($connectionUri->getScheme())

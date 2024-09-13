@@ -177,17 +177,12 @@ class DbDblibFunctions extends DbBaseFunctions
 
     public function getIsolationLevelCommand(?IsolationLevelEnum $isolationLevel = null): string
     {
-        switch ($isolationLevel) {
-            case IsolationLevelEnum::READ_UNCOMMITTED:
-                return "SET TRANSACTION ISOLATION LEVEL READ UNCOMMITTED";
-            case IsolationLevelEnum::READ_COMMITTED:
-                return "SET TRANSACTION ISOLATION LEVEL READ COMMITTED";
-            case IsolationLevelEnum::REPEATABLE_READ:
-                return "SET TRANSACTION ISOLATION LEVEL REPEATABLE READ";
-            case IsolationLevelEnum::SERIALIZABLE:
-                return "SET TRANSACTION ISOLATION LEVEL SERIALIZABLE";
-            default:
-                return "";
-        }
+        return match ($isolationLevel) {
+            IsolationLevelEnum::READ_UNCOMMITTED => "SET TRANSACTION ISOLATION LEVEL READ UNCOMMITTED",
+            IsolationLevelEnum::READ_COMMITTED => "SET TRANSACTION ISOLATION LEVEL READ COMMITTED",
+            IsolationLevelEnum::REPEATABLE_READ => "SET TRANSACTION ISOLATION LEVEL REPEATABLE READ",
+            IsolationLevelEnum::SERIALIZABLE => "SET TRANSACTION ISOLATION LEVEL SERIALIZABLE",
+            default => "",
+        };
     }
 }

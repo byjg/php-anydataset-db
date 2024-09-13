@@ -21,12 +21,12 @@ class Route implements DbDriverInterface
     /**
      * @var array(DbDriverInterface[])
      */
-    protected $dbDriverInterface = [];
+    protected array $dbDriverInterface = [];
 
     /**
      * @var string[]
      */
-    protected $routes;
+    protected array $routes;
 
     /**
      * Route constructor.
@@ -39,10 +39,10 @@ class Route implements DbDriverInterface
 
     /**
      * @param string $routeName
-     * @param DbDriverInterface[]|DbDriverInterface|string|string[] $dbDriver
-     * @return \ByJG\AnyDataset\Db\Route
+     * @param string|DbDriverInterface|DbDriverInterface[]|string[] $dbDriver
+     * @return Route
      */
-    public function addDbDriverInterface($routeName, $dbDriver)
+    public function addDbDriverInterface(string $routeName, array|string|DbDriverInterface $dbDriver): static
     {
         if (!isset($this->dbDriverInterface[$routeName])) {
             $this->dbDriverInterface[$routeName] = [];
@@ -53,6 +53,9 @@ class Route implements DbDriverInterface
         }
 
         foreach ($dbDriver as $item) {
+            if (!is_string($item) && !($item instanceof DbDriverInterface)) {
+                throw new \InvalidArgumentException('Invalid dbDriver');
+            }
             $this->dbDriverInterface[$routeName][] = $item;
         }
 
@@ -62,8 +65,8 @@ class Route implements DbDriverInterface
     /**
      * @param $routeName
      * @param null $table
-     * @return \ByJG\AnyDataset\Db\Route
-     * @throws \ByJG\AnyDataset\Db\Exception\RouteNotFoundException
+     * @return Route
+     * @throws RouteNotFoundException
      */
     public function addRouteForSelect($routeName, $table = null)
     {
@@ -76,8 +79,8 @@ class Route implements DbDriverInterface
     /**
      * @param $routeName
      * @param null $table
-     * @return \ByJG\AnyDataset\Db\Route
-     * @throws \ByJG\AnyDataset\Db\Exception\RouteNotFoundException
+     * @return Route
+     * @throws RouteNotFoundException
      */
     public function addRouteForInsert($routeName, $table = null)
     {
@@ -90,8 +93,8 @@ class Route implements DbDriverInterface
     /**
      * @param $routeName
      * @param null $table
-     * @return \ByJG\AnyDataset\Db\Route
-     * @throws \ByJG\AnyDataset\Db\Exception\RouteNotFoundException
+     * @return Route
+     * @throws RouteNotFoundException
      */
     public function addRouteForUpdate($routeName, $table = null)
     {
@@ -104,8 +107,8 @@ class Route implements DbDriverInterface
     /**
      * @param $routeName
      * @param null $table
-     * @return \ByJG\AnyDataset\Db\Route
-     * @throws \ByJG\AnyDataset\Db\Exception\RouteNotFoundException
+     * @return Route
+     * @throws RouteNotFoundException
      */
     public function addRouteForDelete($routeName, $table = null)
     {
@@ -118,8 +121,8 @@ class Route implements DbDriverInterface
     /**
      * @param $routeName
      * @param $table
-     * @return \ByJG\AnyDataset\Db\Route
-     * @throws \ByJG\AnyDataset\Db\Exception\RouteNotFoundException
+     * @return Route
+     * @throws RouteNotFoundException
      */
     public function addRouteForTable($routeName, $table)
     {
@@ -131,8 +134,8 @@ class Route implements DbDriverInterface
     /**
      * @param $routeName
      * @param null $table
-     * @return \ByJG\AnyDataset\Db\Route
-     * @throws \ByJG\AnyDataset\Db\Exception\RouteNotFoundException
+     * @return Route
+     * @throws RouteNotFoundException
      */
     public function addRouteForWrite($routeName, $table = null)
     {
@@ -145,8 +148,8 @@ class Route implements DbDriverInterface
     /**
      * @param $routeName
      * @param null $table
-     * @return \ByJG\AnyDataset\Db\Route
-     * @throws \ByJG\AnyDataset\Db\Exception\RouteNotFoundException
+     * @return Route
+     * @throws RouteNotFoundException
      */
     public function addRouteForRead($routeName, $table = null)
     {
@@ -157,8 +160,8 @@ class Route implements DbDriverInterface
      * @param $routeName
      * @param $field
      * @param $value
-     * @return \ByJG\AnyDataset\Db\Route
-     * @throws \ByJG\AnyDataset\Db\Exception\RouteNotFoundException
+     * @return Route
+     * @throws RouteNotFoundException
      */
     public function addRouteForFilter($routeName, $field, $value)
     {
@@ -167,8 +170,8 @@ class Route implements DbDriverInterface
 
     /**
      * @param $routeName
-     * @return \ByJG\AnyDataset\Db\Route
-     * @throws \ByJG\AnyDataset\Db\Exception\RouteNotFoundException
+     * @return Route
+     * @throws RouteNotFoundException
      */
     public function addDefaultRoute($routeName)
     {
@@ -178,8 +181,8 @@ class Route implements DbDriverInterface
     /**
      * @param $routeName
      * @param $regEx
-     * @return \ByJG\AnyDataset\Db\Route
-     * @throws \ByJG\AnyDataset\Db\Exception\RouteNotFoundException
+     * @return Route
+     * @throws RouteNotFoundException
      */
     public function addCustomRoute($routeName, $regEx)
     {
@@ -193,7 +196,7 @@ class Route implements DbDriverInterface
     /**
      * @param $sql
      * @return DbDriverInterface
-     * @throws \ByJG\AnyDataset\Db\Exception\RouteNotMatchedException
+     * @throws RouteNotMatchedException
      */
     public function matchRoute($sql)
     {
@@ -223,7 +226,7 @@ class Route implements DbDriverInterface
      * @param CacheInterface|null $cache
      * @param int|DateInterval $ttl
      * @return GenericIterator
-     * @throws \ByJG\AnyDataset\Db\Exception\RouteNotMatchedException
+     * @throws RouteNotMatchedException
      */
     public function getIterator(string $sql, ?array $params = null, ?CacheInterface $cache = null, DateInterval|int $ttl = 60): GenericIterator
     {
@@ -235,7 +238,7 @@ class Route implements DbDriverInterface
      * @param string $sql
      * @param array|null $array
      * @return mixed
-     * @throws \ByJG\AnyDataset\Db\Exception\RouteNotMatchedException
+     * @throws RouteNotMatchedException
      */
     public function getScalar(string $sql, ?array $array = null): mixed
     {
@@ -256,7 +259,7 @@ class Route implements DbDriverInterface
      * @param string $sql
      * @param array|null $array
      * @return bool
-     * @throws \ByJG\AnyDataset\Db\Exception\RouteNotMatchedException
+     * @throws RouteNotMatchedException
      */
     public function execute(string $sql, ?array $array = null): bool
     {
@@ -321,7 +324,7 @@ class Route implements DbDriverInterface
      * @param string $sql
      * @param array|null $array
      * @return mixed
-     * @throws \ByJG\AnyDataset\Db\Exception\RouteNotMatchedException
+     * @throws RouteNotMatchedException
      */
     public function executeAndGetId(string $sql, ?array $array = null): mixed
     {

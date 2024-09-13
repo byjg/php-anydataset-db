@@ -2,13 +2,13 @@
 
 namespace ByJG\AnyDataset\Db;
 
-use ByJG\AnyDataset\Core\Exception\NotAvailableException;
+use ByJG\AnyDataset\Db\Exception\DbDriverNotConnected;
 use ByJG\Util\Uri;
 
 class PdoSqlite extends DbPdoDriver
 {
 
-    public static function schema()
+    public static function schema(): array
     {
         return ['sqlite'];
     }
@@ -16,8 +16,8 @@ class PdoSqlite extends DbPdoDriver
     /**
      * PdoSqlite constructor.
      *
-     * @param \ByJG\Util\Uri $connUri
-     * @throws NotAvailableException
+     * @param Uri $connUri
+     * @throws DbDriverNotConnected
      */
     public function __construct(Uri $connUri)
     {

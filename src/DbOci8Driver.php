@@ -26,7 +26,7 @@ class DbOci8Driver implements DbDriverInterface
 
     private DbFunctionsInterface $dbHelper;
 
-    public static function schema()
+    public static function schema(): array
     {
         return ['oci8'];
     }
@@ -36,11 +36,13 @@ class DbOci8Driver implements DbDriverInterface
      *
      * @var Uri
      */
-    protected $connectionUri;
+    protected Uri $connectionUri;
 
-    /** Used for OCI8 connections * */
-    protected $conn;
-    protected $ociAutoCommit;
+    /**
+     * @var resource|false
+     */
+    protected mixed $conn;
+    protected int $ociAutoCommit;
 
     /**
      * Ex.
@@ -63,7 +65,7 @@ class DbOci8Driver implements DbDriverInterface
      * @param Uri $connUri
      * @return string
      */
-    public static function getTnsString(Uri $connUri)
+    public static function getTnsString(Uri $connUri): string
     {
         $protocol = $connUri->getQueryPart("protocol");
         $protocol = ($protocol == "") ? 'TCP' : $protocol;
@@ -89,12 +91,13 @@ class DbOci8Driver implements DbDriverInterface
     }
 
     /**
-     * @param $sql
-     * @param null $array
+     * @param string $sql
+     * @param array|null $array
      * @return resource
      * @throws DatabaseException
+     * @throws DbDriverNotConnected
      */
-    protected function getOci8Cursor($sql, $array = null)
+    protected function getOci8Cursor(string $sql, array $array = null)
     {
         if (is_null($this->conn)) {
             throw new DbDriverNotConnected('Instance not connected');
@@ -137,6 +140,7 @@ class DbOci8Driver implements DbDriverInterface
      * @param int|DateInterval $ttl
      * @return GenericIterator
      * @throws DatabaseException
+     * @throws DbDriverNotConnected
      */
     public function getIterator(string $sql, ?array $params = null, ?CacheInterface $cache = null, DateInterval|int $ttl = 60): GenericIterator
     {
@@ -151,6 +155,7 @@ class DbOci8Driver implements DbDriverInterface
      * @param array|null $array
      * @return mixed
      * @throws DatabaseException
+     * @throws DbDriverNotConnected
      */
     public function getScalar(string $sql, ?array $array = null): mixed
     {
@@ -172,6 +177,7 @@ class DbOci8Driver implements DbDriverInterface
      * @param string $tablename
      * @return array
      * @throws DatabaseException
+     * @throws DbDriverNotConnected
      */
     public function getAllFields(string $tablename): array
     {
@@ -189,15 +195,15 @@ class DbOci8Driver implements DbDriverInterface
         return $fields;
     }
 
-    protected function transactionHandler($action, $isolLevelCommand = "")
+    protected function transactionHandler(TransactionStageEnum $action, string $isoLevelCommand = ""): void
     {
         switch ($action) {
-            case 'begin':
+            case TransactionStageEnum::begin:
                 $this->ociAutoCommit = OCI_NO_AUTO_COMMIT;
-                $this->execute($isolLevelCommand);
+                $this->execute($isoLevelCommand);
                 break;
 
-            case 'commit':
+            case TransactionStageEnum::commit:
                 if ($this->ociAutoCommit == OCI_COMMIT_ON_SUCCESS) {
                     throw new DatabaseException('No transaction for commit');
                 }
@@ -211,7 +217,7 @@ class DbOci8Driver implements DbDriverInterface
                 }
                 break;
 
-            case 'rollback':
+            case TransactionStageEnum::rollback:
                 if ($this->ociAutoCommit == OCI_COMMIT_ON_SUCCESS) {
                     throw new DatabaseException('No transaction for rollback');
                 }
@@ -238,7 +244,7 @@ class DbOci8Driver implements DbDriverInterface
 
     /**
      *
-     * @return mixed
+     * @return resource
      */
     public function getDbConnection(): mixed
     {
@@ -325,17 +331,12 @@ class DbOci8Driver implements DbDriverInterface
         $codePage = ($codePage == "") ? 'UTF8' : $codePage;
         $tns = DbOci8Driver::getTnsString($this->connectionUri);
         $connType = $this->connectionUri->getQueryPart("conntype");
-        switch ($connType) {
-            case "persistent":
-                $connectMethod = "oci_pconnect";
-                break;
-            case "new":
-                $connectMethod = "oci_new_connect";
-                break;
-            default:
-                $connectMethod = "oci_connect";
-                break;
-        }
+
+        $connectMethod = match ($connType) {
+            "persistent" => "oci_pconnect",
+            "new" => "oci_new_connect",
+            default => "oci_connect",
+        };
 
         $this->conn = $connectMethod(
             $this->connectionUri->getUsername(),

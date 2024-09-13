@@ -13,18 +13,18 @@ class DbIterator extends GenericIterator
 
     const RECORD_BUFFER = 50;
 
-    private $rowBuffer;
-    private $currentRow = 0;
+    private array $rowBuffer;
+    private int $currentRow = 0;
 
     /**
-     * @var PDOStatement
+     * @var PDOStatement|null
      */
-    private $statement;
+    private ?PDOStatement $statement;
 
     /**
      * @param PDOStatement $recordset
      */
-    public function __construct($recordset)
+    public function __construct(PDOStatement $recordset)
     {
         $this->statement = $recordset;
         $this->rowBuffer = array();
@@ -72,7 +72,7 @@ class DbIterator extends GenericIterator
     }
 
     /**
-     * @return Row
+     * @return Row|null
      * @throws InvalidArgumentException
      */
     public function moveNext(): ?Row

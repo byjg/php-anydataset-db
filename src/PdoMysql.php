@@ -2,19 +2,19 @@
 
 namespace ByJG\AnyDataset\Db;
 
-use ByJG\AnyDataset\Core\Exception\NotAvailableException;
+use ByJG\AnyDataset\Db\Exception\DbDriverNotConnected;
 use ByJG\Util\Uri;
 use PDO;
 
 class PdoMysql extends DbPdoDriver
 {
 
-    public static function schema()
+    public static function schema(): array
     {
         return ['mysql', 'mariadb'];
     }
 
-    protected $mysqlAttr = [
+    protected array $mysqlAttr = [
         "ca" => PDO::MYSQL_ATTR_SSL_CA,
         "capath" => PDO::MYSQL_ATTR_SSL_CAPATH,
         "cert" => PDO::MYSQL_ATTR_SSL_CERT,
@@ -26,8 +26,8 @@ class PdoMysql extends DbPdoDriver
     /**
      * PdoMysql constructor.
      *
-     * @param \ByJG\Util\Uri $connUri
-     * @throws NotAvailableException
+     * @param Uri $connUri
+     * @throws DbDriverNotConnected
      */
     public function __construct(Uri $connUri)
     {
