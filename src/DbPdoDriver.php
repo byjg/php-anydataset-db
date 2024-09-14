@@ -195,16 +195,6 @@ abstract class DbPdoDriver implements DbDriverInterface
         return $this->instance;
     }
 
-    public function getAttribute(string $name): mixed
-    {
-        return $this->getInstance()->getAttribute($name);
-    }
-
-    public function setAttribute(string $name, mixed $value): void
-    {
-        $this->getInstance()->setAttribute($name, $value);
-    }
-
     protected ?DbFunctionsInterface $dbHelper = null;
 
     public function getDbHelper(): DbFunctionsInterface

@@ -24,7 +24,7 @@ class DbOci8Driver implements DbDriverInterface
 
     private LoggerInterface $logger;
 
-    private DbFunctionsInterface $dbHelper;
+    private ?DbFunctionsInterface $dbHelper = null;
 
     public static function schema(): array
     {
@@ -56,6 +56,7 @@ class DbOci8Driver implements DbDriverInterface
     {
         $this->logger = new NullLogger();
         $this->connectionUri = $connectionString;
+        /** @psalm-suppress UndefinedConstant */
         $this->ociAutoCommit = OCI_COMMIT_ON_SUCCESS;
         $this->reconnect();
     }
@@ -161,6 +162,7 @@ class DbOci8Driver implements DbDriverInterface
     {
         $cur = $this->getOci8Cursor($sql, $array);
 
+        /** @psalm-suppress UndefinedConstant */
         $row = oci_fetch_array($cur, OCI_RETURN_NULLS);
         if ($row) {
             $scalar = $row[0];
@@ -199,15 +201,18 @@ class DbOci8Driver implements DbDriverInterface
     {
         switch ($action) {
             case TransactionStageEnum::begin:
+                /** @psalm-suppress UndefinedConstant */
                 $this->ociAutoCommit = OCI_NO_AUTO_COMMIT;
                 $this->execute($isoLevelCommand);
                 break;
 
             case TransactionStageEnum::commit:
+                /** @psalm-suppress UndefinedConstant */
                 if ($this->ociAutoCommit == OCI_COMMIT_ON_SUCCESS) {
                     throw new DatabaseException('No transaction for commit');
                 }
 
+                /** @psalm-suppress UndefinedConstant */
                 $this->ociAutoCommit = OCI_COMMIT_ON_SUCCESS;
 
                 $result = oci_commit($this->conn);
@@ -218,10 +223,12 @@ class DbOci8Driver implements DbDriverInterface
                 break;
 
             case TransactionStageEnum::rollback:
+                /** @psalm-suppress UndefinedConstant */
                 if ($this->ociAutoCommit == OCI_COMMIT_ON_SUCCESS) {
                     throw new DatabaseException('No transaction for rollback');
                 }
 
+                /** @psalm-suppress UndefinedConstant */
                 $this->ociAutoCommit = OCI_COMMIT_ON_SUCCESS;
 
                 oci_rollback($this->conn);
@@ -244,7 +251,7 @@ class DbOci8Driver implements DbDriverInterface
 
     /**
      *
-     * @return resource
+     * @return resource|false
      */
     public function getDbConnection(): mixed
     {
@@ -282,7 +289,6 @@ class DbOci8Driver implements DbDriverInterface
 
     /**
      * @return DbFunctionsInterface
-     * @throws NotImplementedException
      */
     public function getDbHelper(): DbFunctionsInterface
     {
@@ -338,6 +344,7 @@ class DbOci8Driver implements DbDriverInterface
             default => "oci_connect",
         };
 
+        /** @psalm-suppress UndefinedConstant */
         $this->conn = $connectMethod(
             $this->connectionUri->getUsername(),
             $this->connectionUri->getPassword(),

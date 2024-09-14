@@ -30,10 +30,6 @@ class DbPgsqlFunctions extends DbBaseFunctions
      */
     public function limit(string $sql, int $start, int $qty = 50): string
     {
-        if (is_null($qty)) {
-            $qty = 50;
-        }
-
         if (stripos($sql, ' LIMIT ') === false) {
             $sql = $sql . " LIMIT x OFFSET y";
         }

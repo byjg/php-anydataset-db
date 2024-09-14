@@ -15,16 +15,16 @@ class SqlBind
      * Each provider have your own model for pass parameter.
      * This method define how each provider name define the parameters
      *
+     * The default is ":_"
+     *
+     * The symbol "_" will be replaced by the parameter name
+     *
      * @param Uri $connData
      * @return string
      */
     public static function getParamModel(Uri $connData): string
     {
-        if ($connData->getQueryPart("parammodel") != "") {
-            return $connData->getQueryPart("parammodel");
-        }
-
-        return ":_";
+        return $connData->getQueryPart("parammodel") ?? ":_";
     }
 
     /**

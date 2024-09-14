@@ -9,6 +9,8 @@ use Psr\SimpleCache\CacheInterface;
 
 trait DbCacheTrait
 {
+    protected bool $cacheIsEnabled = false;
+
     protected array $stmtCache = [];
 
     protected int $maxStmtCache = 10;
@@ -36,7 +38,7 @@ trait DbCacheTrait
 
     protected function enableCache(): void
     {
-        $this->useCache = true;
+        $this->cacheIsEnabled = true;
     }
 
     protected function clearCache(): void
@@ -46,13 +48,18 @@ trait DbCacheTrait
 
     protected function isCachingStmt(): bool
     {
-        return $this->useCache;
+        return $this->cacheIsEnabled;
     }
 
     protected function getOrSetSqlCacheStmt(string $sql): PDOStatement
     {
         if (!isset($this->stmtCache[$sql])) {
-            $this->stmtCache[$sql] = $this->getInstance()->prepare($sql);
+            if (!method_exists($this, 'getInstance')) {
+                $this->stmtCache[$sql] = $sql;
+            } else {
+                $this->stmtCache[$sql] = $this->getInstance()->prepare($sql);
+            }
+
             if ($this->getCountStmtCache() > $this->getMaxStmtCache()) { //Kill old cache to get waste memory
                 array_shift($this->stmtCache);
             }

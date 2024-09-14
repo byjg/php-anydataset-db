@@ -19,7 +19,7 @@ class Route implements DbDriverInterface
     }
 
     /**
-     * @var array(DbDriverInterface[])
+     * @var array<string, DbDriverInterface[]>|array<string, string[]>
      */
     protected array $dbDriverInterface = [];
 
@@ -40,7 +40,7 @@ class Route implements DbDriverInterface
     /**
      * @param string $routeName
      * @param string|DbDriverInterface|DbDriverInterface[]|string[] $dbDriver
-     * @return Route
+     * @return $this
      */
     public function addDbDriverInterface(string $routeName, array|string|DbDriverInterface $dbDriver): static
     {
@@ -63,12 +63,12 @@ class Route implements DbDriverInterface
     }
 
     /**
-     * @param $routeName
-     * @param null $table
-     * @return Route
+     * @param string $routeName
+     * @param string|null $table
+     * @return static
      * @throws RouteNotFoundException
      */
-    public function addRouteForSelect($routeName, $table = null)
+    public function addRouteForSelect(string $routeName, ?string $table = null): static
     {
         if (empty($table)) {
             $table = '\w+';
@@ -77,12 +77,12 @@ class Route implements DbDriverInterface
     }
 
     /**
-     * @param $routeName
-     * @param null $table
-     * @return Route
+     * @param string $routeName
+     * @param string|null $table
+     * @return static
      * @throws RouteNotFoundException
      */
-    public function addRouteForInsert($routeName, $table = null)
+    public function addRouteForInsert(string $routeName, ?string $table = null): static
     {
         if (empty($table)) {
             $table = '\w+';
@@ -91,12 +91,12 @@ class Route implements DbDriverInterface
     }
 
     /**
-     * @param $routeName
-     * @param null $table
-     * @return Route
+     * @param string $routeName
+     * @param string|null $table
+     * @return static
      * @throws RouteNotFoundException
      */
-    public function addRouteForUpdate($routeName, $table = null)
+    public function addRouteForUpdate(string $routeName, ?string $table = null): static
     {
         if (empty($table)) {
             $table = '\w+';
@@ -105,12 +105,12 @@ class Route implements DbDriverInterface
     }
 
     /**
-     * @param $routeName
-     * @param null $table
-     * @return Route
+     * @param string $routeName
+     * @param string|null $table
+     * @return static
      * @throws RouteNotFoundException
      */
-    public function addRouteForDelete($routeName, $table = null)
+    public function addRouteForDelete(string $routeName, ?string $table = null): static
     {
         if (empty($table)) {
             $table = '\w+';
@@ -119,12 +119,12 @@ class Route implements DbDriverInterface
     }
 
     /**
-     * @param $routeName
-     * @param $table
-     * @return Route
+     * @param string $routeName
+     * @param string|null $table
+     * @return static
      * @throws RouteNotFoundException
      */
-    public function addRouteForTable($routeName, $table)
+    public function addRouteForTable(string $routeName, ?string $table = null): static
     {
         $this->addRouteForRead($routeName, $table);
         $this->addRouteForWrite($routeName, $table);
@@ -132,12 +132,12 @@ class Route implements DbDriverInterface
     }
 
     /**
-     * @param $routeName
-     * @param null $table
-     * @return Route
+     * @param string $routeName
+     * @param string|null $table
+     * @return static
      * @throws RouteNotFoundException
      */
-    public function addRouteForWrite($routeName, $table = null)
+    public function addRouteForWrite(string $routeName, ?string $table = null): static
     {
         $this->addRouteForInsert($routeName, $table);
         $this->addRouteForUpdate($routeName, $table);
@@ -146,45 +146,45 @@ class Route implements DbDriverInterface
     }
 
     /**
-     * @param $routeName
-     * @param null $table
-     * @return Route
+     * @param string $routeName
+     * @param string|null $table
+     * @return static
      * @throws RouteNotFoundException
      */
-    public function addRouteForRead($routeName, $table = null)
+    public function addRouteForRead(string $routeName, ?string $table = null): static
     {
         return $this->addRouteForSelect($routeName, $table);
     }
 
     /**
-     * @param $routeName
-     * @param $field
-     * @param $value
-     * @return Route
+     * @param string $routeName
+     * @param string $field
+     * @param string $value
+     * @return static
      * @throws RouteNotFoundException
      */
-    public function addRouteForFilter($routeName, $field, $value)
+    public function addRouteForFilter(string $routeName, string $field, string $value): static
     {
         return $this->addCustomRoute($routeName, "\\s`?$field`?\\s*=\\s*'?$value'?\s");
     }
 
     /**
-     * @param $routeName
-     * @return Route
+     * @param string $routeName
+     * @return static
      * @throws RouteNotFoundException
      */
-    public function addDefaultRoute($routeName)
+    public function addDefaultRoute(string $routeName): static
     {
         return $this->addCustomRoute($routeName, '.');
     }
 
     /**
-     * @param $routeName
-     * @param $regEx
-     * @return Route
+     * @param string $routeName
+     * @param string $regEx
+     * @return static
      * @throws RouteNotFoundException
      */
-    public function addCustomRoute($routeName, $regEx)
+    public function addCustomRoute(string $routeName, string $regEx): static
     {
         if (!isset($this->dbDriverInterface[$routeName])) {
             throw new RouteNotFoundException("Invalid route $routeName");
@@ -194,11 +194,11 @@ class Route implements DbDriverInterface
     }
 
     /**
-     * @param $sql
+     * @param string $sql
      * @return DbDriverInterface
      * @throws RouteNotMatchedException
      */
-    public function matchRoute($sql)
+    public function matchRoute(string $sql): DbDriverInterface
     {
         $sql = trim(strtolower(str_replace("\n", " ", $sql))) . ' ';
         foreach ($this->routes as $pattern => $routeName) {
@@ -206,9 +206,11 @@ class Route implements DbDriverInterface
                 continue;
             }
 
-            $dbDriver = $this->dbDriverInterface[$routeName][rand(0, count($this->dbDriverInterface[$routeName])-1)];
+            $item = rand(0, count($this->dbDriverInterface[$routeName])-1);
+            $dbDriver = $this->dbDriverInterface[$routeName][$item];
             if (is_string($dbDriver)) {
-                return Factory::getDbRelationalInstance($dbDriver);
+                $dbDriver = Factory::getDbInstance($dbDriver);
+                $this->dbDriverInterface[$routeName][$item] = $dbDriver;
             }
 
             return $dbDriver;

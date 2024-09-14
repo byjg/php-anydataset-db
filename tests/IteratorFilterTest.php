@@ -104,6 +104,36 @@ class IteratorFilterTest extends TestCase
         $this->assertEquals('select * from tablename  where  field > cast(\'10\' as integer)  and  field2 < [[field2]]  ', $sql);
     }
 
+    public function testRelationIn()
+    {
+        $this->object->addRelation('field', Relation::IN, ['value1', 'value2']);
+        $params = [];
+        $returnFields = '*';
+        $sql = $this->object->format(
+            new IteratorFilterSqlFormatter(),
+            'tablename',
+            $params,
+            $returnFields
+        );
+        $this->assertEquals(['field0' => 'value1', 'field1' => 'value2'], $params);
+        $this->assertEquals('select * from tablename  where  field IN ([[field0]], [[field1]])  ', $sql);
+    }
+
+    public function testRelationNotIn()
+    {
+        $this->object->addRelation('field', Relation::NOT_IN, ['value1', 'value2']);
+        $params = [];
+        $returnFields = '*';
+        $sql = $this->object->format(
+            new IteratorFilterSqlFormatter(),
+            'tablename',
+            $params,
+            $returnFields
+        );
+        $this->assertEquals(['field0' => 'value1', 'field1' => 'value2'], $params);
+        $this->assertEquals('select * from tablename  where  field NOT IN ([[field0]], [[field1]])  ', $sql);
+    }
+
     public function testAddRelationOr()
     {
         $this->object->addRelation('field', Relation::EQUAL, 'test');

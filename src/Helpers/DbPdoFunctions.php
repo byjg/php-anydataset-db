@@ -15,7 +15,7 @@ class DbPdoFunctions extends DbBaseFunctions
 
     public function concat(string $str1, ?string $str2 = null): string
     {
-        return null;
+        return "";
     }
 
     /**
@@ -27,7 +27,7 @@ class DbPdoFunctions extends DbBaseFunctions
      */
     public function limit(string $sql, int $start, int $qty = 50): string
     {
-        return null;
+        return "";
     }
 
     /**
@@ -38,7 +38,7 @@ class DbPdoFunctions extends DbBaseFunctions
      */
     public function top(string $sql, int $qty): string
     {
-        return null;
+        return "";
     }
 
     /**
@@ -69,11 +69,16 @@ class DbPdoFunctions extends DbBaseFunctions
      */
     public function sqlDate(string $format, ?string $column = null): string
     {
-        return null;
+        return "";
     }
 
     public function hasForUpdate(): bool
     {
         return false;
+    }
+
+    protected function parseColumnMetadata($metadata)
+    {
+        return $metadata;
     }
 }

@@ -47,10 +47,6 @@ interface DbDriverInterface extends DbTransactionInterface, DbCacheInterface
      */
     public function getUri(): Uri;
 
-    public function setAttribute(string $name, mixed $value): void;
-
-    public function getAttribute(string $name): mixed;
-
     public function isSupportMultiRowset(): bool;
 
     public function setSupportMultiRowset(bool $multipleRowSet): void;

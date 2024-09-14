@@ -15,10 +15,11 @@ class LiteralSample extends BaseModel
     /**
      * LiteralSample constructor.
      *
-     * @param string $value
+     * @param string|int $value
      */
-    public function __construct(string $value)
+    public function __construct(string|int $value)
     {
+        parent::__construct();
         $this->value = $value;
     }
 

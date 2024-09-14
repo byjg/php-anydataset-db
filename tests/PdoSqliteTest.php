@@ -47,6 +47,7 @@ class PdoSqliteTest extends TestCase
         unlink('/tmp/test.db');
     }
 
+    /** @psalm-suppress InvalidArrayOffset */
     public function testGetIterator()
     {
         $iterator = $this->dbDriver->getIterator('select * from info');
@@ -79,6 +80,7 @@ class PdoSqliteTest extends TestCase
         }
     }
 
+    /** @psalm-suppress InvalidArrayOffset */
     public function testGetIteratorFilter()
     {
         $iterator = $this->dbDriver->getIterator('select * from info where iduser = :id', ['id' => 1]);
@@ -282,8 +284,8 @@ class PdoSqliteTest extends TestCase
             $iterator->toArray()
         );
 
-        // Remove it from DB (Still in cache) - Execute dont use cache
-        $this->dbDriver->execute("delete from users where name = [[name]]", ['name' => 'Another2'], $cache, 60);
+        // Remove it from DB (Still in cache) - Execute don't use cache
+        $this->dbDriver->execute("delete from users where name = [[name]]", ['name' => 'Another2']);
 
         // Try get from cache
         $iterator = $this->dbDriver->getIterator('select * from info where id = :id', ['id' => 1], $cache, 60);

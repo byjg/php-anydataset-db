@@ -30,10 +30,6 @@ class DbOci8Functions extends DbBaseFunctions
      */
     public function limit(string $sql, int $start, int $qty = 50): string
     {
-        if (is_null($qty)) {
-            $qty = 50;
-        }
-
         if (stripos($sql, ' OFFSET ') === false && stripos($sql, ' FETCH NEXT ') === false) {
             $sql = $sql . " OFFSET x ROWS FETCH NEXT y ROWS ONLY";
         }
