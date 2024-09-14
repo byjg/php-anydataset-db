@@ -45,7 +45,7 @@ class IteratorFilterTest extends TestCase
             $returnFields
         );
         $this->assertEquals(['field' => 'test'], $params);
-        $this->assertEquals('select * from tablename  where  field = [[field]]  ', $sql);
+        $this->assertEquals('select * from tablename  where  field = :field  ', $sql);
 
         $this->object->addRelation('field2', Relation::GREATER_OR_EQUAL_THAN, 'test2');
         $sql = $this->object->format(
@@ -55,7 +55,7 @@ class IteratorFilterTest extends TestCase
             $returnFields
         );
         $this->assertEquals(['field' => 'test', 'field2' => 'test2'], $params);
-        $this->assertEquals('select * from tablename  where  field = [[field]]  and  field2 >= [[field2]]  ', $sql);
+        $this->assertEquals('select * from tablename  where  field = :field  and  field2 >= :field2  ', $sql);
 
         $this->object->addRelation('field3', Relation::CONTAINS, 'test3');
         $sql = $this->object->format(
@@ -65,7 +65,7 @@ class IteratorFilterTest extends TestCase
             $returnFields
         );
         $this->assertEquals(['field' => 'test', 'field2' => 'test2', 'field3' => '%test3%'], $params);
-        $this->assertEquals('select * from tablename  where  field = [[field]]  and  field2 >= [[field2]]  and  field3  like  [[field3]]  ', $sql);
+        $this->assertEquals('select * from tablename  where  field = :field  and  field2 >= :field2  and  field3  like  :field3  ', $sql);
     }
 
     public function testSqlLiteral()
@@ -101,7 +101,7 @@ class IteratorFilterTest extends TestCase
             $returnFields
         );
         $this->assertEquals(['field2' => 5], $params);
-        $this->assertEquals('select * from tablename  where  field > cast(\'10\' as integer)  and  field2 < [[field2]]  ', $sql);
+        $this->assertEquals('select * from tablename  where  field > cast(\'10\' as integer)  and  field2 < :field2  ', $sql);
     }
 
     public function testRelationIn()
@@ -116,7 +116,7 @@ class IteratorFilterTest extends TestCase
             $returnFields
         );
         $this->assertEquals(['field0' => 'value1', 'field1' => 'value2'], $params);
-        $this->assertEquals('select * from tablename  where  field IN ([[field0]], [[field1]])  ', $sql);
+        $this->assertEquals('select * from tablename  where  field IN (:field0, :field1)  ', $sql);
     }
 
     public function testRelationNotIn()
@@ -131,7 +131,7 @@ class IteratorFilterTest extends TestCase
             $returnFields
         );
         $this->assertEquals(['field0' => 'value1', 'field1' => 'value2'], $params);
-        $this->assertEquals('select * from tablename  where  field NOT IN ([[field0]], [[field1]])  ', $sql);
+        $this->assertEquals('select * from tablename  where  field NOT IN (:field0, :field1)  ', $sql);
     }
 
     public function testAddRelationOr()
@@ -148,7 +148,7 @@ class IteratorFilterTest extends TestCase
             $returnFields
         );
         $this->assertEquals(['field' => 'test', 'field2' => 'test2'], $params);
-        $this->assertEquals('select * from tablename  where  field = [[field]]  or  field2 = [[field2]]  ', $sql);
+        $this->assertEquals('select * from tablename  where  field = :field  or  field2 = :field2  ', $sql);
     }
 
     public function testGroup()
@@ -169,7 +169,7 @@ class IteratorFilterTest extends TestCase
         );
         $this->assertEquals(['field' => 'test', 'field2' => 'test2', 'field3' => 'test3'], $params);
         $this->assertEquals(
-            'select * from tablename  where  (  field = [[field]]  and  field2 = [[field2]] ) or  field3 = [[field3]]  ',
+            'select * from tablename  where  (  field = :field  and  field2 = :field2 ) or  field3 = :field3  ',
             $sql
         );
     }

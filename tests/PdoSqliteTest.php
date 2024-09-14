@@ -158,7 +158,7 @@ class PdoSqliteTest extends TestCase
     public function testExecute()
     {
         $this->dbDriver->execute("insert into users (name, createdate) values ('Another', '2017-05-11')");
-        $iterator = $this->dbDriver->getIterator('select * from users where name = [[name]]', ['name' => 'Another']);
+        $iterator = $this->dbDriver->getIterator('select * from users where name = :name', ['name' => 'Another']);
 
         $this->assertEquals(
             [
@@ -173,7 +173,7 @@ class PdoSqliteTest extends TestCase
         $newId = $this->dbDriver->executeAndGetId("insert into users (name, createdate) values ('Another', '2017-05-11')");
 
         $this->assertEquals(4, $newId);
-        $iterator = $this->dbDriver->getIterator('select * from users where name = [[name]]', ['name' => 'Another']);
+        $iterator = $this->dbDriver->getIterator('select * from users where name = :name', ['name' => 'Another']);
 
         $this->assertEquals(
             [
@@ -196,7 +196,7 @@ class PdoSqliteTest extends TestCase
         $this->assertEquals(4, $newId);
         $this->dbDriver->commitTransaction();
 
-        $iterator = $this->dbDriver->getIterator('select * from users where name = [[name]]', ['name' => 'Another']);
+        $iterator = $this->dbDriver->getIterator('select * from users where name = :name', ['name' => 'Another']);
 
         $this->assertEquals(
             [
@@ -213,7 +213,7 @@ class PdoSqliteTest extends TestCase
         $this->assertEquals(4, $newId);
         $this->dbDriver->rollbackTransaction();
 
-        $iterator = $this->dbDriver->getIterator('select * from users where name = [[name]]', ['name' => 'Another']);
+        $iterator = $this->dbDriver->getIterator('select * from users where name = :name', ['name' => 'Another']);
         $this->assertFalse($iterator->hasNext());
     }
 
@@ -234,10 +234,10 @@ class PdoSqliteTest extends TestCase
         $context2->commitTransaction();
 
         // Check values
-        $iterator = $this->dbDriver->getIterator('select * from users where name = [[name]]', ['name' => 'Another']);
+        $iterator = $this->dbDriver->getIterator('select * from users where name = :name', ['name' => 'Another']);
         $this->assertFalse($iterator->hasNext());
 
-        $iterator = $this->dbDriver->getIterator('select * from users where name = [[name]]', ['name' => 'Another2']);
+        $iterator = $this->dbDriver->getIterator('select * from users where name = :name', ['name' => 'Another2']);
         $this->assertEquals(
             [
                 ['id' => 4, 'name' => 'Another2', 'createdate' => '2017-04-11'],
@@ -285,7 +285,7 @@ class PdoSqliteTest extends TestCase
         );
 
         // Remove it from DB (Still in cache) - Execute don't use cache
-        $this->dbDriver->execute("delete from users where name = [[name]]", ['name' => 'Another2']);
+        $this->dbDriver->execute("delete from users where name = :name", ['name' => 'Another2']);
 
         // Try get from cache
         $iterator = $this->dbDriver->getIterator('select * from info where id = :id', ['id' => 1], $cache, 60);

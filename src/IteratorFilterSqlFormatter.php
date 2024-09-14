@@ -38,7 +38,7 @@ class IteratorFilterSqlFormatter extends IteratorFilterFormatter
 
         $paramStr = function (&$param, $paramName, $value) {
             $param[$paramName] = trim($value);
-            $result = "[[$paramName]]";
+            $result = ":$paramName";
             if (is_object($value)) {
                 unset($param[$paramName]);
                 $result = $value->__toString();
@@ -74,14 +74,14 @@ class IteratorFilterSqlFormatter extends IteratorFilterFormatter
                 return " $name  like  " . $paramStr($param, $paramName, $value) . ' ';
             },
             Relation::IN => function (&$param, $name, $paramName, $value) {
-                $placeholders = implode(', ', array_map(fn($v, $i) => "[[$paramName$i]]", $value, array_keys($value)));
+                $placeholders = implode(', ', array_map(fn($v, $i) => ":$paramName$i", $value, array_keys($value)));
                 foreach ($value as $i => $v) {
                     $param["$paramName$i"] = $v;
                 }
                 return " $name IN ($placeholders) ";
             },
             Relation::NOT_IN => function (&$param, $name, $paramName, $value) {
-                $placeholders = implode(', ', array_map(fn($v, $i) => "[[$paramName$i]]", $value, array_keys($value)));
+                $placeholders = implode(', ', array_map(fn($v, $i) => ":$paramName$i", $value, array_keys($value)));
                 foreach ($value as $i => $v) {
                     $param["$paramName$i"] = $v;
                 }

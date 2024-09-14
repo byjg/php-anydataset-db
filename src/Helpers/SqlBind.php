@@ -42,7 +42,7 @@ class SqlBind
 
         $sqlAlter = preg_replace("~'.*?((\\\\'|'').*?)*'~", "", $sql);
         preg_match_all(
-            "/(?<deliStart>\\[\\[|:)(?<param>[\\w\\d]+)(?<deliEnd>\\]\\]|[^\\d\\w]|$)/",
+            "/:(?<param>[_\\w\\d]+)\b/",
             $sqlAlter,
             $matches
         );
@@ -58,30 +58,26 @@ class SqlBind
                 // Remove NON DEFINED parameters
                 $sql = preg_replace(
                     [
-                        "/\\[\\[$paramName\\]\\]/",
-                        "/:$paramName([^\\d\\w]|$)/"
+                        "/:$paramName\b/"
                     ],
                     [
-                        "null",
-                        "null$2"
+                        "null"
                     ],
                     $sql
                 );
                 continue;
             }
 
-            $usedParams[$paramName] = isset($params[$paramName]) ? $params[$paramName] : null;
+            $usedParams[$paramName] = $params[$paramName] ?? null;
             $dbArg = str_replace("_", SqlBind::keyAdj($paramName), $paramSubstName);
 
             $count = 0;
             $sql = preg_replace(
                 [
-                    "/\\[\\[$paramName\\]\\]/",
-                    "/:$paramName([^\\w\\d]|$)/",
+                    "/:$paramName\b/",
                 ],
                 [
-                    $dbArg . '',
-                    $dbArg . '$1',
+                    $dbArg,
                 ],
                 $sql,
                 -1,
