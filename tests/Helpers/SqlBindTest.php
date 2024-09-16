@@ -1,6 +1,6 @@
 <?php
 
-namespace Tests\AnyDataset\Store\Helpers;
+namespace Test\Helpers;
 
 use ByJG\AnyDataset\Db\Helpers\SqlBind;
 use ByJG\Util\Uri;
@@ -19,7 +19,7 @@ class SqlBindTest extends TestCase
         return [
             [
                 new Uri('mysql://host'),
-                'insert into value ([[name]], [[surname]], [[age]])',
+                'insert into value (:name, :surname, :age)',
                 'insert into value (:name, :surname, :age)',
                 $paramIn,
                 $paramIn
@@ -33,28 +33,28 @@ class SqlBindTest extends TestCase
             ],
             [
             new Uri('mysql://host'),
-                'insert into value ([[name]], [[surname]], [[age]], [[nonexistant]])',
+                'insert into value (:name, :surname, :age, :nonexistant)',
                 'insert into value (:name, :surname, :age, null)',
                 $paramIn,
                 $paramIn
             ],
             [
                 new Uri('mysql://host'),
-                'insert into value ([[name]], [[surname]], :age)',
+                'insert into value (:name, :surname, :age)',
                 'insert into value (:name, :surname, :age)',
                 $paramIn,
                 $paramIn
             ],
             [
                 new Uri('mysql://host'),
-                'insert into value (:name, [[surname]], [[age]])',
+                'insert into value (:name, :surname, :age)',
                 'insert into value (:name, :surname, :age)',
                 $paramIn,
                 $paramIn
             ],
             [
                 new Uri('mysql://host'),
-                'select * from table where [[age]]-1900 > 10',
+                'select * from table where :age-1900 > 10',
                 'select * from table where :age-1900 > 10',
                 $paramIn,
                 [
@@ -68,32 +68,33 @@ class SqlBindTest extends TestCase
                 $paramIn,
                 [
                     'age' => 43
-                ]            ],
+                ]
+            ],
             [
                 new Uri('mysql://host'),
-                'select * from table where age = [[aaa]] and date = [[bbb]]',
+                'select * from table where age = :aaa and date = :bbb',
                 'select * from table where age = null and date = null',
                 $paramIn,
                 []
             ],
             [
                 new Uri('mysql://host'),
-                "insert into value (':name', 'a:surname', '[[age]]')",
-                "insert into value (':name', 'a:surname', '[[age]]')",
+                "insert into value (':name', 'a:surname', ':age')",
+                "insert into value (':name', 'a:surname', ':age')",
                 null,
                 []
             ],
             [
                 new Uri('mysql://host'),
-                "insert into value (':name', 'a:surname', '[[age]]')",
-                "insert into value (':name', 'a:surname', '[[age]]')",
+                "insert into value (':name', 'a:surname', ':age')",
+                "insert into value (':name', 'a:surname', ':age')",
                 $paramIn,
                 []
             ],
             [
                 new Uri('mysql://host'),
-                "insert into value (':na''me', 43, '[[ag''e]]')",
-                "insert into value (':na''me', 43, '[[ag''e]]')",
+                "insert into value (':na''me', 43, ':ag''e')",
+                "insert into value (':na''me', 43, ':ag''e')",
                 null,
                 []
             ],

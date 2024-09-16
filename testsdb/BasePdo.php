@@ -1,6 +1,6 @@
 <?php
 
-namespace TestsDb\AnyDataset;
+namespace TestDb;
 
 use ByJG\AnyDataset\Core\Exception\NotImplementedException;
 use ByJG\AnyDataset\Db\DbDriverInterface;
@@ -169,7 +169,7 @@ abstract class BasePdo extends TestCase
 
     public function testMultipleRowset()
     {
-        if (!$this->dbDriver->isSupportMultRowset()) {
+        if (!$this->dbDriver->isSupportMultiRowset()) {
             $this->markTestSkipped('Skipped: This DbDriver does not support multiple row set');
         }
 

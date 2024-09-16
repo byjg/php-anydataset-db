@@ -7,7 +7,7 @@ use ByJG\Util\Uri;
 class PdoOci extends PdoLiteral
 {
 
-    public static function schema()
+    public static function schema(): array
     {
         return ['oracle'];
     }
@@ -17,7 +17,7 @@ class PdoOci extends PdoLiteral
         parent::__construct($this->createPdoConnStr($connUri), $connUri->getUsername(), $connUri->getPassword(), [], []);
     }
 
-    protected function createPdoConnStr(Uri $connUri)
+    protected function createPdoConnStr(Uri $connUri): string
     {
         return $connUri->getScheme(). ":dbname=" . self::getTnsString($connUri);
     }
@@ -27,7 +27,7 @@ class PdoOci extends PdoLiteral
      * @param Uri $connUri
      * @return string
      */
-    public static function getTnsString(Uri $connUri)
+    public static function getTnsString(Uri $connUri): string
     {
         $protocol = $connUri->getQueryPart("protocol");
         $protocol = ($protocol == "") ? 'TCP' : $protocol;

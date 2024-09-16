@@ -17,7 +17,7 @@ class DbDblibFunctions extends DbBaseFunctions
         $this->deliTableRight = '"';
     }
 
-    public function concat($str1, $str2 = null)
+    public function concat(string $str1, ?string $str2 = null): string
     {
         return implode(' + ', func_get_args());
     }
@@ -30,7 +30,7 @@ class DbDblibFunctions extends DbBaseFunctions
      * @return string
      * @throws NotAvailableException
      */
-    public function limit($sql, $start, $qty = null)
+    public function limit(string $sql, int $start, int $qty = 50): string
     {
         throw new NotAvailableException("DBLib does not support LIMIT feature.");
     }
@@ -41,7 +41,7 @@ class DbDblibFunctions extends DbBaseFunctions
      * @param int $qty
      * @return string
      */
-    public function top($sql, $qty)
+    public function top(string $sql, int $qty): string
     {
         if (stripos($sql, ' TOP ') === false) {
             return  preg_replace("/^\\s*(select) /i", "\\1 top $qty ", $sql);
@@ -58,7 +58,7 @@ class DbDblibFunctions extends DbBaseFunctions
      * Return if the database provider have a top or similar function
      * @return bool
      */
-    public function hasTop()
+    public function hasTop(): bool
     {
         return true;
     }
@@ -67,21 +67,20 @@ class DbDblibFunctions extends DbBaseFunctions
      * Return if the database provider have a limit function
      * @return bool
      */
-    public function hasLimit()
+    public function hasLimit(): bool
     {
         return false;
     }
 
     /**
      * Format date column in sql string given an input format that understands Y M D
-
-*
+ *
 *@param string $format
-     * @param bool|string $column
+     * @param string|null $column
      * @return string
      * @example $db->getDbFunctions()->SQLDate("d/m/Y H:i", "dtcriacao")
      */
-    public function sqlDate($format, $column = null)
+    public function sqlDate(string $format, ?string $column = null): string
     {
         if (is_null($column)) {
             $column = "getdate()";
@@ -117,10 +116,10 @@ class DbDblibFunctions extends DbBaseFunctions
      *
      * @param DbDriverInterface $dbdataset
      * @param string $sql
-     * @param array $param
-     * @return bool|string
+     * @param array|null $param
+     * @return mixed
      */
-    public function executeAndGetInsertedId(DbDriverInterface $dbdataset, $sql, $param)
+    public function executeAndGetInsertedId(DbDriverInterface $dbdataset, string $sql, ?array $param = null): mixed
     {
         $insertedId = parent::executeAndGetInsertedId($dbdataset, $sql, $param);
         $iterator = $dbdataset->getIterator("select @@identity id");
@@ -133,21 +132,21 @@ class DbDblibFunctions extends DbBaseFunctions
     }
 
     /**
-     * @param $sql
-     * @return string|void
+     * @param string $sql
+     * @return string
      * @throws \ByJG\AnyDataset\Core\Exception\NotAvailableException
      */
-    public function forUpdate($sql)
+    public function forUpdate(string $sql): string
     {
         throw new NotAvailableException('FOR UPDATE not available for Mssql/Dblib');
     }
 
-    public function hasForUpdate()
+    public function hasForUpdate(): bool
     {
         return false;
     }
 
-    public function getTableMetadata(DbDriverInterface $dbdataset, $tableName)
+    public function getTableMetadata(DbDriverInterface $dbdataset, string $tableName): array
     {
         $sql = "select * from INFORMATION_SCHEMA.COLUMNS where TABLE_NAME = '$tableName'";
         return $this->getTableMetadataFromSql($dbdataset, $sql);
@@ -176,19 +175,14 @@ class DbDblibFunctions extends DbBaseFunctions
         return $return;
     }
 
-    public function getIsolationLevelCommand($isolationLevel)
+    public function getIsolationLevelCommand(?IsolationLevelEnum $isolationLevel = null): string
     {
-        switch ($isolationLevel) {
-            case IsolationLevelEnum::READ_UNCOMMITTED:
-                return "SET TRANSACTION ISOLATION LEVEL READ UNCOMMITTED";
-            case IsolationLevelEnum::READ_COMMITTED:
-                return "SET TRANSACTION ISOLATION LEVEL READ COMMITTED";
-            case IsolationLevelEnum::REPEATABLE_READ:
-                return "SET TRANSACTION ISOLATION LEVEL REPEATABLE READ";
-            case IsolationLevelEnum::SERIALIZABLE:
-                return "SET TRANSACTION ISOLATION LEVEL SERIALIZABLE";
-            default:
-                return "";
-        }
+        return match ($isolationLevel) {
+            IsolationLevelEnum::READ_UNCOMMITTED => "SET TRANSACTION ISOLATION LEVEL READ UNCOMMITTED",
+            IsolationLevelEnum::READ_COMMITTED => "SET TRANSACTION ISOLATION LEVEL READ COMMITTED",
+            IsolationLevelEnum::REPEATABLE_READ => "SET TRANSACTION ISOLATION LEVEL REPEATABLE READ",
+            IsolationLevelEnum::SERIALIZABLE => "SET TRANSACTION ISOLATION LEVEL SERIALIZABLE",
+            default => "",
+        };
     }
 }

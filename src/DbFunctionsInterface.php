@@ -17,7 +17,7 @@ interface DbFunctionsInterface
      * @param string|null $str2
      * @return string
      */
-    public function concat($str1, $str2 = null);
+    public function concat(string $str1, ?string $str2 = null): string;
 
     /**
      * Given a SQL returns it with the proper LIMIT or equivalent method included
@@ -26,7 +26,7 @@ interface DbFunctionsInterface
      * @param int $qty
      * @return string
      */
-    public function limit($sql, $start, $qty);
+    public function limit(string $sql, int $start, int $qty = 50): string;
 
     /**
      * Given a SQL returns it with the proper TOP or equivalent method included
@@ -34,29 +34,29 @@ interface DbFunctionsInterface
      * @param int $qty
      * @return string
      */
-    public function top($sql, $qty);
+    public function top(string $sql, int $qty): string;
 
     /**
      * Return if the database provider have a top or similar function
      * @return bool
      */
-    public function hasTop();
+    public function hasTop(): bool;
 
     /**
      * Return if the database provider have a limit function
      * @return bool
      */
-    public function hasLimit();
+    public function hasLimit(): bool;
 
     /**
      * Format date column in sql string given an input format that understands Y M D
      *
      * @param string $format
-     * @param null|string $column
+     * @param string|null $column
      * @return string
      * @example $db->getDbFunctions()->SQLDate("d/m/Y H:i", "dtcriacao")
      */
-    public function sqlDate($format, $column = null);
+    public function sqlDate(string $format, ?string $column = null): string;
 
     /**
      * Format a string date to a string database readable format.
@@ -65,7 +65,7 @@ interface DbFunctionsInterface
      * @param string $dateFormat
      * @return string
      */
-    public function toDate($date, $dateFormat);
+    public function toDate(string $date, string $dateFormat): string;
 
     /**
      * Format a string database readable format to a string date in a free format.
@@ -74,34 +74,34 @@ interface DbFunctionsInterface
      * @param string $dateFormat
      * @return string
      */
-    public function fromDate($date, $dateFormat);
+    public function fromDate(string $date, string $dateFormat): string;
 
     /**
      *
      * @param DbDriverInterface $dbdataset
      * @param string $sql
-     * @param array $param
-     * @return int
+     * @param array|null $param
+     * @return mixed
      */
-    public function executeAndGetInsertedId(DbDriverInterface $dbdataset, $sql, $param);
+    public function executeAndGetInsertedId(DbDriverInterface $dbdataset, string $sql, ?array $param = null): mixed;
 
     /**
      * @param string|array $field
-     * @return mixed
+     * @return string|array
      */
-    public function delimiterField($field);
+    public function delimiterField(string|array $field): string|array;
 
     /**
      * @param string|array $table
-     * @return mixed
+     * @return string
      */
-    public function delimiterTable($table);
+    public function delimiterTable(string|array $table): string;
 
-    public function forUpdate($sql);
+    public function forUpdate(string $sql): string;
 
-    public function hasForUpdate();
+    public function hasForUpdate(): bool;
 
-    public function getTableMetadata(DbDriverInterface $dbdataset, $tableName);
+    public function getTableMetadata(DbDriverInterface $dbdataset, string $tableName): array;
 
-    public function getIsolationLevelCommand($isolationLevel);
+    public function getIsolationLevelCommand(?IsolationLevelEnum $isolationLevel = null): string;
 }

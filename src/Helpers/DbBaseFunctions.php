@@ -4,6 +4,7 @@ namespace ByJG\AnyDataset\Db\Helpers;
 
 use ByJG\AnyDataset\Db\DbDriverInterface;
 use ByJG\AnyDataset\Db\DbFunctionsInterface;
+use ByJG\AnyDataset\Db\IsolationLevelEnum;
 use DateTime;
 use Exception;
 
@@ -28,7 +29,7 @@ abstract class DbBaseFunctions implements DbFunctionsInterface
      * @param string|null $str2
      * @return string
      */
-    abstract public function concat($str1, $str2 = null);
+    abstract public function concat(string $str1, ?string $str2 = null): string;
 
     /**
      * Given a SQL returns it with the proper LIMIT or equivalent method included
@@ -38,7 +39,7 @@ abstract class DbBaseFunctions implements DbFunctionsInterface
      * @param int $qty
      * @return string
      */
-    abstract public function limit($sql, $start, $qty = null);
+    abstract public function limit(string $sql, int $start, int $qty = 50): string;
 
     /**
      * Given a SQL returns it with the proper TOP or equivalent method included
@@ -47,14 +48,14 @@ abstract class DbBaseFunctions implements DbFunctionsInterface
      * @param int $qty
      * @return string
      */
-    abstract public function top($sql, $qty);
+    abstract public function top(string $sql, int $qty): string;
 
     /**
      * Return if the database provider have a top or similar function
      *
      * @return bool
      */
-    public function hasTop()
+    public function hasTop(): bool
     {
         return false;
     }
@@ -64,7 +65,7 @@ abstract class DbBaseFunctions implements DbFunctionsInterface
      *
      * @return bool
      */
-    public function hasLimit()
+    public function hasLimit(): bool
     {
         return false;
     }
@@ -73,11 +74,11 @@ abstract class DbBaseFunctions implements DbFunctionsInterface
      * Format date column in sql string given an input format that understands Y M D
      *
      * @param string $format
-     * @param string|bool $column
+     * @param string|null $column
      * @return string
      * @example $db->getDbFunctions()->SQLDate("d/m/Y H:i", "dtcriacao")
      */
-    abstract public function sqlDate($format, $column = null);
+    abstract public function sqlDate(string $format, ?string $column = null): string;
 
 
     protected function prepareSqlDate($input, $pattern, $delimitString = "'")
@@ -108,7 +109,7 @@ abstract class DbBaseFunctions implements DbFunctionsInterface
      * @param string $dateFormat
      * @return string
      */
-    public function toDate($date, $dateFormat)
+    public function toDate(string $date, string $dateFormat): string
     {
         $dateTime = DateTime::createFromFormat($dateFormat, $date);
 
@@ -122,7 +123,7 @@ abstract class DbBaseFunctions implements DbFunctionsInterface
      * @param string $dateFormat
      * @return string
      */
-    public function fromDate($date, $dateFormat)
+    public function fromDate(string $date, string $dateFormat): string
     {
         $dateTime = DateTime::createFromFormat(self::YMDH, $date);
 
@@ -132,10 +133,10 @@ abstract class DbBaseFunctions implements DbFunctionsInterface
     /**
      * @param DbDriverInterface $dbdataset
      * @param string $sql
-     * @param array $param
-     * @return int
+     * @param array|null $param
+     * @return mixed
      */
-    public function executeAndGetInsertedId(DbDriverInterface $dbdataset, $sql, $param)
+    public function executeAndGetInsertedId(DbDriverInterface $dbdataset, string $sql, ?array $param = null): mixed
     {
         $dbdataset->execute($sql, $param);
 
@@ -148,10 +149,10 @@ abstract class DbBaseFunctions implements DbFunctionsInterface
     protected $deliTableRight = '';
 
     /**
-     * @param array|string $field
-     * @return mixed
+     * @param string|array $field
+     * @return string|array
      */
-    public function delimiterField($field)
+    public function delimiterField(string|array $field): string|array
     {
         $result = [];
         foreach ((array)$field as $fld) {
@@ -168,7 +169,7 @@ abstract class DbBaseFunctions implements DbFunctionsInterface
         return $result;
     }
 
-    public function delimiterTable($table)
+    public function delimiterTable(string|array $table): string
     {
         $tableAr = explode('.', $table);
 
@@ -177,7 +178,7 @@ abstract class DbBaseFunctions implements DbFunctionsInterface
             . $this->deliTableRight;
     }
 
-    public function forUpdate($sql)
+    public function forUpdate(string $sql): string
     {
         if (!preg_match('#\bfor update\b#i', $sql)) {
             $sql = $sql . " FOR UPDATE ";
@@ -186,9 +187,9 @@ abstract class DbBaseFunctions implements DbFunctionsInterface
         return $sql;
     }
 
-    abstract public function hasForUpdate();
+    abstract public function hasForUpdate(): bool;
 
-    public function getTableMetadata(DbDriverInterface $dbdataset, $tableName)
+    public function getTableMetadata(DbDriverInterface $dbdataset, string $tableName): array
     {
         throw new Exception("Not implemented");
     }
@@ -239,8 +240,8 @@ abstract class DbBaseFunctions implements DbFunctionsInterface
         return [ 'phpType' => 'string', 'length' => null, 'precision' => null ];
     }
 
-    public function getIsolationLevelCommand($isolationLevel)
+    public function getIsolationLevelCommand(?IsolationLevelEnum $isolationLevel = null): string
     {
-        return null;
+        return "";
     }
 }

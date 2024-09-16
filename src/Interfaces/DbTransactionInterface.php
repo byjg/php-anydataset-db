@@ -2,19 +2,21 @@
 
 namespace ByJG\AnyDataset\Db\Interfaces;
 
+use ByJG\AnyDataset\Db\IsolationLevelEnum;
+
 interface DbTransactionInterface
 {
-    public function beginTransaction($isolationLevel = null, $allowJoin = false);
+    public function beginTransaction(IsolationLevelEnum $isolationLevel = null, bool $allowJoin = false);
 
-    public function commitTransaction();
+    public function commitTransaction(): void;
 
-    public function rollbackTransaction();
+    public function rollbackTransaction(): void;
 
-    public function hasActiveTransaction();
+    public function hasActiveTransaction(): bool;
 
-    public function activeIsolationLevel();
+    public function activeIsolationLevel(): ?IsolationLevelEnum;
 
-    public function remainingCommits();
+    public function remainingCommits(): int;
 
-    public function requiresTransaction();
+    public function requiresTransaction(): void;
 }

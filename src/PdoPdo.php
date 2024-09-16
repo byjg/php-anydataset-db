@@ -2,13 +2,13 @@
 
 namespace ByJG\AnyDataset\Db;
 
-use ByJG\AnyDataset\Core\Exception\NotAvailableException;
+use ByJG\AnyDataset\Db\Exception\DbDriverNotConnected;
 use ByJG\Util\Uri;
 
 class PdoPdo extends DbPdoDriver
 {
 
-    public static function schema()
+    public static function schema(): array
     {
         return ['pdo'];
     }
@@ -17,11 +17,12 @@ class PdoPdo extends DbPdoDriver
      * PdoPdo constructor.
      *
      * @param Uri $connUri
-     * @param array $preOptions
-     * @param array $postOptions
-     * @throws NotAvailableException
+     * @param array|null $preOptions
+     * @param array|null $postOptions
+     * @param array $executeAfterConnect
+     * @throws DbDriverNotConnected
      */
-    public function __construct(Uri $connUri, $preOptions = [], $postOptions = [], $executeAfterConnect = [])
+    public function __construct(Uri $connUri, ?array $preOptions = [], ?array $postOptions = [], array $executeAfterConnect = [])
     {
         parent::__construct($connUri, $preOptions, $postOptions, $executeAfterConnect);
     }

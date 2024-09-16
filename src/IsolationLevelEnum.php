@@ -2,10 +2,10 @@
 
 namespace ByJG\AnyDataset\Db;
 
-class IsolationLevelEnum
+enum IsolationLevelEnum
 {
-    const READ_UNCOMMITTED = 'READ UNCOMMITTED';
-    const READ_COMMITTED = 'READ COMMITTED';
-    const REPEATABLE_READ = 'REPEATABLE READ';
-    const SERIALIZABLE = 'SERIALIZABLE';
+    case READ_UNCOMMITTED;
+    case READ_COMMITTED;
+    case REPEATABLE_READ;
+    case SERIALIZABLE;
 }
