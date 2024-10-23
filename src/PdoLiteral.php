@@ -2,6 +2,7 @@
 
 namespace ByJG\AnyDataset\Db;
 
+use ByJG\AnyDataset\Db\Exception\DbDriverNotConnected;
 use ByJG\Util\Uri;
 
 class PdoLiteral extends DbPdoDriver
@@ -18,10 +19,12 @@ class PdoLiteral extends DbPdoDriver
      * @param string $pdoConnStr
      * @param string $username
      * @param string $password
-     * @param array $preOptions
-     * @param array $postOptions
+     * @param array|null $preOptions
+     * @param array|null $postOptions
+     * @param array $executeAfterConnect
+     * @throws DbDriverNotConnected
      */
-    public function __construct($pdoConnStr, $username = "", $password = "", $preOptions = null, $postOptions = null, $executeAfterConnect = [])
+    public function __construct(string $pdoConnStr, string $username = "", string $password = "", ?array $preOptions = null, ?array $postOptions = null, array $executeAfterConnect = [])
     {
         $parts = explode(":", $pdoConnStr, 2);
 

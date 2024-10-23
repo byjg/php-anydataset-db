@@ -17,6 +17,9 @@ class PdoObj
 
     private string $connectionString;
 
+    /**
+     * @throws NotAvailableException
+     */
     public function __construct(Uri $uri)
     {
         $this->uri = $uri;
@@ -28,7 +31,7 @@ class PdoObj
         return $this->uri;
     }
 
-    public function getConnStr()
+    public function getConnStr(): string
     {
         if (empty($this->connectionString)) {
             if ($this->uri->getScheme() == "pdo") {
@@ -48,7 +51,7 @@ class PdoObj
         return $this->useStmtCache;
     }
 
-    public function createInstance($preOptions = [], $postOptions = [], $executeAfterConnect = []): PDO
+    public function createInstance(?array $preOptions = [], ?array $postOptions = [], array $executeAfterConnect = []): PDO
     {
         $pdoConnectionString = $this->getConnStr();
 
@@ -71,7 +74,7 @@ class PdoObj
         return $instance;
     }
 
-    protected function setPdoDefaultParams($instance, $postOptions = [])
+    protected function setPdoDefaultParams(PDO $instance, ?array $postOptions = []): void
     {
         // Set Specific Attributes
         $defaultPostOptions = [
@@ -90,7 +93,7 @@ class PdoObj
     /**
      * @throws NotAvailableException
      */
-    protected function validateConnUri()
+    protected function validateConnUri(): void
     {
         if (!defined('PDO::ATTR_DRIVER_NAME')) {
             throw new NotAvailableException("Extension 'PDO' is not loaded");
@@ -108,9 +111,9 @@ class PdoObj
         }
     }
 
-    protected function preparePdoConnectionStr($scheme, $host, $database, $port, $query)
+    protected function preparePdoConnectionStr(string $scheme, string $host, ?string $database, ?int $port, ?string $query): string
     {
-        if (empty($host) && strpos($query, DbPdoDriver::UNIX_SOCKET) === false) {
+        if (empty($host) && !str_contains($query ?? "", DbPdoDriver::UNIX_SOCKET)) {
             return $scheme . ":" . $database;
         }
 
@@ -140,7 +143,7 @@ class PdoObj
         return $scheme . ":" . implode(";", $pdoAr);
     }
 
-    public static function getUriFromPdoConnStr($connStr, $username = "", $password = ""): Uri
+    public static function getUriFromPdoConnStr(string $connStr, string $username = "", string $password = ""): Uri
     {
         if (preg_match("~^([^:]+):(/.*)~", $connStr, $matches) !== 0) {
             return Uri::getInstanceFromString("{$matches[1]}://{$matches[2]}");

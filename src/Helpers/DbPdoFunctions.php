@@ -13,9 +13,9 @@ class DbPdoFunctions extends DbBaseFunctions
         $this->deliTableRight = '';
     }
 
-    public function concat($str1, $str2 = null)
+    public function concat(string $str1, ?string $str2 = null): string
     {
-        return null;
+        return "";
     }
 
     /**
@@ -25,9 +25,9 @@ class DbPdoFunctions extends DbBaseFunctions
      * @param int $qty
      * @return string
      */
-    public function limit($sql, $start, $qty = null)
+    public function limit(string $sql, int $start, int $qty = 50): string
     {
-        return null;
+        return "";
     }
 
     /**
@@ -36,16 +36,16 @@ class DbPdoFunctions extends DbBaseFunctions
      * @param int $qty
      * @return string
      */
-    public function top($sql, $qty)
+    public function top(string $sql, int $qty): string
     {
-        return null;
+        return "";
     }
 
     /**
      * Return if the database provider have a top or similar function
      * @return bool
      */
-    public function hasTop()
+    public function hasTop(): bool
     {
         return false;
     }
@@ -54,7 +54,7 @@ class DbPdoFunctions extends DbBaseFunctions
      * Return if the database provider have a limit function
      * @return bool
      */
-    public function hasLimit()
+    public function hasLimit(): bool
     {
         return false;
     }
@@ -67,13 +67,18 @@ class DbPdoFunctions extends DbBaseFunctions
      * @return string
      * @example $db->getDbFunctions()->SQLDate("d/m/Y H:i", "dtcriacao")
      */
-    public function sqlDate($format, $column = null)
+    public function sqlDate(string $format, ?string $column = null): string
     {
-        return null;
+        return "";
     }
 
-    public function hasForUpdate()
+    public function hasForUpdate(): bool
     {
         return false;
+    }
+
+    protected function parseColumnMetadata($metadata)
+    {
+        return $metadata;
     }
 }

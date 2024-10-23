@@ -11,9 +11,9 @@ class Oci8Iterator extends GenericIterator
 
     const RECORD_BUFFER = 50;
 
-    private $rowBuffer;
-    protected $currentRow = 0;
-    protected $moveNextRow = 0;
+    private array $rowBuffer;
+    protected int $currentRow = 0;
+    protected int $moveNextRow = 0;
 
     /**
      * @var resource Cursor
@@ -34,7 +34,7 @@ class Oci8Iterator extends GenericIterator
      * @access public
      * @return int
      */
-    public function count()
+    public function count(): int
     {
         return -1;
     }
@@ -44,7 +44,7 @@ class Oci8Iterator extends GenericIterator
      * @return bool
      * @throws InvalidArgumentException
      */
-    public function hasNext()
+    public function hasNext(): bool
     {
         if (count($this->rowBuffer) >= Oci8Iterator::RECORD_BUFFER) {
             return true;
@@ -84,10 +84,10 @@ class Oci8Iterator extends GenericIterator
     }
 
     /**
-     * @return mixed
+     * @return Row|null
      * @throws InvalidArgumentException
      */
-    public function moveNext()
+    public function moveNext(): ?Row
     {
         if (!$this->hasNext()) {
             return null;
@@ -98,7 +98,7 @@ class Oci8Iterator extends GenericIterator
         return $row;
     }
 
-    public function key()
+    public function key(): int
     {
         return $this->moveNextRow;
     }

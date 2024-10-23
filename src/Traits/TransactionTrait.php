@@ -4,6 +4,8 @@ namespace ByJG\AnyDataset\Db\Traits;
 
 use ByJG\AnyDataset\Db\Exception\TransactionNotStartedException;
 use ByJG\AnyDataset\Db\Exception\TransactionStartedException;
+use ByJG\AnyDataset\Db\IsolationLevelEnum;
+use ByJG\AnyDataset\Db\TransactionStageEnum;
 
 /**
  * Trait TransactionTrait
@@ -12,11 +14,11 @@ use ByJG\AnyDataset\Db\Exception\TransactionStartedException;
  */
 trait TransactionTrait
 {
-    protected $isolationLevel = null;
+    protected IsolationLevelEnum|null $isolationLevel = null;
 
-    protected $transactionCount = 0;
+    protected int $transactionCount = 0;
 
-    public function beginTransaction($isolationLevel = null, $allowJoin = false)
+    public function beginTransaction(IsolationLevelEnum $isolationLevel = null, bool $allowJoin = false): void
     {
         if ($this->hasActiveTransaction()) {
             if (!$allowJoin) {
@@ -30,12 +32,12 @@ trait TransactionTrait
 
         $this->logger->debug("SQL: Begin transaction");
         $isolLevelCommand = $this->getDbHelper()->getIsolationLevelCommand($isolationLevel);
-        $this->transactionHandler('begin', $isolLevelCommand);
+        $this->transactionHandler(TransactionStageEnum::begin, $isolLevelCommand);
         $this->transactionCount = 1;
         $this->isolationLevel = $isolationLevel;
     }
 
-    public function commitTransaction()
+    public function commitTransaction(): void
     {
         $this->logger->debug("SQL: Commit transaction");
         if (!$this->hasActiveTransaction()) {
@@ -45,39 +47,39 @@ trait TransactionTrait
         if ($this->transactionCount > 0) {
             return;
         }
-        $this->transactionHandler('commit');
+        $this->transactionHandler(TransactionStageEnum::commit);
         $this->isolationLevel = null;
     }
 
-    public function rollbackTransaction()
+    public function rollbackTransaction(): void
     {
         $this->logger->debug("SQL: Rollback transaction");
         if (!$this->hasActiveTransaction()) {
             throw new TransactionNotStartedException("There is no active transaction");
         }
-        $this->transactionHandler('rollback');
+        $this->transactionHandler(TransactionStageEnum::rollback);
         $this->transactionCount = 0;
         $this->isolationLevel = null;
     }
 
-    public function remainingCommits()
+    public function remainingCommits(): int
     {
         return $this->transactionCount;
     }
 
-    public function requiresTransaction()
+    public function requiresTransaction(): void
     {
         if (!$this->hasActiveTransaction()) {
             throw new TransactionNotStartedException("A transaction is required.");
         }
     }
 
-    public function hasActiveTransaction()
+    public function hasActiveTransaction(): bool
     {
         return $this->remainingCommits() > 0;
     }
 
-    public function activeIsolationLevel()
+    public function activeIsolationLevel(): ?IsolationLevelEnum
     {
         return $this->isolationLevel;
     }

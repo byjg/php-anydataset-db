@@ -1,15 +1,16 @@
 <?php
 
-namespace Tests\AnyDataset\Store\Helpers;
+namespace Test\Helpers;
 
 use ByJG\AnyDataset\Db\Helpers\DbPgsqlFunctions;
+use PHPUnit\Framework\TestCase;
 
-class DbPostgresFunctionsTest extends \PHPUnit\Framework\TestCase
+class DbPostgresFunctionsTest extends TestCase
 {
     /**
-     * @var DbPgsqlFunctions
+     * @var DbPgsqlFunctions|null
      */
-    private $object;
+    private ?DbPgsqlFunctions $object;
 
     protected function setUp(): void
     {

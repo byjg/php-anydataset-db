@@ -18,11 +18,11 @@ class DbSqliteFunctions extends DbBaseFunctions
     }
 
     /**
-     * @param $str1
-     * @param null $str2
+     * @param string $str1
+     * @param string|null $str2
      * @return string
      */
-    public function concat($str1, $str2 = null)
+    public function concat(string $str1, ?string $str2 = null): string
     {
         return implode(' || ', func_get_args());
     }
@@ -34,12 +34,8 @@ class DbSqliteFunctions extends DbBaseFunctions
      * @param int $qty
      * @return string
      */
-    public function limit($sql, $start, $qty = null)
+    public function limit(string $sql, int $start, int $qty = 50): string
     {
-        if (is_null($qty)) {
-            $qty = 50;
-        }
-
         if (stripos($sql, ' LIMIT ') === false) {
             $sql = $sql . " LIMIT x, y";
         }
@@ -57,7 +53,7 @@ class DbSqliteFunctions extends DbBaseFunctions
      * @param int $qty
      * @return string
      */
-    public function top($sql, $qty)
+    public function top(string $sql, int $qty): string
     {
         return $this->limit($sql, 0, $qty);
     }
@@ -66,7 +62,7 @@ class DbSqliteFunctions extends DbBaseFunctions
      * Return if the database provider have a top or similar function
      * @return bool
      */
-    public function hasTop()
+    public function hasTop(): bool
     {
         return true;
     }
@@ -75,7 +71,7 @@ class DbSqliteFunctions extends DbBaseFunctions
      * Return if the database provider have a limit function
      * @return bool
      */
-    public function hasLimit()
+    public function hasLimit(): bool
     {
         return true;
     }
@@ -84,11 +80,11 @@ class DbSqliteFunctions extends DbBaseFunctions
      * Format date column in sql string given an input format that understands Y M D
      *
      * @param string $format
-     * @param string|null$column
+     * @param string|null $column
      * @return string
      * @example $db->getDbFunctions()->SQLDate("d/m/Y H:i", "dtcriacao")
      */
-    public function sqlDate($format, $column = null)
+    public function sqlDate(string $format, ?string $column = null): string
     {
         if (is_null($column)) {
             $column = "'now'";
@@ -124,31 +120,31 @@ class DbSqliteFunctions extends DbBaseFunctions
      *
      * @param DbDriverInterface $dbdataset
      * @param string $sql
-     * @param array $param
-     * @return int
+     * @param array|null $param
+     * @return mixed
      */
-    public function executeAndGetInsertedId(DbDriverInterface $dbdataset, $sql, $param)
+    public function executeAndGetInsertedId(DbDriverInterface $dbdataset, string $sql, ?array $param = null): mixed
     {
         parent::executeAndGetInsertedId($dbdataset, $sql, $param);
         return $dbdataset->getScalar("SELECT last_insert_rowid()");
     }
 
     /**
-     * @param $sql
-     * @return string|void
+     * @param string $sql
+     * @return string
      * @throws \ByJG\AnyDataset\Core\Exception\NotAvailableException
      */
-    public function forUpdate($sql)
+    public function forUpdate(string $sql): string
     {
         throw new NotAvailableException('FOR UPDATE not available for SQLite');
     }
 
-    public function hasForUpdate()
+    public function hasForUpdate(): bool
     {
         return false;
     }
 
-    public function getTableMetadata(DbDriverInterface $dbdataset, $tableName)
+    public function getTableMetadata(DbDriverInterface $dbdataset, string $tableName): array
     {
         $sql = "PRAGMA table_info(" . $this->deliTableLeft . $tableName . $this->deliTableRight . ")";
         return $this->getTableMetadataFromSql($dbdataset, $sql);
@@ -170,7 +166,7 @@ class DbSqliteFunctions extends DbBaseFunctions
         return $return;
     }
 
-    public function getIsolationLevelCommand($isolationLevel)
+    public function getIsolationLevelCommand(?IsolationLevelEnum $isolationLevel = null): string
     {
         switch ($isolationLevel) {
             case IsolationLevelEnum::READ_UNCOMMITTED:

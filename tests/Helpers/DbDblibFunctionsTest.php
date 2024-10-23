@@ -1,16 +1,17 @@
 <?php
 
-namespace Tests\AnyDataset\Store\Helpers;
+namespace Test\Helpers;
 
+use ByJG\AnyDataset\Core\Exception\NotAvailableException;
 use ByJG\AnyDataset\Db\Helpers\DbDblibFunctions;
 use PHPUnit\Framework\TestCase;
 
 class DbDblibFunctionsTest extends TestCase
 {
     /**
-     * @var DbDblibFunctions
+     * @var DbDblibFunctions|null
      */
-    protected $object;
+    protected ?DbDblibFunctions $object;
 
     protected function setUp(): void
     {
@@ -36,7 +37,7 @@ class DbDblibFunctionsTest extends TestCase
 
     public function testLimit()
     {
-        $this->expectException(\ByJG\AnyDataset\Core\Exception\NotAvailableException::class);
+        $this->expectException(NotAvailableException::class);
 
         $this->object->limit('select  from table', 0, 10);
     }
@@ -96,7 +97,7 @@ class DbDblibFunctionsTest extends TestCase
 
     public function testForUpdate()
     {
-        $this->expectException(\ByJG\AnyDataset\Core\Exception\NotAvailableException::class);
+        $this->expectException(NotAvailableException::class);
 
         $this->assertFalse($this->object->hasForUpdate());
         $this->object->forUpdate('select * from table');

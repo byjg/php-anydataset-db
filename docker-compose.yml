@@ -1,4 +1,3 @@
-version: '3.4'
 services:
   mssql:
     container_name: anydataset_db_mssql

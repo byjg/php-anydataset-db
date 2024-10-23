@@ -1,10 +1,10 @@
 <?php
 
-namespace TestsDb\AnyDataset;
+namespace Test;
 
 use ByJG\AnyDataset\Db\PdoLiteral;
+use TestDb\BasePdo;
 
-require_once __DIR__ . '/../testsdb/BasePdo.php';
 
 class PdoLiteralTest extends BasePdo
 {

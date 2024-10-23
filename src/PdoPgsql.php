@@ -2,12 +2,12 @@
 
 namespace ByJG\AnyDataset\Db;
 
-use ByJG\AnyDataset\Core\Exception\NotAvailableException;
+use ByJG\AnyDataset\Db\Exception\DbDriverNotConnected;
 use ByJG\Util\Uri;
 
 class PdoPgsql extends DbPdoDriver
 {
-    public static function schema()
+    public static function schema(): array
     {
         return ['pgsql', 'postgres', 'postgresql'];
     }
@@ -15,8 +15,8 @@ class PdoPgsql extends DbPdoDriver
     /**
      * PdoPgsql constructor.
      *
-     * @param \ByJG\Util\Uri $connUri
-     * @throws NotAvailableException
+     * @param Uri $connUri
+     * @throws DbDriverNotConnected
      */
     public function __construct(Uri $connUri)
     {

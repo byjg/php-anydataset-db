@@ -1,6 +1,6 @@
 <?php
 
-namespace Tests\AnyDataset\Store\Helpers;
+namespace Test\Helpers;
 
 use ByJG\AnyDataset\Db\Helpers\DbMysqlFunctions;
 use PHPUnit\Framework\TestCase;
@@ -8,9 +8,9 @@ use PHPUnit\Framework\TestCase;
 class DbMysqlFunctionsTest extends TestCase
 {
     /**
-     * @var DbMysqlFunctions
+     * @var DbMysqlFunctions|null
      */
-    private $object;
+    protected ?DbMysqlFunctions $object;
 
     protected function setUp(): void
     {
