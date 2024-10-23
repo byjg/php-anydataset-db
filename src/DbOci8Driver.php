@@ -167,7 +167,7 @@ class DbOci8Driver implements DbDriverInterface
         if ($row) {
             $scalar = $row[0];
         } else {
-            $scalar = null;
+            $scalar = false;
         }
 
         oci_free_cursor($cur);

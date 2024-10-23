@@ -1,10 +1,8 @@
 <?php
 
-namespace TestsDb\AnyDataset;
+namespace TestDb;
 
 use ByJG\AnyDataset\Db\Factory;
-
-require_once 'BasePdo.php';
 
 class PdoOciTest extends BasePdo
 {
