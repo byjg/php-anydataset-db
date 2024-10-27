@@ -41,6 +41,7 @@ $conn = \ByJG\AnyDataset\Db\Factory::getDbRelationalInstance("mysql://root:passw
 
 ## Examples
 
+- [Getting Started](docs/getting-started.md)
 - [Basic Query and Update](docs/basic-query.md)
 - [Cache results](docs/cache.md)
 - [Database Transaction](docs/transaction.md)
