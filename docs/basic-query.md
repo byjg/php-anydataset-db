@@ -45,7 +45,7 @@ $id = $dbDriver->executeAndGetId(
 ```php
 <?php
 $dbDriver = \ByJG\AnyDataset\Db\Factory::getDbRelationalInstance('mysql://username:password@host/database');
-$dbDriver->beginTransaction(null);
+$dbDriver->beginTransaction(\ByJG\AnyDataset\Db\IsolationLevelEnum::SERIALIZABLE);
 
 // ... Do your queries
 
