@@ -8,7 +8,7 @@ use ByJG\Util\Uri;
 class PdoSqlsrv extends PdoDblib
 {
 
-    public static function schema()
+    public static function schema(): array
     {
         return ['sqlsrv'];
     }
@@ -19,14 +19,17 @@ class PdoSqlsrv extends PdoDblib
      * @param Uri $connUri
      * @throws NotAvailableException
      */
-    public function __construct($connUri)
+    public function __construct(Uri $connUri)
     {
         parent::__construct($connUri);
     }
 
     protected function getMssqlUri(Uri $connUri): Uri
     {
-        return Uri::getInstanceFromString("pdo://")
+        /** @var Uri $uri */
+        $uri = Uri::getInstanceFromString("pdo://");
+
+        return $uri
             ->withUserInfo($connUri->getUsername(), $connUri->getPassword())
             ->withHost($connUri->getScheme())
             ->withQueryKeyValue("Server" , $connUri->getHost() . (!empty($connUri->getPort()) ? "," . $connUri->getPort() : ""))

@@ -1,10 +1,8 @@
 <?php
 
-namespace TestsDb\AnyDataset;
+namespace TestDb;
 
 use ByJG\AnyDataset\Db\Factory;
-
-require_once 'PdoDblibTest.php';
 
 class PdoSqlsrvTest extends PdoDblibTest
 {
@@ -21,7 +19,7 @@ class PdoSqlsrvTest extends PdoDblibTest
             $password = 'Pa55word';
         }
 
-        return Factory::getDbRelationalInstance("sqlsrv://sa:$password@$host/tempdb");
+        return Factory::getDbInstance("sqlsrv://sa:$password@$host/tempdb");
     }
 
     public function testGetDate() {

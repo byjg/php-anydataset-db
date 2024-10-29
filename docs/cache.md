@@ -5,7 +5,7 @@ You need to add to your project an implementation of PSR-16. We suggested you ad
 
 ```php
 <?php
-$dbDriver = \ByJG\AnyDataset\Db\Factory::getDbRelationalInstance('mysql://username:password@host/database');
+$dbDriver = \ByJG\AnyDataset\Db\Factory::getDbInstance('mysql://username:password@host/database');
 $cache = new \ByJG\Cache\Psr16\ArrayCacheEngine()
 
 // Query using the PSR16 cache interface.

@@ -6,8 +6,9 @@ use ByJG\AnyDataset\Core\GenericIterator;
 use ByJG\AnyDataset\Db\Interfaces\DbCacheInterface;
 use ByJG\AnyDataset\Db\Interfaces\DbTransactionInterface;
 use ByJG\Util\Uri;
-use PDO;
+use DateInterval;
 use Psr\Log\LoggerInterface;
+use Psr\SimpleCache\CacheInterface;
 
 interface DbDriverInterface extends DbTransactionInterface, DbCacheInterface
 {
@@ -17,48 +18,46 @@ interface DbDriverInterface extends DbTransactionInterface, DbCacheInterface
     /**
      * @param string $sql
      * @param array|null $params
+     * @param CacheInterface|null $cache
+     * @param int|DateInterval $ttl
      * @return GenericIterator
      */
-    public function getIterator($sql, $params = null);
+    public function getIterator(string $sql, ?array $params = null, ?CacheInterface $cache = null, DateInterval|int $ttl = 60): GenericIterator;
 
-    public function getScalar($sql, $array = null);
+    public function getScalar(string $sql, ?array $array = null): mixed;
 
-    public function getAllFields($tablename);
+    public function getAllFields(string $tablename): array;
 
-    public function execute($sql, $array = null);
+    public function execute(string $sql, ?array $array = null): bool;
 
-    public function executeAndGetId($sql, $array = null);
+    public function executeAndGetId(string $sql, ?array $array = null): mixed;
 
     /**
      * @return DbFunctionsInterface
      */
-    public function getDbHelper();
+    public function getDbHelper(): DbFunctionsInterface;
 
     /**
-     * @return PDO
+     * @return mixed
      */
-    public function getDbConnection();
+    public function getDbConnection(): mixed;
 
     /**
      * @return Uri
      */
-    public function getUri();
+    public function getUri(): Uri;
 
-    public function setAttribute($name, $value);
+    public function isSupportMultiRowset(): bool;
 
-    public function getAttribute($name);
+    public function setSupportMultiRowset(bool $multipleRowSet): void;
 
-    public function isSupportMultRowset();
+    public function isConnected(bool $softCheck = false, bool $throwError = false): bool;
+    public function reconnect(bool $force = false): bool;
 
-    public function setSupportMultRowset($multipleRowSet);
+    public function disconnect(): void;
 
-    public function isConnected($softCheck = false, $throwError = false);
-    public function reconnect($force = false);
+    public function enableLogger(LoggerInterface $logger): void;
 
-    public function disconnect();
-
-    public function enableLogger(LoggerInterface $logger);
-
-    public function log($message, $context = []);
+    public function log(string $message, array $context = []): void;
 
 }

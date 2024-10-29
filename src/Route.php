@@ -6,8 +6,10 @@ use ByJG\AnyDataset\Core\Exception\NotImplementedException;
 use ByJG\AnyDataset\Core\GenericIterator;
 use ByJG\AnyDataset\Db\Exception\RouteNotFoundException;
 use ByJG\AnyDataset\Db\Exception\RouteNotMatchedException;
-use PDO;
+use ByJG\Util\Uri;
+use DateInterval;
 use Psr\Log\LoggerInterface;
+use Psr\SimpleCache\CacheInterface;
 
 class Route implements DbDriverInterface
 {
@@ -17,14 +19,14 @@ class Route implements DbDriverInterface
     }
 
     /**
-     * @var array(DbDriverInterface[])
+     * @var array<string, DbDriverInterface[]>|array<string, string[]>
      */
-    protected $dbDriverInterface = [];
+    protected array $dbDriverInterface = [];
 
     /**
      * @var string[]
      */
-    protected $routes;
+    protected array $routes;
 
     /**
      * Route constructor.
@@ -37,10 +39,10 @@ class Route implements DbDriverInterface
 
     /**
      * @param string $routeName
-     * @param DbDriverInterface[]|DbDriverInterface|string|string[] $dbDriver
-     * @return \ByJG\AnyDataset\Db\Route
+     * @param string|DbDriverInterface|DbDriverInterface[]|string[] $dbDriver
+     * @return $this
      */
-    public function addDbDriverInterface($routeName, $dbDriver)
+    public function addDbDriverInterface(string $routeName, array|string|DbDriverInterface $dbDriver): static
     {
         if (!isset($this->dbDriverInterface[$routeName])) {
             $this->dbDriverInterface[$routeName] = [];
@@ -51,6 +53,9 @@ class Route implements DbDriverInterface
         }
 
         foreach ($dbDriver as $item) {
+            if (!is_string($item) && !($item instanceof DbDriverInterface)) {
+                throw new \InvalidArgumentException('Invalid dbDriver');
+            }
             $this->dbDriverInterface[$routeName][] = $item;
         }
 
@@ -58,12 +63,12 @@ class Route implements DbDriverInterface
     }
 
     /**
-     * @param $routeName
-     * @param null $table
-     * @return \ByJG\AnyDataset\Db\Route
-     * @throws \ByJG\AnyDataset\Db\Exception\RouteNotFoundException
+     * @param string $routeName
+     * @param string|null $table
+     * @return static
+     * @throws RouteNotFoundException
      */
-    public function addRouteForSelect($routeName, $table = null)
+    public function addRouteForSelect(string $routeName, ?string $table = null): static
     {
         if (empty($table)) {
             $table = '\w+';
@@ -72,12 +77,12 @@ class Route implements DbDriverInterface
     }
 
     /**
-     * @param $routeName
-     * @param null $table
-     * @return \ByJG\AnyDataset\Db\Route
-     * @throws \ByJG\AnyDataset\Db\Exception\RouteNotFoundException
+     * @param string $routeName
+     * @param string|null $table
+     * @return static
+     * @throws RouteNotFoundException
      */
-    public function addRouteForInsert($routeName, $table = null)
+    public function addRouteForInsert(string $routeName, ?string $table = null): static
     {
         if (empty($table)) {
             $table = '\w+';
@@ -86,12 +91,12 @@ class Route implements DbDriverInterface
     }
 
     /**
-     * @param $routeName
-     * @param null $table
-     * @return \ByJG\AnyDataset\Db\Route
-     * @throws \ByJG\AnyDataset\Db\Exception\RouteNotFoundException
+     * @param string $routeName
+     * @param string|null $table
+     * @return static
+     * @throws RouteNotFoundException
      */
-    public function addRouteForUpdate($routeName, $table = null)
+    public function addRouteForUpdate(string $routeName, ?string $table = null): static
     {
         if (empty($table)) {
             $table = '\w+';
@@ -100,12 +105,12 @@ class Route implements DbDriverInterface
     }
 
     /**
-     * @param $routeName
-     * @param null $table
-     * @return \ByJG\AnyDataset\Db\Route
-     * @throws \ByJG\AnyDataset\Db\Exception\RouteNotFoundException
+     * @param string $routeName
+     * @param string|null $table
+     * @return static
+     * @throws RouteNotFoundException
      */
-    public function addRouteForDelete($routeName, $table = null)
+    public function addRouteForDelete(string $routeName, ?string $table = null): static
     {
         if (empty($table)) {
             $table = '\w+';
@@ -114,12 +119,12 @@ class Route implements DbDriverInterface
     }
 
     /**
-     * @param $routeName
-     * @param $table
-     * @return \ByJG\AnyDataset\Db\Route
-     * @throws \ByJG\AnyDataset\Db\Exception\RouteNotFoundException
+     * @param string $routeName
+     * @param string|null $table
+     * @return static
+     * @throws RouteNotFoundException
      */
-    public function addRouteForTable($routeName, $table)
+    public function addRouteForTable(string $routeName, ?string $table = null): static
     {
         $this->addRouteForRead($routeName, $table);
         $this->addRouteForWrite($routeName, $table);
@@ -127,12 +132,12 @@ class Route implements DbDriverInterface
     }
 
     /**
-     * @param $routeName
-     * @param null $table
-     * @return \ByJG\AnyDataset\Db\Route
-     * @throws \ByJG\AnyDataset\Db\Exception\RouteNotFoundException
+     * @param string $routeName
+     * @param string|null $table
+     * @return static
+     * @throws RouteNotFoundException
      */
-    public function addRouteForWrite($routeName, $table = null)
+    public function addRouteForWrite(string $routeName, ?string $table = null): static
     {
         $this->addRouteForInsert($routeName, $table);
         $this->addRouteForUpdate($routeName, $table);
@@ -141,45 +146,45 @@ class Route implements DbDriverInterface
     }
 
     /**
-     * @param $routeName
-     * @param null $table
-     * @return \ByJG\AnyDataset\Db\Route
-     * @throws \ByJG\AnyDataset\Db\Exception\RouteNotFoundException
+     * @param string $routeName
+     * @param string|null $table
+     * @return static
+     * @throws RouteNotFoundException
      */
-    public function addRouteForRead($routeName, $table = null)
+    public function addRouteForRead(string $routeName, ?string $table = null): static
     {
         return $this->addRouteForSelect($routeName, $table);
     }
 
     /**
-     * @param $routeName
-     * @param $field
-     * @param $value
-     * @return \ByJG\AnyDataset\Db\Route
-     * @throws \ByJG\AnyDataset\Db\Exception\RouteNotFoundException
+     * @param string $routeName
+     * @param string $field
+     * @param string $value
+     * @return static
+     * @throws RouteNotFoundException
      */
-    public function addRouteForFilter($routeName, $field, $value)
+    public function addRouteForFilter(string $routeName, string $field, string $value): static
     {
         return $this->addCustomRoute($routeName, "\\s`?$field`?\\s*=\\s*'?$value'?\s");
     }
 
     /**
-     * @param $routeName
-     * @return \ByJG\AnyDataset\Db\Route
-     * @throws \ByJG\AnyDataset\Db\Exception\RouteNotFoundException
+     * @param string $routeName
+     * @return static
+     * @throws RouteNotFoundException
      */
-    public function addDefaultRoute($routeName)
+    public function addDefaultRoute(string $routeName): static
     {
         return $this->addCustomRoute($routeName, '.');
     }
 
     /**
-     * @param $routeName
-     * @param $regEx
-     * @return \ByJG\AnyDataset\Db\Route
-     * @throws \ByJG\AnyDataset\Db\Exception\RouteNotFoundException
+     * @param string $routeName
+     * @param string $regEx
+     * @return static
+     * @throws RouteNotFoundException
      */
-    public function addCustomRoute($routeName, $regEx)
+    public function addCustomRoute(string $routeName, string $regEx): static
     {
         if (!isset($this->dbDriverInterface[$routeName])) {
             throw new RouteNotFoundException("Invalid route $routeName");
@@ -189,11 +194,11 @@ class Route implements DbDriverInterface
     }
 
     /**
-     * @param $sql
+     * @param string $sql
      * @return DbDriverInterface
-     * @throws \ByJG\AnyDataset\Db\Exception\RouteNotMatchedException
+     * @throws RouteNotMatchedException
      */
-    public function matchRoute($sql)
+    public function matchRoute(string $sql): DbDriverInterface
     {
         $sql = trim(strtolower(str_replace("\n", " ", $sql))) . ' ';
         foreach ($this->routes as $pattern => $routeName) {
@@ -201,9 +206,11 @@ class Route implements DbDriverInterface
                 continue;
             }
 
-            $dbDriver = $this->dbDriverInterface[$routeName][rand(0, count($this->dbDriverInterface[$routeName])-1)];
+            $item = rand(0, count($this->dbDriverInterface[$routeName])-1);
+            $dbDriver = $this->dbDriverInterface[$routeName][$item];
             if (is_string($dbDriver)) {
-                return Factory::getDbRelationalInstance($dbDriver);
+                $dbDriver = Factory::getDbInstance($dbDriver);
+                $this->dbDriverInterface[$routeName][$item] = $dbDriver;
             }
 
             return $dbDriver;
@@ -217,54 +224,56 @@ class Route implements DbDriverInterface
 
     /**
      * @param string $sql
-     * @param null $params
+     * @param array|null $params
+     * @param CacheInterface|null $cache
+     * @param int|DateInterval $ttl
      * @return GenericIterator
-     * @throws \ByJG\AnyDataset\Db\Exception\RouteNotMatchedException
+     * @throws RouteNotMatchedException
      */
-    public function getIterator($sql, $params = null)
+    public function getIterator(string $sql, ?array $params = null, ?CacheInterface $cache = null, DateInterval|int $ttl = 60): GenericIterator
     {
         $dbDriver = $this->matchRoute($sql);
-        return $dbDriver->getIterator($sql, $params);
+        return $dbDriver->getIterator($sql, $params, $cache, $ttl);
     }
 
     /**
-     * @param $sql
-     * @param null $array
+     * @param string $sql
+     * @param array|null $array
      * @return mixed
-     * @throws \ByJG\AnyDataset\Db\Exception\RouteNotMatchedException
+     * @throws RouteNotMatchedException
      */
-    public function getScalar($sql, $array = null)
+    public function getScalar(string $sql, ?array $array = null): mixed
     {
         $dbDriver = $this->matchRoute($sql);
         return $dbDriver->getScalar($sql, $array);
     }
 
     /**
-     * @param $tablename
+     * @param string $tablename
      * @throws NotImplementedException
      */
-    public function getAllFields($tablename)
+    public function getAllFields(string $tablename): array
     {
         throw new NotImplementedException('Feature not available');
     }
 
     /**
-     * @param $sql
-     * @param null $array
-     * @return mixed
-     * @throws \ByJG\AnyDataset\Db\Exception\RouteNotMatchedException
+     * @param string $sql
+     * @param array|null $array
+     * @return bool
+     * @throws RouteNotMatchedException
      */
-    public function execute($sql, $array = null)
+    public function execute(string $sql, ?array $array = null): bool
     {
         $dbDriver = $this->matchRoute($sql);
         return $dbDriver->execute($sql, $array);
     }
 
     /**
-     * @param $isolationLevel
+     * @param IsolationLevelEnum|null $isolationLevel
      * @throws NotImplementedException
      */
-    public function beginTransaction($isolationLevel = null, $allowJoin = false)
+    public function beginTransaction(IsolationLevelEnum $isolationLevel = null, bool $allowJoin = false)
     {
         throw new NotImplementedException('Feature not available');
     }
@@ -272,7 +281,7 @@ class Route implements DbDriverInterface
     /**
      * @throws NotImplementedException
      */
-    public function commitTransaction()
+    public function commitTransaction(): void
     {
         throw new NotImplementedException('Feature not available');
     }
@@ -280,65 +289,65 @@ class Route implements DbDriverInterface
     /**
      * @throws NotImplementedException
      */
-    public function rollbackTransaction()
+    public function rollbackTransaction(): void
     {
         throw new NotImplementedException('Feature not available');
     }
 
     /**
-     * @return PDO|void
-     * @throws NotImplementedException
-     */
-    public function getDbConnection()
-    {
-        throw new NotImplementedException('Feature not available');
-    }
-
-    /**
-     * @param $name
-     * @param $value
-     * @throws NotImplementedException
-     */
-    public function setAttribute($name, $value)
-    {
-        throw new NotImplementedException('Feature not available');
-    }
-
-    /**
-     * @param $name
-     * @throws NotImplementedException
-     */
-    public function getAttribute($name)
-    {
-        throw new NotImplementedException('Feature not available');
-    }
-
-    /**
-     * @param $sql
-     * @param null $array
      * @return mixed
-     * @throws \ByJG\AnyDataset\Db\Exception\RouteNotMatchedException
+     * @throws NotImplementedException
      */
-    public function executeAndGetId($sql, $array = null)
+    public function getDbConnection(): mixed
+    {
+        throw new NotImplementedException('Feature not available');
+    }
+
+    /**
+     * @param string $name
+     * @param mixed $value
+     * @throws NotImplementedException
+     */
+    public function setAttribute(string $name, mixed $value): void
+    {
+        throw new NotImplementedException('Feature not available');
+    }
+
+    /**
+     * @param string $name
+     * @throws NotImplementedException
+     */
+    public function getAttribute(string $name): mixed
+    {
+        throw new NotImplementedException('Feature not available');
+    }
+
+    /**
+     * @param string $sql
+     * @param array|null $array
+     * @return mixed
+     * @throws RouteNotMatchedException
+     */
+    public function executeAndGetId(string $sql, ?array $array = null): mixed
     {
         $dbDriver = $this->matchRoute($sql);
         return $dbDriver->executeAndGetId($sql, $array);
     }
 
     /**
-     * @return \ByJG\AnyDataset\Db\DbFunctionsInterface|void
+     * @return DbFunctionsInterface
      * @throws NotImplementedException
      */
-    public function getDbHelper()
+    public function getDbHelper(): DbFunctionsInterface
     {
         throw new NotImplementedException('Feature not available');
     }
 
     /**
-     * @return void
+     * @return Uri
      * @throws NotImplementedException
      */
-    public function getUri()
+    public function getUri(): Uri
     {
         throw new NotImplementedException('Feature not available');
     }
@@ -346,77 +355,77 @@ class Route implements DbDriverInterface
     /**
      * @throws NotImplementedException
      */
-    public function isSupportMultRowset()
+    public function isSupportMultiRowset(): bool
     {
         throw new NotImplementedException('Feature not available');
     }
 
     /**
-     * @param $multipleRowSet
+     * @param bool $multipleRowSet
      * @throws NotImplementedException
      */
-    public function setSupportMultRowset($multipleRowSet)
+    public function setSupportMultiRowset(bool $multipleRowSet): void
     {
         throw new NotImplementedException('Feature not available');
     }
 
-    public function getMaxStmtCache()
+    public function getMaxStmtCache(): int
     {
         throw new NotImplementedException('Feature not available');
     }
 
-    public function setMaxStmtCache($maxStmtCache)
+    public function setMaxStmtCache(int $maxStmtCache): void
     {
         throw new NotImplementedException('Feature not available');
     }
 
-    public function getCountStmtCache()
+    public function getCountStmtCache(): int
     {
         throw new NotImplementedException('Feature not available');
     }
     //</editor-fold>
-    public function reconnect($force = false)
+    public function reconnect(bool $force = false): bool
     {
         throw new NotImplementedException('Feature not available');
     }
 
-    public function disconnect()
+    public function disconnect(): void
     {
         throw new NotImplementedException('Feature not available');
     }
 
-    public function isConnected($softCheck = false, $throwError = false)
+    public function isConnected(bool $softCheck = false, bool $throwError = false): bool
     {
         throw new NotImplementedException('Feature not available');
     }
 
-    public function enableLogger(LoggerInterface $logger)
+    public function enableLogger(LoggerInterface $logger): void
     {
         throw new NotImplementedException('Feature not available');
     }
 
-    public function log($message, $context = [])
+    public function log(string $message, array $context = []): void
     {
         throw new NotImplementedException('Feature not available');
     }
 
-    public function hasActiveTransaction()
+    public function hasActiveTransaction(): bool
     {
         throw new NotImplementedException('Feature not available');
     }
 
-    public function requiresTransaction()
+    public function requiresTransaction(): void
     {
         throw new NotImplementedException('Feature not available');
     }
 
-    public function activeIsolationLevel()
+    public function activeIsolationLevel(): ?IsolationLevelEnum
     {
-        // TODO: Implement activeIsolationLevel() method.
+        throw new NotImplementedException('Feature not available');
     }
 
-    public function remainingCommits()
+    public function remainingCommits(): int
     {
-        // TODO: Implement remainingCommits() method.
+        throw new NotImplementedException('Feature not available');
     }
 }

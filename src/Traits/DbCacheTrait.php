@@ -4,23 +4,26 @@ namespace ByJG\AnyDataset\Db\Traits;
 
 use ByJG\AnyDataset\Core\GenericIterator;
 use ByJG\AnyDataset\Lists\ArrayDataset;
+use PDOStatement;
 use Psr\SimpleCache\CacheInterface;
 
 trait DbCacheTrait
 {
-    protected $stmtCache = [];
+    protected bool $cacheIsEnabled = false;
 
-    protected $maxStmtCache = 10;
+    protected array $stmtCache = [];
+
+    protected int $maxStmtCache = 10;
 
     /**
      * @return int
      */
-    public function getMaxStmtCache()
+    public function getMaxStmtCache(): int
     {
         return $this->maxStmtCache;
     }
 
-    public function getCountStmtCache()
+    public function getCountStmtCache(): int
     {
         return count($this->stmtCache);
     }
@@ -28,20 +31,35 @@ trait DbCacheTrait
     /**
      * @param int $maxStmtCache
      */
-    public function setMaxStmtCache($maxStmtCache)
+    public function setMaxStmtCache(int $maxStmtCache): void
     {
         $this->maxStmtCache = $maxStmtCache;
     }
 
-    protected function clearCache()
+    protected function enableCache(): void
+    {
+        $this->cacheIsEnabled = true;
+    }
+
+    protected function clearCache(): void
     {
         $this->stmtCache = [];
     }
 
-    protected function getOrSetSqlCacheStmt($sql)
+    protected function isCachingStmt(): bool
+    {
+        return $this->cacheIsEnabled;
+    }
+
+    protected function getOrSetSqlCacheStmt(string $sql): PDOStatement
     {
         if (!isset($this->stmtCache[$sql])) {
-            $this->stmtCache[$sql] = $this->getInstance()->prepare($sql);
+            if (!method_exists($this, 'getInstance')) {
+                $this->stmtCache[$sql] = $sql;
+            } else {
+                $this->stmtCache[$sql] = $this->getInstance()->prepare($sql);
+            }
+
             if ($this->getCountStmtCache() > $this->getMaxStmtCache()) { //Kill old cache to get waste memory
                 array_shift($this->stmtCache);
             }
@@ -50,7 +68,7 @@ trait DbCacheTrait
         return $this->stmtCache[$sql];
     }
 
-    public function getIteratorUsingCache($sql, $params, ?CacheInterface $cache, $ttl, \Closure $closure): GenericIterator
+    public function getIteratorUsingCache($sql, $params, ?CacheInterface $cache, \DateInterval|int $ttl, \Closure $closure): GenericIterator
     {
         $cacheKey = $this->getQueryKey($cache, $sql, $params);
 

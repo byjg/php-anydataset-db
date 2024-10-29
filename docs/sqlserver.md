@@ -1,10 +1,28 @@
 # Driver: Microsoft SQL Server
 
-The SQLServer can be connected using both FreeDTS / Dblib (Sybase) or SQLSVR driver. 
+There are two Drivers to connect to Microsoft SQL Server.
 
-They have specifics, but both are able to connect to SQLServer. 
+- **Dblib**: This driver is based on the Sybase protocol. It is a good driver, but it is not maintained anymore.
+- **SqlSrv**: This driver is the official driver from Microsoft. It is maintained and has more features than Dblib.
 
-There are some specifics as you can see below.
+## Dblib
+
+You can check if there is a PHP extension `php_dblib` installed in your system. If you have this extension, you can use the following URI:
+
+```php
+<?php
+$conn = \ByJG\AnyDataset\Db\Factory::getDbInstance("dblib://username:password@hostname:port/database");
+```
+
+## SqlSrv
+
+You can check if there is a PHP extension `php_sqlsrv` installed in your system. If you have this extension, you can use the following URI:
+
+```php
+<?php
+$conn = \ByJG\AnyDataset\Db\Factory::getDbInstance("sqlsrv://username:password@hostname:port/database");
+```
+
 
 ## The  Date format Issues
 

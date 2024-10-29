@@ -7,7 +7,7 @@ use ByJG\Util\Uri;
 
 class PdoDblib extends PdoPdo
 {
-    public static function schema()
+    public static function schema(): array
     {
         return ['dblib'];
     }
@@ -19,9 +19,9 @@ class PdoDblib extends PdoPdo
      * @param Uri $connUri
      * @throws NotAvailableException
      */
-    public function __construct($connUri)
+    public function __construct(Uri $connUri)
     {
-        $this->setSupportMultRowset(true);
+        $this->setSupportMultiRowset(true);
 
         // Run after instance is created
         // Solve the error:
@@ -43,7 +43,10 @@ class PdoDblib extends PdoPdo
 
     protected function getMssqlUri(Uri $connUri): Uri
     {
-        return Uri::getInstanceFromString("pdo://")
+        /** @var Uri $uri */
+        $uri = Uri::getInstanceFromString("dblib://");
+
+        return $uri
             ->withUserInfo($connUri->getUsername(), $connUri->getPassword())
             ->withHost($connUri->getScheme())
             ->withQueryKeyValue("host" , $connUri->getHost() . (!empty($connUri->getPort()) ? "," . $connUri->getPort() : ""))

@@ -1,15 +1,17 @@
 <?php
 
-namespace Tests\AnyDataset\Store\Helpers;
+namespace Test\Helpers;
 
+use ByJG\AnyDataset\Core\Exception\NotAvailableException;
 use ByJG\AnyDataset\Db\Helpers\DbSqliteFunctions;
+use PHPUnit\Framework\TestCase;
 
-class DbSqliteFunctionsTest extends \PHPUnit\Framework\TestCase
+class DbSqliteFunctionsTest extends TestCase
 {
     /**
-     * @var DbSqliteFunctions
+     * @var DbSqliteFunctions|null
      */
-    private $object;
+    private ?DbSqliteFunctions $object;
 
     protected function setUp(): void
     {
@@ -102,7 +104,7 @@ class DbSqliteFunctionsTest extends \PHPUnit\Framework\TestCase
 
     public function testForUpdate()
     {
-        $this->expectException(\ByJG\AnyDataset\Core\Exception\NotAvailableException::class);
+        $this->expectException(NotAvailableException::class);
         
         $this->assertFalse($this->object->hasForUpdate());
         $this->object->forUpdate('select * from table');

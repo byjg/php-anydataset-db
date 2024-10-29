@@ -2,13 +2,14 @@
 
 namespace ByJG\AnyDataset\Db;
 
-use ByJG\AnyDataset\Core\Exception\NotAvailableException;
+use ByJG\AnyDataset\Core\GenericIterator;
 use ByJG\AnyDataset\Db\Exception\DbDriverNotConnected;
 use ByJG\AnyDataset\Db\Helpers\SqlBind;
 use ByJG\AnyDataset\Db\Helpers\SqlHelper;
 use ByJG\AnyDataset\Db\Traits\DbCacheTrait;
 use ByJG\AnyDataset\Db\Traits\TransactionTrait;
 use ByJG\Util\Uri;
+use DateInterval;
 use Exception;
 use PDO;
 use PDOStatement;
@@ -21,31 +22,24 @@ abstract class DbPdoDriver implements DbDriverInterface
     use TransactionTrait;
     use DbCacheTrait;
 
-    /**
-     * @var PDO
-     */
-    protected $instance = null;
+    protected ?PDO $instance = null;
 
-    /**
-     * @var PDOStatement[]
-     */
-    protected $supportMultRowset = false;
+    protected bool $supportMultiRowset = false;
+
 
 
     const DONT_PARSE_PARAM = "dont_parse_param";
     const STATEMENT_CACHE = "stmtcache";
     const UNIX_SOCKET = "unix_socket";
 
-    /**
-     * @var PdoObj
-     */
-    protected $pdoObj;
+    protected PdoObj $pdoObj;
 
-    protected $preOptions;
+    protected ?array $preOptions;
 
-    protected $postOptions;
+    protected ?array $postOptions;
 
-    protected $executeAfterConnect;
+    protected ?array $executeAfterConnect;
+
     /**
      * @var LoggerInterface
      */
@@ -55,11 +49,12 @@ abstract class DbPdoDriver implements DbDriverInterface
      * DbPdoDriver constructor.
      *
      * @param Uri $connUri
-     * @param array $preOptions
-     * @param array $postOptions
-     * @throws NotAvailableException
+     * @param array|null $preOptions
+     * @param array|null $postOptions
+     * @param array $executeAfterConnect
+     * @throws DbDriverNotConnected
      */
-    public function __construct(Uri $connUri, $preOptions = null, $postOptions = null, $executeAfterConnect = [])
+    public function __construct(Uri $connUri, ?array $preOptions = null, ?array $postOptions = null, array $executeAfterConnect = [])
     {
         $this->logger = new NullLogger();
         $this->pdoObj = new PdoObj($connUri);
@@ -69,7 +64,10 @@ abstract class DbPdoDriver implements DbDriverInterface
         $this->reconnect();
     }
 
-    public function reconnect($force = false)
+    /**
+     * @throws DbDriverNotConnected
+     */
+    public function reconnect(bool $force = false): bool
     {
         if ($this->isConnected() && !$force) {
             return false;
@@ -84,7 +82,7 @@ abstract class DbPdoDriver implements DbDriverInterface
         return true;
     }
 
-    public function disconnect()
+    public function disconnect(): void
     {
         $this->clearCache();
         $this->instance = null;
@@ -98,10 +96,11 @@ abstract class DbPdoDriver implements DbDriverInterface
     /**
      *
      * @param string $sql
-     * @param array $array
+     * @param array|null $array $array
      * @return PDOStatement
+     * @throws DbDriverNotConnected
      */
-    protected function getDBStatement($sql, $array = null)
+    protected function getDBStatement(string $sql, ?array $array = null): PDOStatement
     {
         if (!$this->getUri()->hasQueryKey(self::DONT_PARSE_PARAM)) {
             list($sql, $array) = SqlBind::parseSQL($this->pdoObj->getUri(), $sql, $array);
@@ -125,7 +124,7 @@ abstract class DbPdoDriver implements DbDriverInterface
         return $stmt;
     }
 
-    public function getIterator($sql, $params = null, CacheInterface $cache = null, $ttl = 60)
+    public function getIterator(string $sql, ?array $params = null, ?CacheInterface $cache = null, DateInterval|int $ttl = 60): GenericIterator
     {
         return $this->getIteratorUsingCache($sql, $params, $cache, $ttl, function ($sql, $params) {
             $stmt = $this->getDBStatement($sql, $params);
@@ -134,7 +133,7 @@ abstract class DbPdoDriver implements DbDriverInterface
         });
     }
 
-    public function getScalar($sql, $array = null)
+    public function getScalar(string $sql, ?array $array = null): mixed
     {
         $stmt = $this->getDBStatement($sql, $array);
         $stmt->execute();
@@ -146,7 +145,7 @@ abstract class DbPdoDriver implements DbDriverInterface
         return $scalar;
     }
 
-    public function getAllFields($tablename)
+    public function getAllFields(string $tablename): array
     {
         $fields = array();
         $statement = $this->getInstance()->query(
@@ -166,12 +165,12 @@ abstract class DbPdoDriver implements DbDriverInterface
     }
 
 
-    public function execute($sql, $array = null)
+    public function execute(string $sql, ?array $array = null): bool
     {
         $stmt = $this->getDBStatement($sql, $array);
         $result = $stmt->execute();
 
-        if ($this->isSupportMultRowset()) {
+        if ($this->isSupportMultiRowset()) {
             // Check error
             do {
                 // This loop is only to throw an error (if exists)
@@ -182,33 +181,23 @@ abstract class DbPdoDriver implements DbDriverInterface
         return $result;
     }
 
-    public function executeAndGetId($sql, $array = null)
+    public function executeAndGetId(string $sql, ?array $array = null): mixed
     {
         return $this->getDbHelper()->executeAndGetInsertedId($this, $sql, $array);
     }
 
     /**
      *
-     * @return PDO
+     * @return PDO|null
      */
-    public function getDbConnection()
+    public function getDbConnection(): ?PDO
     {
         return $this->instance;
     }
 
-    public function getAttribute($name)
-    {
-        $this->getInstance()->getAttribute($name);
-    }
+    protected ?DbFunctionsInterface $dbHelper = null;
 
-    public function setAttribute($name, $value)
-    {
-        $this->getInstance()->setAttribute($name, $value);
-    }
-
-    protected $dbHelper;
-
-    public function getDbHelper()
+    public function getDbHelper(): DbFunctionsInterface
     {
         if (empty($this->dbHelper)) {
             $this->dbHelper = Factory::getDbFunctions($this->pdoObj->getUri());
@@ -216,7 +205,7 @@ abstract class DbPdoDriver implements DbDriverInterface
         return $this->dbHelper;
     }
 
-    public function getUri()
+    public function getUri(): Uri
     {
         return $this->pdoObj->getUri();
     }
@@ -224,21 +213,21 @@ abstract class DbPdoDriver implements DbDriverInterface
     /**
      * @return bool
      */
-    public function isSupportMultRowset()
+    public function isSupportMultiRowset(): bool
     {
-        return $this->supportMultRowset;
+        return $this->supportMultiRowset;
     }
 
     /**
      * @param bool $multipleRowSet
      */
-    public function setSupportMultRowset($multipleRowSet)
+    public function setSupportMultiRowset(bool $multipleRowSet): void
     {
-        $this->supportMultRowset = $multipleRowSet;
+        $this->supportMultiRowset = $multipleRowSet;
     }
 
 
-    public function isConnected($softCheck = false, $throwError = false)
+    public function isConnected(bool $softCheck = false, bool $throwError = false): bool
     {
         if (empty($this->instance)) {
             if ($throwError) {
@@ -263,35 +252,35 @@ abstract class DbPdoDriver implements DbDriverInterface
         return true;
     }
 
-    protected function getInstance()
+    protected function getInstance(): ?PDO
     {
         $this->isConnected(true, true);
         return $this->instance;
     }
 
-    public function enableLogger(LoggerInterface $logger)
+    public function enableLogger(LoggerInterface $logger): void
     {
         $this->logger = $logger;
     }
 
-    public function log($message, $context = [])
+    public function log(string $message, array $context = []): void
     {
         $this->logger->debug($message, $context);
     }
 
-    protected function transactionHandler($action, $isolLevelCommand = "")
+    protected function transactionHandler(TransactionStageEnum $action, string $isoLevelCommand = ""): void
     {
         switch ($action) {
-            case 'begin':
-                if (!empty($isolLevelCommand)) {
-                    $this->getInstance()->exec($isolLevelCommand);
+            case TransactionStageEnum::begin:
+                if (!empty($isoLevelCommand)) {
+                    $this->getInstance()->exec($isoLevelCommand);
                 }
                 $this->getInstance()->beginTransaction();
                 break;
-            case 'commit':
+            case TransactionStageEnum::commit:
                 $this->getInstance()->commit();
                 break;
-            case 'rollback':
+            case TransactionStageEnum::rollback:
                 $this->getInstance()->rollBack();
                 break;
         }

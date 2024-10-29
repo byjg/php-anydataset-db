@@ -13,7 +13,7 @@ class Factory
      * @param string $class
      * @return void
      */
-    public static function registerDbDriver($class)
+    public static function registerDbDriver(string $class): void
     {
         if (!in_array(DbDriverInterface::class, class_implements($class))) {
             throw new InvalidArgumentException(
@@ -21,9 +21,10 @@ class Factory
             );
         }
 
+        /** @var DbDriverInterface $class */
         if (empty($class::schema())) {
             throw new InvalidArgumentException(
-                "The class '$class' must implement the static method schema()"
+                "The class must implement the static method schema()"
             );
         }
 
@@ -33,42 +34,58 @@ class Factory
         }
     }
 
+    public static function getRegisteredDrivers(string $checkDriver = null): array|string
+    {
+        if (empty(self::$config)) {
+            self::registerAllDrivers();
+        }
+
+        if (!empty($checkDriver)) {
+            if (!isset(self::$config[$checkDriver])) {
+                throw new InvalidArgumentException("The '$checkDriver' scheme does not exist.");
+            }
+            return self::$config[$checkDriver];
+        }
+
+        return self::$config;
+    }
+
+    public static function registerAllDrivers(): void
+    {
+        self::registerDbDriver(PdoMysql::class);
+        self::registerDbDriver(PdoPgsql::class);
+        self::registerDbDriver(PdoSqlite::class);
+        self::registerDbDriver(PdoDblib::class);
+        self::registerDbDriver(PdoSqlsrv::class);
+        self::registerDbDriver(PdoOdbc::class);
+        self::registerDbDriver(PdoPdo::class);
+        self::registerDbDriver(PdoOci::class);
+        self::registerDbDriver(DbOci8Driver::class);
+    }
+
     /**
-     * @param $connectionString
+     * @param string $connectionString
      * @return DbDriverInterface
+     * @deprecated Use getDbInstance instead
      */
-    public static function getDbRelationalInstance($connectionString)
+    public static function getDbRelationalInstance(string $connectionString): DbDriverInterface
     {
         return self::getDbInstance(new Uri($connectionString));
     }
 
 
     /**
-     * @param $connectionUri Uri
-     * @return mixed
+     * @param Uri|string $connectionUri Uri
+     * @return DbDriverInterface
      */
-    public static function getDbInstance($connectionUri)
+    public static function getDbInstance(Uri|string $connectionUri): DbDriverInterface
     {
-
-        if (empty(self::$config)) {
-            self::registerDbDriver(PdoMysql::class);
-            self::registerDbDriver(PdoPgsql::class);
-            self::registerDbDriver(PdoSqlite::class);
-            self::registerDbDriver(PdoDblib::class);
-            self::registerDbDriver(PdoSqlsrv::class);
-            self::registerDbDriver(PdoOdbc::class);
-            self::registerDbDriver(PdoPdo::class);
-            self::registerDbDriver(PdoOci::class);
-            self::registerDbDriver(DbOci8Driver::class);
+        if (is_string($connectionUri)) {
+            $connectionUri = new Uri($connectionUri);
         }
 
-        $scheme = $connectionUri->getScheme();
-
-        if (!isset(self::$config[$scheme])) {
-            throw new InvalidArgumentException("The '$scheme' scheme does not exist.");
-        }
-
-        $class = self::$config[$scheme];
+        /** @var string $class */
+        $class = self::getRegisteredDrivers($connectionUri->getScheme());
 
         return new $class($connectionUri);
     }
@@ -76,10 +93,10 @@ class Factory
     /**
      * Get a IDbFunctions class to execute Database specific operations.
      *
-     * @param \ByJG\Util\Uri $connectionUri
-     * @return \ByJG\AnyDataset\Db\DbFunctionsInterface
+     * @param Uri $connectionUri
+     * @return DbFunctionsInterface
      */
-    public static function getDbFunctions(Uri $connectionUri)
+    public static function getDbFunctions(Uri $connectionUri): DbFunctionsInterface
     {
         $dbFunc = "\\ByJG\\AnyDataset\\Db\\Helpers\\Db"
             . ucfirst($connectionUri->getScheme())

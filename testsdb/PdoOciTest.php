@@ -1,10 +1,8 @@
 <?php
 
-namespace TestsDb\AnyDataset;
+namespace TestDb;
 
 use ByJG\AnyDataset\Db\Factory;
-
-require_once 'BasePdo.php';
 
 class PdoOciTest extends BasePdo
 {
@@ -37,7 +35,7 @@ class PdoOciTest extends BasePdo
             $database = 'XE';
         }
 
-        return Factory::getDbRelationalInstance("oci8://C##TEST:$password@$host/$database?session_mode=" . OCI_DEFAULT . "&conntype=" . $this->connType);
+        return Factory::getDbInstance("oci8://C##TEST:$password@$host/$database?session_mode=" . OCI_DEFAULT . "&conntype=" . $this->connType);
     }
 
     protected function createDatabase()

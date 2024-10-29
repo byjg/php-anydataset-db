@@ -1,10 +1,8 @@
 <?php
 
-namespace TestsDb\AnyDataset;
+namespace TestDb;
 
 use ByJG\AnyDataset\Db\Factory;
-
-require_once 'BasePdo.php';
 
 class PdoMySqlTest extends BasePdo
 {
@@ -25,9 +23,9 @@ class PdoMySqlTest extends BasePdo
             $password = "";
         }
 
-        $dbDriver = Factory::getDbRelationalInstance("mysql://root:$password@$host");
+        $dbDriver = Factory::getDbInstance("mysql://root:$password@$host");
         $dbDriver->execute('CREATE DATABASE IF NOT EXISTS test');
-        return Factory::getDbRelationalInstance("mysql://root:$password@$host/test");
+        return Factory::getDbInstance("mysql://root:$password@$host/test");
     }
 
     protected function createDatabase()

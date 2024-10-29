@@ -16,10 +16,9 @@ jobs:
     strategy:
       matrix:
         php-version:
+          - "8.3"
           - "8.2"
           - "8.1"
-          - "8.0"
-          - "7.4"
 
     services:
       mysql:
@@ -66,7 +65,11 @@ jobs:
       
     steps:
       - uses: actions/checkout@v4
+      - name: Install Dependencies
+        run: |
+          apk add --no-cache ${PHP_VARIANT}-pdo_dblib
       - run: composer install
+      - run: ./vendor/bin/psalm
       - run: ./vendor/bin/phpunit
       - run: ./vendor/bin/phpunit testsdb/PdoMySqlTest.php 
       - run: ./vendor/bin/phpunit testsdb/PdoSqliteTest.php 

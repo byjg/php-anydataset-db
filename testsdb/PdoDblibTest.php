@@ -1,11 +1,9 @@
 <?php
 
-namespace TestsDb\AnyDataset;
+namespace TestDb;
 
 use ByJG\AnyDataset\Db\DbPdoDriver;
 use ByJG\AnyDataset\Db\Factory;
-
-require_once 'BasePdo.php';
 
 class PdoDblibTest extends BasePdo
 {
@@ -22,7 +20,7 @@ class PdoDblibTest extends BasePdo
             $password = 'Pa55word';
         }
 
-        return Factory::getDbRelationalInstance("dblib://sa:$password@$host/tempdb");
+        return Factory::getDbInstance("dblib://sa:$password@$host/tempdb");
     }
 
     protected function createDatabase()
@@ -72,23 +70,4 @@ class PdoDblibTest extends BasePdo
     {
         $this->markTestSkipped('SQLServer locks the table make the test inviable');
     }
-
-    public function testInsertSpecialChars()
-    {
-        if (PHP_MAJOR_VERSION == 8 && PHP_MINOR_VERSION == 0) {
-            // @fixme: Remove this in version 5.0
-            $this->markTestSkipped('This test is not working on PHP 8.0');
-        }
-        parent::testInsertSpecialChars();
-    }
-
-    public function testGetBuggyUT8()
-    {
-        if (PHP_MAJOR_VERSION == 8 && PHP_MINOR_VERSION == 0) {
-            // @fixme: Remove this in version 5.0
-            $this->markTestSkipped('This test is not working on PHP 8.0');
-        }
-        parent::testGetBuggyUT8();
-    }
-
 }
