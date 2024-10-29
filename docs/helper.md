@@ -26,7 +26,7 @@ It is useful when you are working with different database connections and don't 
 E.g.
 
 ```php
-$dbDriver = \ByJG\AnyDataset\Db\Factory::getDbRelationalInstance('...connection string...');
+$dbDriver = \ByJG\AnyDataset\Db\Factory::getDbInstance('...connection string...');
 $dbHelper = $dbDriver->getDbHelper();
 
 // This will return the proper SQL with the TOP 10

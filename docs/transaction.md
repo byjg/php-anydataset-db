@@ -4,7 +4,7 @@
 
 ```php
 <?php
-$dbDriver = \ByJG\AnyDataset\Db\Factory::getDbRelationalInstance('mysql://username:password@host/database');
+$dbDriver = \ByJG\AnyDataset\Db\Factory::getDbInstance('mysql://username:password@host/database');
 
 $dbDriver->beginTransaction(\ByJG\AnyDataset\Db\IsolationLevelEnum::SERIALIZABLE);
 try {

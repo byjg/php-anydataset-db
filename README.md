@@ -36,7 +36,7 @@ See below the current implemented drivers:
 
 ```php
 <?php
-$conn = \ByJG\AnyDataset\Db\Factory::getDbRelationalInstance("mysql://root:password@10.0.1.10/myschema");
+$conn = \ByJG\AnyDataset\Db\Factory::getDbInstance("mysql://root:password@10.0.1.10/myschema");
 ```
 
 ## Examples

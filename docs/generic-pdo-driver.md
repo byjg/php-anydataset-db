@@ -7,7 +7,7 @@ The generic PDO driver uses the format `pdo://username:password@pdo_driver?PDO_A
 That are the steps to get it working:
 1. Install the PDO driver properly;
 2. Adapt the connection string URI to the generic PDO format.
-3. Use the `Factory::getDbRelationalInstance` to get the database instance.
+3. Use the `Factory::getDbInstance` to get the database instance.
 
 **IMPORTANT**:
 

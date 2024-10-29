@@ -8,7 +8,7 @@ e.g.
 <?php
 $uri = Uri::getInstanceFromUri("mysql://root:password@localhost")
                 ->withQueryKeyValue(PDO::MYSQL_ATTR_COMPRESS, 1);
-$db = Factory::getDbRelationalInstance($uri);
+$db = Factory::getDbInstance($uri);
  ```
 
 ## Special Parameters

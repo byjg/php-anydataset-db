@@ -4,7 +4,7 @@
 
 ```php
 <?php
-$dbDriver = \ByJG\AnyDataset\Db\Factory::getDbRelationalInstance('mysql://username:password@host/database');
+$dbDriver = \ByJG\AnyDataset\Db\Factory::getDbInstance('mysql://username:password@host/database');
 $iterator = $dbDriver->getIterator('select * from table where field = :param', ['param' => 'value']);
 foreach ($iterator as $row) {
     // Do Something
@@ -16,7 +16,7 @@ foreach ($iterator as $row) {
 
 ```php
 <?php
-$dbDriver = \ByJG\AnyDataset\Db\Factory::getDbRelationalInstance('mysql://username:password@host/database');
+$dbDriver = \ByJG\AnyDataset\Db\Factory::getDbInstance('mysql://username:password@host/database');
 $dbDriver->execute(
     'update table set other = :value where field = :param',
     [
@@ -30,7 +30,7 @@ $dbDriver->execute(
 
 ```php
 <?php
-$dbDriver = \ByJG\AnyDataset\Db\Factory::getDbRelationalInstance('mysql://username:password@host/database');
+$dbDriver = \ByJG\AnyDataset\Db\Factory::getDbInstance('mysql://username:password@host/database');
 $id = $dbDriver->executeAndGetId(
     'insert into table (field1, field2) values (:param1, :param2)',
     [
@@ -44,7 +44,7 @@ $id = $dbDriver->executeAndGetId(
 
 ```php
 <?php
-$dbDriver = \ByJG\AnyDataset\Db\Factory::getDbRelationalInstance('mysql://username:password@host/database');
+$dbDriver = \ByJG\AnyDataset\Db\Factory::getDbInstance('mysql://username:password@host/database');
 $dbDriver->beginTransaction(\ByJG\AnyDataset\Db\IsolationLevelEnum::SERIALIZABLE);
 
 // ... Do your queries

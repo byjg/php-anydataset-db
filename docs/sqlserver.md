@@ -11,7 +11,7 @@ You can check if there is a PHP extension `php_dblib` installed in your system. 
 
 ```php
 <?php
-$conn = \ByJG\AnyDataset\Db\Factory::getDbRelationalInstance("dblib://username:password@hostname:port/database");
+$conn = \ByJG\AnyDataset\Db\Factory::getDbInstance("dblib://username:password@hostname:port/database");
 ```
 
 ## SqlSrv
@@ -20,7 +20,7 @@ You can check if there is a PHP extension `php_sqlsrv` installed in your system.
 
 ```php
 <?php
-$conn = \ByJG\AnyDataset\Db\Factory::getDbRelationalInstance("sqlsrv://username:password@hostname:port/database");
+$conn = \ByJG\AnyDataset\Db\Factory::getDbInstance("sqlsrv://username:password@hostname:port/database");
 ```
 
 
