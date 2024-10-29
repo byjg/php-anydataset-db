@@ -67,7 +67,7 @@ jobs:
       - uses: actions/checkout@v4
       - name: Install Dependencies
         run: |
-          apk install --no-cache ${PHP_VARIANT}-pdo_dblib
+          apk add --no-cache ${PHP_VARIANT}-pdo_dblib
       - run: composer install
       - run: ./vendor/bin/psalm
       - run: ./vendor/bin/phpunit
