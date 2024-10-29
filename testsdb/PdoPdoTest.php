@@ -24,7 +24,7 @@ class PdoPdoTest extends PdoPostgresTest
             $password = "";
         }
 
-        $dbDriver = Factory::getDbRelationalInstance(
+        $dbDriver = Factory::getDbInstance(
             Uri::getInstanceFromString("pdo://postgres:$password@pgsql")
                 ->withQueryKeyValue("host", $host));
 
@@ -33,7 +33,7 @@ class PdoPdoTest extends PdoPostgresTest
             $dbDriver->execute('CREATE DATABASE testpdo');
         }
 
-        return Factory::getDbRelationalInstance(
+        return Factory::getDbInstance(
             Uri::getInstanceFromString("pdo://postgres:$password@pgsql")
                 ->withQueryKeyValue("host", $host)
                 ->withQueryKeyValue("dbname", "testpdo"));

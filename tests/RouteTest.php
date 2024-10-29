@@ -32,9 +32,9 @@ class RouteTest extends TestCase
     {
         $this->object = new Route();
 
-        $this->obj1 = Factory::getDbRelationalInstance('sqlite:///tmp/a.db');
-        $this->obj2 = Factory::getDbRelationalInstance('sqlite:///tmp/b.db');
-        $this->obj3 = Factory::getDbRelationalInstance('sqlite:///tmp/c.db');
+        $this->obj1 = Factory::getDbInstance('sqlite:///tmp/a.db');
+        $this->obj2 = Factory::getDbInstance('sqlite:///tmp/b.db');
+        $this->obj3 = Factory::getDbInstance('sqlite:///tmp/c.db');
 
         $this->object->addDbDriverInterface('route1', 'sqlite:///tmp/a.db');
         $this->object->addDbDriverInterface('route2', $this->obj2);

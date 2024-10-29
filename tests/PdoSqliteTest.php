@@ -17,7 +17,7 @@ class PdoSqliteTest extends TestCase
 
     public function setUp(): void
     {
-        $this->dbDriver = Factory::getDbRelationalInstance('sqlite:///tmp/test.db');
+        $this->dbDriver = Factory::getDbInstance('sqlite:///tmp/test.db');
 
         $this->dbDriver->execute(
             'create table users (
@@ -227,7 +227,7 @@ class PdoSqliteTest extends TestCase
         $this->dbDriver->rollbackTransaction();
 
         // Context 2
-        $context2 = Factory::getDbRelationalInstance('sqlite:///tmp/test.db');
+        $context2 = Factory::getDbInstance('sqlite:///tmp/test.db');
         $context2->beginTransaction();
         $newId = $context2->executeAndGetId("insert into users (name, createdate) values ('Another2', '2017-04-11')");
         $this->assertEquals(4, $newId);

@@ -44,7 +44,7 @@ class PdoDblib extends PdoPdo
     protected function getMssqlUri(Uri $connUri): Uri
     {
         /** @var Uri $uri */
-        $uri = Uri::getInstanceFromString("mssql://");
+        $uri = Uri::getInstanceFromString("dblib://");
 
         return $uri
             ->withUserInfo($connUri->getUsername(), $connUri->getPassword())

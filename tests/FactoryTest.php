@@ -13,6 +13,6 @@ class FactoryTest extends TestCase
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage("'abc' scheme does not exist");
 
-        Factory::getDbRelationalInstance("abc://user:pass@test");
+        Factory::getDbInstance("abc://user:pass@test");
     }
 }

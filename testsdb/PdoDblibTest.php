@@ -20,7 +20,7 @@ class PdoDblibTest extends BasePdo
             $password = 'Pa55word';
         }
 
-        return Factory::getDbRelationalInstance("dblib://sa:$password@$host/tempdb");
+        return Factory::getDbInstance("dblib://sa:$password@$host/tempdb");
     }
 
     protected function createDatabase()
