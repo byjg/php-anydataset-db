@@ -1,5 +1,7 @@
 <?php
 
+namespace Test;
+
 use ByJG\AnyDataset\Db\DbPdoDriver;
 use ByJG\AnyDataset\Db\PdoObj;
 use ByJG\Util\Uri;
@@ -57,10 +59,6 @@ class DbPdoUriTest extends TestCase
             ],
             [
                 new Uri("mysql://localhost/dbname?charset=utf8&other=1&" . DbPdoDriver::DONT_PARSE_PARAM . "=1"),
-                "mysql:host=localhost;dbname=dbname;charset=utf8;other=1"
-            ],
-            [
-                new Uri("mysql://localhost/dbname?charset=utf8&other=1&" . DbPdoDriver::DONT_PARSE_PARAM . "=1&" . DbPdoDriver::STATEMENT_CACHE . "=1"),
                 "mysql:host=localhost;dbname=dbname;charset=utf8;other=1"
             ],
             [
@@ -158,17 +156,4 @@ class DbPdoUriTest extends TestCase
             ],
         ];
     }
-
-    public function testExpectCache()
-    {
-        $uri = new Uri("mysql://localhost/dbname?" . DbPdoDriver::STATEMENT_CACHE . "=true");
-        $dbPdoUri = new PdoObj($uri);
-        $this->assertTrue($dbPdoUri->expectToCacheResults());
-
-        $uri = new Uri("mysql://localhost/dbname");
-        $dbPdoUri = new PdoObj($uri);
-        $this->assertFalse($dbPdoUri->expectToCacheResults());
-
-    }
-
 }

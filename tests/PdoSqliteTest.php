@@ -2,16 +2,19 @@
 
 namespace Test;
 
+use ByJG\AnyDataset\Db\DbDriverInterface;
 use ByJG\AnyDataset\Db\Factory;
 use ByJG\AnyDataset\Db\Helpers\DbSqliteFunctions;
+use ByJG\AnyDataset\Db\SqlStatement;
 use ByJG\Cache\Psr16\ArrayCacheEngine;
 use ByJG\Util\Uri;
+use PDO;
 use PHPUnit\Framework\TestCase;
 
 class PdoSqliteTest extends TestCase
 {
     /**
-     * @var \ByJG\AnyDataset\Db\DbDriverInterface
+     * @var DbDriverInterface
      */
     protected $dbDriver;
 
@@ -249,7 +252,7 @@ class PdoSqliteTest extends TestCase
     public function testGetDbConnection()
     {
         $connection = $this->dbDriver->getDbConnection();
-        $this->assertInstanceOf(\PDO::class, $connection);
+        $this->assertInstanceOf(PDO::class, $connection);
     }
 
     public function testGetUri()
@@ -325,6 +328,84 @@ class PdoSqliteTest extends TestCase
             [],
             $iterator->toArray()
         );
+    }
+
+    public function testCachedResultsqlStatement()
+    {
+        $cache = new ArrayCacheEngine();
+
+        $sqlStatement = new SqlStatement('select * from info where id = :id');
+
+        // Get the first from Db and then cache it;
+        $iterator = $sqlStatement->getIterator($this->dbDriver, ['id' => 4]);
+        $this->assertEmpty($iterator->toArray());
+        $iterator = $sqlStatement->getIterator($this->dbDriver, ['id' => 5]);
+        $this->assertEmpty($iterator->toArray());
+
+        // Add a new record to DB
+        $id = $this->dbDriver->execute("insert into info (iduser, number, property) values (2, 20, 40)");
+        $id = $this->dbDriver->execute("insert into info (iduser, number, property) values (3, 30, 60)");
+        $this->assertEquals(4, $id);
+
+        // Get Without Cache
+        $iterator = $sqlStatement->getIterator($this->dbDriver, ['id' => 4]);
+        $this->assertEquals(
+            [
+                ["id" => 4, "iduser" => 2, "number" => 20, "property" => '40'],
+            ],
+            $iterator->toArray()
+        );
+        $iterator = $sqlStatement->getIterator($this->dbDriver, ['id' => 5]);
+        $this->assertEquals(
+            [
+                ["id" => 5, "iduser" => 3, "number" => 30, "property" => '60'],
+            ],
+            $iterator->toArray()
+        );
+
+        // Get from cache, should return the same values
+        $sqlStatement->withCache($cache, 'info', 60);
+        $iterator = $sqlStatement->getIterator($this->dbDriver, ['id' => 4]);
+        $this->assertEquals(
+            [
+                ["id" => 4, "iduser" => 2, "number" => 20, "property" => '40', '__id' => 0, '__key' => 0],
+            ],
+            $iterator->toArray()
+        );
+        $iterator = $sqlStatement->getIterator($this->dbDriver, ['id' => 5]);
+        $this->assertEquals(
+            [
+                ["id" => 5, "iduser" => 3, "number" => 30, "property" => '60', '__id' => 0, '__key' => 0],
+            ],
+            $iterator->toArray()
+        );
+
+        // Delete the record
+        $id = $this->dbDriver->execute("delete from info where id = :id", ['id' => 4]);
+        $id = $this->dbDriver->execute("delete from info where id = :id", ['id' => 5]);
+
+        // Get from cache, should return the same values
+        $iterator = $sqlStatement->getIterator($this->dbDriver, ['id' => 4]);
+        $this->assertEquals(
+            [
+                ["id" => 4, "iduser" => 2, "number" => 20, "property" => '40', '__id' => 0, '__key' => 0],
+            ],
+            $iterator->toArray()
+        );
+        $iterator = $sqlStatement->getIterator($this->dbDriver, ['id' => 5]);
+        $this->assertEquals(
+            [
+                ["id" => 5, "iduser" => 3, "number" => 30, "property" => '60', '__id' => 0, '__key' => 0],
+            ],
+            $iterator->toArray()
+        );
+
+        // Get direct from DB, should return empty
+        $sqlStatement->withoutCache();
+        $iterator = $sqlStatement->getIterator($this->dbDriver, ['id' => 4]);
+        $this->assertEmpty($iterator->toArray());
+        $iterator = $sqlStatement->getIterator($this->dbDriver, ['id' => 5]);
+        $this->assertEmpty($iterator->toArray());
     }
 
     public function testCachedResults2()
