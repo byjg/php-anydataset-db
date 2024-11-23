@@ -2,7 +2,6 @@
 
 namespace ByJG\AnyDataset\Db\Helpers;
 
-use ByJG\AnyDataset\Core\Exception\NotImplementedException;
 use ByJG\AnyDataset\Db\DbDriverInterface;
 use ByJG\AnyDataset\Db\DbFunctionsInterface;
 use ByJG\AnyDataset\Db\IsolationLevelEnum;
@@ -248,6 +247,9 @@ abstract class DbBaseFunctions implements DbFunctionsInterface
 
     public function getJoinTablesUpdate(array $tables): array
     {
-        throw new NotImplementedException('Method not implemented');
+        return [
+            'sql' => '',
+            'position' => 'before_set'
+        ];
     }
 }
