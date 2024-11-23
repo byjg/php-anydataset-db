@@ -158,4 +158,20 @@ class DbPgsqlFunctions extends DbBaseFunctions
             default => "",
         };
     }
+
+    public function getJoinTablesUpdate(array $tables): array
+    {
+        $joinTables = [];
+        $join = "FROM";
+        foreach ($tables as $table) {
+            $joinTables[] = " $join " . $this->deliTableLeft . $table['table'] . $this->deliTableRight . " ON " . $table['condition'];
+            $join = " INNER JOIN ";
+        }
+
+        return [
+            "position" => "after_set",
+            "sql" => implode(' ', $joinTables)
+        ];
+    }
+
 }

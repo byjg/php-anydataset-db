@@ -166,4 +166,17 @@ class DbMysqlFunctions extends DbBaseFunctions
             default => "",
         };
     }
+
+    public function getJoinTablesUpdate(array $tables): array
+    {
+        $joinTables = [];
+        foreach ($tables as $table) {
+            $joinTables[] = " INNER JOIN " . $this->deliTableLeft . $table['table'] . $this->deliTableRight . " ON " . $table['condition'];
+        }
+
+        return [
+            "position" => "before_set",
+            "sql" => implode(' ', $joinTables)
+        ];
+    }
 }
