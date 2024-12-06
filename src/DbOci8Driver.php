@@ -143,11 +143,10 @@ class DbOci8Driver implements DbDriverInterface
      * @param array|null $params
      * @param CacheInterface|null $cache
      * @param int|DateInterval $ttl
+     * @param int $preFetch
      * @return GenericIterator
-     * @throws DatabaseException
-     * @throws DbDriverNotConnected
      */
-    public function getIterator(mixed $sql, ?array $params = null, ?CacheInterface $cache = null, DateInterval|int $ttl = 60): GenericIterator
+    public function getIterator(mixed $sql, ?array $params = null, ?CacheInterface $cache = null, DateInterval|int $ttl = 60, int $preFetch = 0): GenericIterator
     {
         if (is_resource($sql)) {
             return new Oci8Iterator($sql);
@@ -162,7 +161,7 @@ class DbOci8Driver implements DbDriverInterface
             throw new InvalidArgumentException("The SQL must be a cursor, string or a SqlStatement object");
         }
 
-        return $sql->getIterator($this, $params);
+        return $sql->getIterator($this, $params, $preFetch);
     }
 
     /**

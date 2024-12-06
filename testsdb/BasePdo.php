@@ -114,6 +114,8 @@ abstract class BasePdo extends TestCase
             $singleRow = $iterator->moveNext();
             $this->assertEquals($array[$i++], $singleRow->toArray());
         }
+
+        $this->assertFalse($iterator->isCursorOpen());
     }
 
     public function testExecuteAndGetId()
@@ -206,6 +208,7 @@ abstract class BasePdo extends TestCase
 
         $iterator = $this->dbDriver->getIterator('select Id, Breed, Name, Age, Weight from Dogs where id = 4');
         $row = $iterator->toArray();
+        $this->assertFalse($iterator->isCursorOpen());
 
         $this->assertEquals(4, $row[0]["id"]);
         $this->assertEquals('Dog', $row[0]["breed"]);
@@ -224,6 +227,7 @@ abstract class BasePdo extends TestCase
 
         $iterator = $this->dbDriver->getIterator('select Id, Breed, Name, Age from Dogs where id = 4');
         $row = $iterator->toArray();
+        $this->assertFalse($iterator->isCursorOpen());
 
         $this->assertEquals(4, $row[0]["id"]);
         $this->assertEquals('Dog', $row[0]["breed"]);
@@ -244,6 +248,7 @@ abstract class BasePdo extends TestCase
 
         $iterator = $this->dbDriver->getIterator('select Id, Breed, Name, Age from Dogs where id = 4');
         $row = $iterator->toArray();
+        $this->assertFalse($iterator->isCursorOpen());
 
         $this->assertEquals(4, $row[0]["id"]);
         $this->assertEquals('Dog', $row[0]["breed"]);
@@ -265,6 +270,7 @@ abstract class BasePdo extends TestCase
 
         $iterator = $this->dbDriver->getIterator('select Id, Breed, Name, Age from Dogs where id = 4');
         $row = $iterator->toArray();
+        $this->assertFalse($iterator->isCursorOpen());
 
         $this->assertEquals(4, $row[0]["id"]);
         $this->assertEquals('Dog', $row[0]["breed"]);
@@ -280,6 +286,7 @@ abstract class BasePdo extends TestCase
 
         $iterator = $this->dbDriver->getIterator('select Id, Breed, Name, Age from Dogs where id = 4');
         $row = $iterator->toArray();
+        $this->assertFalse($iterator->isCursorOpen());
 
         $this->assertEquals(4, $row[0]["id"]);
         $this->assertEquals('Dog', $row[0]["breed"]);
@@ -293,6 +300,7 @@ abstract class BasePdo extends TestCase
         $newConn = Factory::getDbInstance($newUri);
         $it = $newConn->getIterator('select Id, Breed, Name, Age from Dogs where id = :field', ["field" => 1]);
         $this->assertCount(1, $it->toArray());
+        $this->assertFalse($it->isCursorOpen());
     }
 
     public function testDontParseParam_2()
