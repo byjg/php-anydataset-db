@@ -17,14 +17,12 @@ AnyDatasetDB has some special parameters:
 
 | Parameter                      | Value     | Description                                                                                                               |
 |--------------------------------|-----------|---------------------------------------------------------------------------------------------------------------------------|
-| DbPdoDriver::STATEMENT_CACHE   | true      | If this parameter is set with "true", anydataset will cache the last prepared queries.                                    |
 | DbPdoDriver::DONT_PARSE_PARAM  | any value | Is this parameter is set with any value, anydataset won't try to parse the SQL to find the values to bind the parameters. |
 | DbPdoDriver::UNIX_SOCKET       | path      | PDO will use "unix_socket=" instead of "host=".                                                                           |
 e.g.
 
 ```php
 $uri = Uri::getInstanceFromString("sqlite://" . $this->host)
-    ->withQueryKeyValue(DbPdoDriver::STATEMENT_CACHE, "true")
     ->withQueryKeyValue(DbPdoDriver::DONT_PARSE_PARAM, "");
 ```
 
