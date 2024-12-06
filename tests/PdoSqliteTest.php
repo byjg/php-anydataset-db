@@ -443,6 +443,22 @@ class PdoSqliteTest extends TestCase
         );
     }
 
+    public function testPDOStatement()
+    {
+        $pdo = $this->dbDriver->getDbConnection();
+        $stmt = $pdo->prepare('select * from info where id = :id');
+        $stmt->execute(['id' => 1]);
+
+        $iterator = $this->dbDriver->getIterator($stmt);
+        $this->assertEquals(
+            [
+                ['id' => 1, 'iduser' => 1, 'number' => 10.45, 'property' => 'xxx'],
+            ],
+            $iterator->toArray()
+        );
+
+    }
+
 
     /**
      * @dataProvider dataProviderPreFetch

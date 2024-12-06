@@ -1,3 +1,7 @@
+---
+sidebar_position: 15
+---
+
 # Driver: Microsoft SQL Server
 
 There are two Drivers to connect to Microsoft SQL Server.

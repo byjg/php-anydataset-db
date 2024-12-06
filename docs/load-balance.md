@@ -1,3 +1,7 @@
+---
+sidebar_position: 6
+---
+
 # Load balancing
 
 The API have support for connection load balancing, connection pooling and persistent connection.

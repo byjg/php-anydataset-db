@@ -1,3 +1,7 @@
+---
+sidebar_position: 7
+---
+
 # Helper - DbFunctions
 
 AnyDataset has a helper `ByJG\AnyDataset\Db\DbFunctionsInterface` that can be return some specific data based on the database connection. 
