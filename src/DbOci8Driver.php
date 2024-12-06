@@ -13,14 +13,15 @@ use ByJG\AnyDataset\Db\Traits\TransactionTrait;
 use ByJG\Util\Uri;
 use DateInterval;
 use Exception;
+use InvalidArgumentException;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
 use Psr\SimpleCache\CacheInterface;
 
 class DbOci8Driver implements DbDriverInterface
 {
-    use TransactionTrait;
     use DbCacheTrait;
+    use TransactionTrait;
 
     private LoggerInterface $logger;
 
@@ -93,19 +94,19 @@ class DbOci8Driver implements DbDriverInterface
 
     /**
      * @param string $sql
-     * @param array|null $array
+     * @param array|null $params
      * @return resource
      * @throws DatabaseException
      * @throws DbDriverNotConnected
      */
-    protected function getOci8Cursor(string $sql, array $array = null)
+    public function prepareStatement(string $sql, array $params = null, ?array &$cacheInfo = []): mixed
     {
         if (is_null($this->conn)) {
             throw new DbDriverNotConnected('Instance not connected');
         }
-        list($query, $array) = SqlBind::parseSQL($this->connectionUri, $sql, $array);
+        list($query, $params) = SqlBind::parseSQL($this->connectionUri, $sql, $params);
 
-        $this->logger->debug("SQL: $query, Params: " . json_encode($array));
+        $this->logger->debug("SQL: $query, Params: " . json_encode($params));
 
         // Prepare the statement
         $query = rtrim($query, ' ;');
@@ -116,26 +117,29 @@ class DbOci8Driver implements DbDriverInterface
         }
 
         // Bind the parameters
-        if (is_array($array)) {
-            foreach ($array as $key => $value) {
-                oci_bind_by_name($stid, ":$key", $array[$key], -1);
+        if (is_array($params)) {
+            foreach ($params as $key => $value) {
+                oci_bind_by_name($stid, ":$key", $params[$key], -1);
             }
-        }
-
-        // Perform the logic of the query
-        $result = oci_execute($stid, $this->ociAutoCommit);
-
-        // Check if is OK;
-        if (!$result) {
-            $error = oci_error($stid);
-            throw new DatabaseException($error['message']);
         }
 
         return $stid;
     }
 
+    public function executeCursor(mixed $statement): void
+    {
+        // Perform the logic of the query
+        $result = oci_execute($statement, $this->ociAutoCommit);
+
+        // Check if is OK;
+        if (!$result) {
+            $error = oci_error($statement);
+            throw new DatabaseException($error['message']);
+        }
+    }
+
     /**
-     * @param string $sql
+     * @param mixed $sql
      * @param array|null $params
      * @param CacheInterface|null $cache
      * @param int|DateInterval $ttl
@@ -143,36 +147,52 @@ class DbOci8Driver implements DbDriverInterface
      * @throws DatabaseException
      * @throws DbDriverNotConnected
      */
-    public function getIterator(string $sql, ?array $params = null, ?CacheInterface $cache = null, DateInterval|int $ttl = 60): GenericIterator
+    public function getIterator(mixed $sql, ?array $params = null, ?CacheInterface $cache = null, DateInterval|int $ttl = 60): GenericIterator
     {
-        return $this->getIteratorUsingCache($sql, $params, $cache, $ttl, function ($sql, $params) {
-            $cur = $this->getOci8Cursor($sql, $params);
-            return new Oci8Iterator($cur);
-        });
+        if (is_resource($sql)) {
+            return new Oci8Iterator($sql);
+        }
+
+        if (is_string($sql)) {
+            $sql = new SqlStatement($sql);
+            if (!empty($cache)) {
+                $sql->withCache($cache, $this->getQueryKey($cache, $sql->getSql(), $params), $ttl);
+            }
+        } elseif (!($sql instanceof SqlStatement)) {
+            throw new InvalidArgumentException("The SQL must be a cursor, string or a SqlStatement object");
+        }
+
+        return $sql->getIterator($this, $params);
     }
 
     /**
-     * @param string $sql
+     * @param mixed $sql
      * @param array|null $array
      * @return mixed
-     * @throws DatabaseException
-     * @throws DbDriverNotConnected
      */
-    public function getScalar(string $sql, ?array $array = null): mixed
+    public function getScalar(mixed $sql, ?array $array = null): mixed
     {
-        $cur = $this->getOci8Cursor($sql, $array);
+        if (is_resource($sql)) {
+            /** @psalm-suppress UndefinedConstant */
+            $row = oci_fetch_array($sql, OCI_RETURN_NULLS);
+            if ($row) {
+                $scalar = $row[0];
+            } else {
+                $scalar = false;
+            }
 
-        /** @psalm-suppress UndefinedConstant */
-        $row = oci_fetch_array($cur, OCI_RETURN_NULLS);
-        if ($row) {
-            $scalar = $row[0];
-        } else {
-            $scalar = false;
+            oci_free_cursor($sql);
+
+            return $scalar;
         }
 
-        oci_free_cursor($cur);
+        if (is_string($sql)) {
+            $sql = new SqlStatement($sql);
+        } elseif (!($sql instanceof SqlStatement)) {
+            throw new InvalidArgumentException("The SQL must be a cursor, string or a SqlStatement object");
+        }
 
-        return $scalar;
+        return $sql->getScalar($this, $array);
     }
 
     /**
@@ -183,7 +203,8 @@ class DbOci8Driver implements DbDriverInterface
      */
     public function getAllFields(string $tablename): array
     {
-        $cur = $this->getOci8Cursor(SqlHelper::createSafeSQL("select * from :table", array(':table' => $tablename)));
+        $cur = $this->prepareStatement(SqlHelper::createSafeSQL("select * from :table", array(':table' => $tablename)));
+        $this->executeCursor($cur);
 
         $ncols = oci_num_fields($cur);
 
@@ -237,16 +258,27 @@ class DbOci8Driver implements DbDriverInterface
     }
     
     /**
-     * @param string $sql
+     * @param mixed $sql
      * @param array|null $array
      * @return bool
      * @throws DatabaseException
      */
-    public function execute(string $sql, ?array $array = null): bool
+    public function execute(mixed $sql, ?array $array = null): bool
     {
-        $cur = $this->getOci8Cursor($sql, $array);
-        oci_free_cursor($cur);
+        if (is_resource($sql)) {
+            oci_free_cursor($sql);
+            return true;
+        }
+
+        if (is_string($sql)) {
+            $sql = new SqlStatement($sql);
+        } elseif (!($sql instanceof SqlStatement)) {
+            throw new InvalidArgumentException("The SQL must be a cursor, string or a SqlStatement object");
+        }
+
+        $sql->execute($this, $array);
         return true;
+
     }
 
     /**
@@ -363,7 +395,6 @@ class DbOci8Driver implements DbDriverInterface
 
     public function disconnect(): void
     {
-        $this->clearCache();
         $this->conn = null;
     }
 

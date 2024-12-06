@@ -244,4 +244,12 @@ abstract class DbBaseFunctions implements DbFunctionsInterface
     {
         return "";
     }
+
+    public function getJoinTablesUpdate(array $tables): array
+    {
+        return [
+            'sql' => '',
+            'position' => 'before_set'
+        ];
+    }
 }

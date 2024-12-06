@@ -4,6 +4,7 @@ namespace TestDb;
 
 use ByJG\AnyDataset\Db\DbPdoDriver;
 use ByJG\AnyDataset\Db\Factory;
+use PDOException;
 
 class PdoDblibTest extends BasePdo
 {
@@ -48,11 +49,12 @@ class PdoDblibTest extends BasePdo
     {
         $newUri = $this->dbDriver->getUri()->withQueryKeyValue(DbPdoDriver::DONT_PARSE_PARAM, "")->withScheme("pdo");
         $newConn = Factory::getDbInstance($newUri);
-        $newConn->getIterator('select Id, Breed, Name, Age from Dogs where id = :field', [ "field" => 1 ]);
+        $it = $newConn->getIterator('select Id, Breed, Name, Age from Dogs where id = :field', ["field" => 1]);
+        $this->assertCount(1, $it->toArray());
     }
 
     public function testDontParseParam_3() {
-        $this->expectException(\PDOException::class);
+        $this->expectException(PDOException::class);
 
         parent::testDontParseParam_3();
     }

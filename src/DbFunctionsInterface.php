@@ -104,4 +104,6 @@ interface DbFunctionsInterface
     public function getTableMetadata(DbDriverInterface $dbdataset, string $tableName): array;
 
     public function getIsolationLevelCommand(?IsolationLevelEnum $isolationLevel = null): string;
+
+    public function getJoinTablesUpdate(array $tables): array;
 }

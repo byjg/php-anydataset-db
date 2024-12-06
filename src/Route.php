@@ -8,6 +8,7 @@ use ByJG\AnyDataset\Db\Exception\RouteNotFoundException;
 use ByJG\AnyDataset\Db\Exception\RouteNotMatchedException;
 use ByJG\Util\Uri;
 use DateInterval;
+use InvalidArgumentException;
 use Psr\Log\LoggerInterface;
 use Psr\SimpleCache\CacheInterface;
 
@@ -54,7 +55,7 @@ class Route implements DbDriverInterface
 
         foreach ($dbDriver as $item) {
             if (!is_string($item) && !($item instanceof DbDriverInterface)) {
-                throw new \InvalidArgumentException('Invalid dbDriver');
+                throw new InvalidArgumentException('Invalid dbDriver');
             }
             $this->dbDriverInterface[$routeName][] = $item;
         }
@@ -222,6 +223,17 @@ class Route implements DbDriverInterface
 
     //<editor-fold desc="DbDriverInterface">
 
+    public function prepareStatement(string $sql, ?array $params = null, ?array &$cacheInfo = []): mixed
+    {
+        // TODO: Implement prepareStatement() method.
+        return null;
+    }
+
+    public function executeCursor(mixed $statement): void
+    {
+        // TODO: Implement executeCursor() method.
+    }
+
     /**
      * @param string $sql
      * @param array|null $params
@@ -230,19 +242,19 @@ class Route implements DbDriverInterface
      * @return GenericIterator
      * @throws RouteNotMatchedException
      */
-    public function getIterator(string $sql, ?array $params = null, ?CacheInterface $cache = null, DateInterval|int $ttl = 60): GenericIterator
+    public function getIterator(mixed $sql, ?array $params = null, ?CacheInterface $cache = null, DateInterval|int $ttl = 60): GenericIterator
     {
         $dbDriver = $this->matchRoute($sql);
         return $dbDriver->getIterator($sql, $params, $cache, $ttl);
     }
 
     /**
-     * @param string $sql
+     * @param mixed $sql
      * @param array|null $array
      * @return mixed
      * @throws RouteNotMatchedException
      */
-    public function getScalar(string $sql, ?array $array = null): mixed
+    public function getScalar(mixed $sql, ?array $array = null): mixed
     {
         $dbDriver = $this->matchRoute($sql);
         return $dbDriver->getScalar($sql, $array);
@@ -258,12 +270,12 @@ class Route implements DbDriverInterface
     }
 
     /**
-     * @param string $sql
+     * @param mixed $sql
      * @param array|null $array
      * @return bool
      * @throws RouteNotMatchedException
      */
-    public function execute(string $sql, ?array $array = null): bool
+    public function execute(mixed $sql, ?array $array = null): bool
     {
         $dbDriver = $this->matchRoute($sql);
         return $dbDriver->execute($sql, $array);

@@ -10,7 +10,9 @@ use ByJG\AnyDataset\Db\Exception\TransactionNotStartedException;
 use ByJG\AnyDataset\Db\Exception\TransactionStartedException;
 use ByJG\AnyDataset\Db\Factory;
 use ByJG\AnyDataset\Db\IsolationLevelEnum;
+use ByJG\AnyDataset\Db\SqlStatement;
 use ByJG\Cache\Psr16\ArrayCacheEngine;
+use Exception;
 use PHPUnit\Framework\TestCase;
 
 abstract class BasePdo extends TestCase
@@ -26,7 +28,7 @@ abstract class BasePdo extends TestCase
     protected $floatSize = 10;
 
     /**
-     * @throws \Exception
+     * @throws Exception
      */
     public function setUp(): void
     {
@@ -44,18 +46,12 @@ abstract class BasePdo extends TestCase
     {
         //insert some data...
         $array = $this->allData();
+        $sqlStatement = new SqlStatement("INSERT INTO Dogs (Breed, Name, Age, Weight) VALUES (:breed, :name, :age, :weight);");
         foreach ($array as $param) {
             $this->dbDriver->execute(
-                "INSERT INTO Dogs (Breed, Name, Age, Weight) VALUES (:breed, :name, :age, :weight);",
+                $sqlStatement,
                 $param
             );
-        }
-
-        if ($this->dbDriver->getUri()->getQueryPart(DbPdoDriver::STATEMENT_CACHE) == "true") {
-            // One cache for CREATE TABLE... and another for INSERT INTO...
-            $this->assertEquals(2, $this->dbDriver->getCountStmtCache());
-        } else {
-            $this->assertEquals(0, $this->dbDriver->getCountStmtCache());
         }
     }
 
@@ -295,19 +291,22 @@ abstract class BasePdo extends TestCase
     {
         $newUri = $this->dbDriver->getUri()->withQueryKeyValue(DbPdoDriver::DONT_PARSE_PARAM, "");
         $newConn = Factory::getDbInstance($newUri);
-        $newConn->getIterator('select Id, Breed, Name, Age from Dogs where id = :field', [ "field" => 1 ]);
+        $it = $newConn->getIterator('select Id, Breed, Name, Age from Dogs where id = :field', ["field" => 1]);
+        $this->assertCount(1, $it->toArray());
     }
 
     public function testDontParseParam_2()
     {
-        $this->dbDriver->getIterator('select Id, Breed, Name, Age from Dogs where id = :field');
+        $it = $this->dbDriver->getIterator('select Id, Breed, Name, Age from Dogs where id = :field');
+        $this->assertCount(0, $it->toArray());
     }
 
     public function testDontParseParam_3()
     {
         $newUri = $this->dbDriver->getUri()->withQueryKeyValue(DbPdoDriver::DONT_PARSE_PARAM, "");
         $newConn = Factory::getDbInstance($newUri);
-        $newConn->getIterator('select Id, Breed, Name, Age from Dogs where id = :field');
+        $it = $newConn->getIterator('select Id, Breed, Name, Age from Dogs where id = :field');
+        $this->assertCount(0, $it->toArray());
     }
 
 

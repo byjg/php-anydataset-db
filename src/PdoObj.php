@@ -10,11 +10,6 @@ class PdoObj
 {
     private Uri $uri;
 
-    /**
-     * @var true
-     */
-    private bool $useStmtCache = false;
-
     private string $connectionString;
 
     /**
@@ -44,11 +39,6 @@ class PdoObj
         }
 
         return $this->connectionString;
-    }
-
-    public function expectToCacheResults(): bool
-    {
-        return $this->useStmtCache;
     }
 
     public function createInstance(?array $preOptions = [], ?array $postOptions = [], array $executeAfterConnect = []): PDO
@@ -105,10 +95,6 @@ class PdoObj
         if ($scheme != "pdo" && !extension_loaded($extension)) {
             throw new NotAvailableException("Extension '$extension' is not loaded");
         }
-
-        if ($this->uri->getQueryPart(DbPdoDriver::STATEMENT_CACHE) == "true") {
-            $this->useStmtCache = true;
-        }
     }
 
     protected function preparePdoConnectionStr(string $scheme, string $host, ?string $database, ?int $port, ?string $query): string
@@ -134,7 +120,6 @@ class PdoObj
 
         parse_str($query, $queryArr);
         unset($queryArr[DbPdoDriver::DONT_PARSE_PARAM]);
-        unset($queryArr[DbPdoDriver::STATEMENT_CACHE]);
 
         $pdoAr = array_merge($pdoAr, array_map(function ($k, $v) {
             return "$k=" . urldecode($v);

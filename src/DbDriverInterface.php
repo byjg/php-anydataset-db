@@ -3,17 +3,20 @@
 namespace ByJG\AnyDataset\Db;
 
 use ByJG\AnyDataset\Core\GenericIterator;
-use ByJG\AnyDataset\Db\Interfaces\DbCacheInterface;
 use ByJG\AnyDataset\Db\Interfaces\DbTransactionInterface;
 use ByJG\Util\Uri;
 use DateInterval;
 use Psr\Log\LoggerInterface;
 use Psr\SimpleCache\CacheInterface;
 
-interface DbDriverInterface extends DbTransactionInterface, DbCacheInterface
+interface DbDriverInterface extends DbTransactionInterface
 {
 
     public static function schema();
+
+    public function prepareStatement(string $sql, ?array $params = null, ?array &$cacheInfo = []): mixed;
+
+    public function executeCursor(mixed $statement): void;
 
     /**
      * @param string $sql
@@ -22,13 +25,13 @@ interface DbDriverInterface extends DbTransactionInterface, DbCacheInterface
      * @param int|DateInterval $ttl
      * @return GenericIterator
      */
-    public function getIterator(string $sql, ?array $params = null, ?CacheInterface $cache = null, DateInterval|int $ttl = 60): GenericIterator;
+    public function getIterator(mixed $sql, ?array $params = null, ?CacheInterface $cache = null, DateInterval|int $ttl = 60): GenericIterator;
 
-    public function getScalar(string $sql, ?array $array = null): mixed;
+    public function getScalar(mixed $sql, ?array $array = null): mixed;
 
     public function getAllFields(string $tablename): array;
 
-    public function execute(string $sql, ?array $array = null): bool;
+    public function execute(mixed $sql, ?array $array = null): bool;
 
     public function executeAndGetId(string $sql, ?array $array = null): mixed;
 

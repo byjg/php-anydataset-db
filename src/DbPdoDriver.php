@@ -11,6 +11,7 @@ use ByJG\AnyDataset\Db\Traits\TransactionTrait;
 use ByJG\Util\Uri;
 use DateInterval;
 use Exception;
+use InvalidArgumentException;
 use PDO;
 use PDOStatement;
 use Psr\Log\LoggerInterface;
@@ -19,17 +20,14 @@ use Psr\SimpleCache\CacheInterface;
 
 abstract class DbPdoDriver implements DbDriverInterface
 {
-    use TransactionTrait;
     use DbCacheTrait;
+    use TransactionTrait;
 
     protected ?PDO $instance = null;
 
     protected bool $supportMultiRowset = false;
 
-
-
     const DONT_PARSE_PARAM = "dont_parse_param";
-    const STATEMENT_CACHE = "stmtcache";
     const UNIX_SOCKET = "unix_socket";
 
     protected PdoObj $pdoObj;
@@ -84,7 +82,6 @@ abstract class DbPdoDriver implements DbDriverInterface
 
     public function disconnect(): void
     {
-        $this->clearCache();
         $this->instance = null;
     }
 
@@ -96,53 +93,75 @@ abstract class DbPdoDriver implements DbDriverInterface
     /**
      *
      * @param string $sql
-     * @param array|null $array $array
+     * @param array|null $params
+     * @param array|null &$cacheInfo
      * @return PDOStatement
      * @throws DbDriverNotConnected
      */
-    protected function getDBStatement(string $sql, ?array $array = null): PDOStatement
+    public function prepareStatement(string $sql, ?array $params = null, ?array &$cacheInfo = []): PDOStatement
     {
         if (!$this->getUri()->hasQueryKey(self::DONT_PARSE_PARAM)) {
-            list($sql, $array) = SqlBind::parseSQL($this->pdoObj->getUri(), $sql, $array);
+            list($sql, $params) = SqlBind::parseSQL($this->pdoObj->getUri(), $sql, $params);
         }
 
-        if ($this->pdoObj->expectToCacheResults()) {
-            $this->isConnected(true, true);
-            $stmt = $this->getOrSetSqlCacheStmt($sql);
-        } else {
+        if (($cacheInfo['sql'] ?? "") != $sql || empty($cacheInfo['stmt'])) {
             $stmt = $this->getInstance()->prepare($sql);
+        } else {
+            $stmt = $cacheInfo['stmt'];
         }
 
-        if (!empty($array)) {
-            foreach ($array as $key => $value) {
+        if (!empty($params)) {
+            foreach ($params as $key => $value) {
                 $stmt->bindValue(":" . SqlBind::keyAdj($key), $value);
             }
         }
 
-        $this->logger->debug("SQL: $sql\nParams: " . json_encode($array));
+        $this->logger->debug("SQL: $sql\nParams: " . json_encode($params));
+
+        $cacheInfo['sql'] = $sql;
+        $cacheInfo['stmt'] = $stmt;
 
         return $stmt;
     }
 
-    public function getIterator(string $sql, ?array $params = null, ?CacheInterface $cache = null, DateInterval|int $ttl = 60): GenericIterator
+    public function executeCursor(mixed $statement): void
     {
-        return $this->getIteratorUsingCache($sql, $params, $cache, $ttl, function ($sql, $params) {
-            $stmt = $this->getDBStatement($sql, $params);
-            $stmt->execute();
-            return new DbIterator($stmt);
-        });
+        $statement->execute();
     }
 
-    public function getScalar(string $sql, ?array $array = null): mixed
+    public function getIterator(mixed $sql, ?array $params = null, ?CacheInterface $cache = null, DateInterval|int $ttl = 60): GenericIterator
     {
-        $stmt = $this->getDBStatement($sql, $array);
-        $stmt->execute();
+        if ($sql instanceof PDOStatement) {
+            return new DbIterator($sql);
+        }
 
-        $scalar = $stmt->fetchColumn();
+        if (is_string($sql)) {
+            $sql = new SqlStatement($sql);
+            if (!empty($cache)) {
+                $sql->withCache($cache, $this->getQueryKey($cache, $sql->getSql(), $params), $ttl);
+            }
+        } elseif (!($sql instanceof SqlStatement)) {
+            throw new InvalidArgumentException("The SQL must be a cursor, string or a SqlStatement object");
+        }
 
-        $stmt->closeCursor();
+        return $sql->getIterator($this, $params);
+    }
 
-        return $scalar;
+    public function getScalar(mixed $sql, ?array $array = null): mixed
+    {
+        if ($sql instanceof PDOStatement) {
+            $scalar = $sql->fetchColumn();
+            $sql->closeCursor();
+            return $scalar;
+        }
+
+        if (is_string($sql)) {
+            $sql = new SqlStatement($sql);
+        } elseif (!($sql instanceof SqlStatement)) {
+            throw new InvalidArgumentException("The SQL must be a cursor, string or a SqlStatement object");
+        }
+
+        return $sql->getScalar($this, $array);
     }
 
     public function getAllFields(string $tablename): array
@@ -165,20 +184,28 @@ abstract class DbPdoDriver implements DbDriverInterface
     }
 
 
-    public function execute(string $sql, ?array $array = null): bool
+    public function execute(mixed $sql, ?array $array = null): bool
     {
-        $stmt = $this->getDBStatement($sql, $array);
-        $result = $stmt->execute();
+        if ($sql instanceof PDOStatement) {
+            if ($this->isSupportMultiRowset()) {
+                // Check error
+                do {
+                    // This loop is only to throw an error (if exists)
+                    // in case of execute multiple queries
+                } while ($sql->nextRowset());
+            }
 
-        if ($this->isSupportMultiRowset()) {
-            // Check error
-            do {
-                // This loop is only to throw an error (if exists)
-                // in case of execute multiple queries
-            } while ($stmt->nextRowset());
+            return true;
         }
 
-        return $result;
+        if (is_string($sql)) {
+            $sql = new SqlStatement($sql);
+        } elseif (!($sql instanceof SqlStatement)) {
+            throw new InvalidArgumentException("The SQL must be a cursor, string or a SqlStatement object");
+        }
+
+        $sql->execute($this, $array);
+        return true;
     }
 
     public function executeAndGetId(string $sql, ?array $array = null): mixed
