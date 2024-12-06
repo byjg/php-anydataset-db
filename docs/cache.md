@@ -1,3 +1,7 @@
+---
+sidebar_position: 4
+---
+
 # Cache results
 
 You can easily cache your results to speed up the results of long queries;

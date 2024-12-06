@@ -1,3 +1,7 @@
+---
+sidebar_position: 10
+---
+
 # Generic PDO configuration
 
 If you want to use a PDO driver that is not mapped into the `anydataset-db` library you can use the generic PDO driver.

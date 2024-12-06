@@ -1,3 +1,7 @@
+---
+sidebar_position: 14
+---
+
 # Driver: MySQL
 
 The connection string can have special attributes to connect using SSL. 

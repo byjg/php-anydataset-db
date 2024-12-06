@@ -1,3 +1,7 @@
+---
+sidebar_position: 8
+---
+
 # Using IteratorFilter
 
 `IteratorFilter` is a class that helps you to create a filter to be used in the Iterator. 

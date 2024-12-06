@@ -114,6 +114,8 @@ abstract class BasePdo extends TestCase
             $singleRow = $iterator->moveNext();
             $this->assertEquals($array[$i++], $singleRow->toArray());
         }
+
+        $this->assertFalse($iterator->isCursorOpen());
     }
 
     public function testExecuteAndGetId()
@@ -206,6 +208,7 @@ abstract class BasePdo extends TestCase
 
         $iterator = $this->dbDriver->getIterator('select Id, Breed, Name, Age, Weight from Dogs where id = 4');
         $row = $iterator->toArray();
+        $this->assertFalse($iterator->isCursorOpen());
 
         $this->assertEquals(4, $row[0]["id"]);
         $this->assertEquals('Dog', $row[0]["breed"]);
@@ -224,6 +227,7 @@ abstract class BasePdo extends TestCase
 
         $iterator = $this->dbDriver->getIterator('select Id, Breed, Name, Age from Dogs where id = 4');
         $row = $iterator->toArray();
+        $this->assertFalse($iterator->isCursorOpen());
 
         $this->assertEquals(4, $row[0]["id"]);
         $this->assertEquals('Dog', $row[0]["breed"]);
@@ -244,6 +248,7 @@ abstract class BasePdo extends TestCase
 
         $iterator = $this->dbDriver->getIterator('select Id, Breed, Name, Age from Dogs where id = 4');
         $row = $iterator->toArray();
+        $this->assertFalse($iterator->isCursorOpen());
 
         $this->assertEquals(4, $row[0]["id"]);
         $this->assertEquals('Dog', $row[0]["breed"]);
@@ -265,6 +270,7 @@ abstract class BasePdo extends TestCase
 
         $iterator = $this->dbDriver->getIterator('select Id, Breed, Name, Age from Dogs where id = 4');
         $row = $iterator->toArray();
+        $this->assertFalse($iterator->isCursorOpen());
 
         $this->assertEquals(4, $row[0]["id"]);
         $this->assertEquals('Dog', $row[0]["breed"]);
@@ -280,6 +286,7 @@ abstract class BasePdo extends TestCase
 
         $iterator = $this->dbDriver->getIterator('select Id, Breed, Name, Age from Dogs where id = 4');
         $row = $iterator->toArray();
+        $this->assertFalse($iterator->isCursorOpen());
 
         $this->assertEquals(4, $row[0]["id"]);
         $this->assertEquals('Dog', $row[0]["breed"]);
@@ -293,6 +300,7 @@ abstract class BasePdo extends TestCase
         $newConn = Factory::getDbInstance($newUri);
         $it = $newConn->getIterator('select Id, Breed, Name, Age from Dogs where id = :field', ["field" => 1]);
         $this->assertCount(1, $it->toArray());
+        $this->assertFalse($it->isCursorOpen());
     }
 
     public function testDontParseParam_2()
@@ -620,6 +628,79 @@ abstract class BasePdo extends TestCase
         $iterator = $dbDriver2->getIterator('select Id, Breed, Name, Age from Dogs where id = 4');
         $row = $iterator->toArray();
         $this->assertNotEmpty($row);
+    }
+
+    /**
+     * @dataProvider dataProviderPreFetch
+     * @return void
+     * @psalm-suppress UndefinedMethod
+     */
+    public function testPreFetchWhile(int $preFetch, array $rows, array $expected)
+    {
+        $iterator = $this->dbDriver->getIterator('select * from Dogs', preFetch: $preFetch);
+
+        $i = 0;
+        while ($iterator->hasNext()) {
+            $row = $iterator->moveNext();
+            $this->assertEquals($rows[$i], $row->toArray(), "Row $i");
+            $this->assertEquals($i, $iterator->key(), "Key Row $i");
+            $this->assertEquals($expected[$i++], $iterator->getPreFetchBufferSize(), "PreFetchBufferSize Row " . $iterator->key());
+        }
+        $this->assertFalse($iterator->isCursorOpen());
+    }
+
+    /**
+     * @dataProvider dataProviderPreFetch
+     * @psalm-suppress UndefinedMethod
+     * @return void
+     */
+    public function testPreFetchForEach(int $preFetch, array $rows, array $expected)
+    {
+        $iterator = $this->dbDriver->getIterator('select * from Dogs', preFetch: $preFetch);
+
+        $i = 0;
+        foreach ($iterator as $row) {
+            $this->assertEquals($rows[$i], $row->toArray(), "Row $i");
+            $this->assertEquals($i, $iterator->key(), "Key Row $i");
+            $this->assertEquals($expected[$i++], $iterator->getPreFetchBufferSize(), "PreFetchBufferSize Row $i");
+        }
+        $this->assertFalse($iterator->isCursorOpen());
+    }
+
+    protected function dataProviderPreFetch()
+    {
+        $rows = [
+            [
+                'breed' => 'Mutt',
+                'name' => 'Spyke',
+                'age' => 8,
+                'id' => 1,
+                'weight' => 8.5
+            ],
+            [
+                'breed' => 'Brazilian Terrier',
+                'name' => 'Sandy',
+                'age' => 3,
+                'id' => 2,
+                'weight' => 3.8
+            ],
+            [
+                'breed' => 'Pincher',
+                'name' => 'Lola',
+                'age' => 1,
+                'id' => 3,
+                'weight' => 1.2
+            ]
+        ];
+
+
+        return [
+            [0, $rows, [1, 1, 0]],
+            [1, $rows, [1, 1, 0]],
+            [2, $rows, [2, 1, 0]],
+            [3, $rows, [2, 1, 0]],
+            [50, $rows, [2, 1, 0]],
+        ];
     }
 }
 

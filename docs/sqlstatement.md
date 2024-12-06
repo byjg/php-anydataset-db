@@ -1,3 +1,7 @@
+---
+sidebar_position: 3
+---
+
 # SQL Statement
 
 The SQL Statement is a class to abstract the SQL query from the database.
