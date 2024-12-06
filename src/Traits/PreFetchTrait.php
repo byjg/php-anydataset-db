@@ -38,6 +38,10 @@ trait PreFetchTrait
             return true;
         }
 
+        if (!$this->isCursorOpen()) {
+            return false;
+        }
+
         $rowArray = $this->fetchRow();
         if (!empty($rowArray)) {
             $rowArray = array_change_key_case($rowArray, CASE_LOWER);
