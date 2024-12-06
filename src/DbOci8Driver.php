@@ -149,7 +149,7 @@ class DbOci8Driver implements DbDriverInterface
     public function getIterator(mixed $sql, ?array $params = null, ?CacheInterface $cache = null, DateInterval|int $ttl = 60, int $preFetch = 0): GenericIterator
     {
         if (is_resource($sql)) {
-            return new Oci8Iterator($sql);
+            return new Oci8Iterator($sql, $preFetch);
         }
 
         if (is_string($sql)) {
