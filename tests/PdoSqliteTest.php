@@ -2,12 +2,10 @@
 
 namespace Test;
 
-use ByJG\AnyDataset\Core\GenericIterator;
 use ByJG\AnyDataset\Db\DbDriverInterface;
 use ByJG\AnyDataset\Db\Factory;
 use ByJG\AnyDataset\Db\Helpers\DbSqliteFunctions;
 use ByJG\AnyDataset\Db\SqlStatement;
-use ByJG\AnyDataset\Db\Traits\PreFetchTrait;
 use ByJG\Cache\Psr16\ArrayCacheEngine;
 use ByJG\Util\Uri;
 use PDO;
@@ -449,10 +447,10 @@ class PdoSqliteTest extends TestCase
     /**
      * @dataProvider dataProviderPreFetch
      * @return void
+     * @psalm-suppress UndefinedMethod
      */
     public function testPreFetchWhile(int $preFetch, array $rows, array $expected)
     {
-        /** @var GenericIterator|PreFetchTrait $iterator */
         $iterator = $this->dbDriver->getIterator('select * from info', preFetch: $preFetch);
 
         $i = 0;
@@ -467,11 +465,11 @@ class PdoSqliteTest extends TestCase
 
     /**
      * @dataProvider dataProviderPreFetch
+     * @psalm-suppress UndefinedMethod
      * @return void
      */
     public function testPreFetchForEach(int $preFetch, array $rows, array $expected)
     {
-        /** @var GenericIterator|PreFetchTrait $iterator */
         $iterator = $this->dbDriver->getIterator('select * from info', preFetch: $preFetch);
 
         $i = 0;
