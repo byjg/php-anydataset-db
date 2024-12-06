@@ -1,3 +1,7 @@
+---
+sidebar_position: 1
+---
+
 # Getting Started
 
 ## 1. Install the ByJG AnyDatasetDB library
