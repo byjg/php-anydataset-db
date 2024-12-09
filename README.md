@@ -6,33 +6,36 @@
 [![GitHub license](https://img.shields.io/github/license/byjg/php-anydataset-db.svg)](https://opensource.byjg.com/opensource/licensing.html)
 [![GitHub release](https://img.shields.io/github/release/byjg/php-anydataset-db.svg)](https://github.com/byjg/php-anydataset-db/releases/)
 
-Anydataset Database Relational abstraction. Anydataset is an agnostic data source abstraction layer in PHP.
+**AnyDataset-DB** provides a relational database abstraction layer. It is part of the Anydataset project, an agnostic
+data source abstraction layer for PHP.
 
-See more about Anydataset [here](https://opensource.byjg.com/anydataset).
+Learn more about Anydataset [here](https://opensource.byjg.com/anydataset).
 
 ## Features
 
 - Connection based on URI
-- Support and fix code tricks with several databases (MySQL, PostgresSql, MS SQL Server, etc)
-- Natively supports Query Cache by implementing a PSR-6 interface
-- Supports Connection Routes based on regular expression against the queries, that's mean a select in a table should be
-executed in a database and in another table should be executed in another (even if in different DB)
+- Handles compatibility and code optimization across multiple databases (e.g., MySQL, PostgreSQL, MS SQL Server)
+- Built-in Query Cache support using a PSR-6 compliant interface
+- Enables connection routing based on regular expressions for queries (e.g., directing queries to different databases
+  for specific tables)
 
 ## Connection Based on URI
 
-The connection string for databases is based on URL.
+Database connections are defined using URL-based connection strings.
 
-See below the current implemented drivers:
+Supported drivers are listed below:
 
-| Database            | Connection String                                 | Factory                   |
-|---------------------|---------------------------------------------------|---------------------------|
-| Sqlite              | sqlite:///path/to/file                            | getDbRelationalInstance() |
-| MySql/MariaDb       | mysql://username:password@hostname:port/database  | getDbRelationalInstance() |
-| Postgres            | psql://username:password@hostname:port/database   | getDbRelationalInstance() |
-| Sql Server (DbLib)  | dblib://username:password@hostname:port/database  | getDbRelationalInstance() |
-| Sql Server (Sqlsrv) | sqlsrv://username:password@hostname:port/database | getDbRelationalInstance() |
-| Oracle (OCI8)       | oci8://username:password@hostname:port/database   | getDbRelationalInstance() |
-| Generic PDO         | pdo://username:password@pdo_driver?PDO_PARAMETERS | getDbRelationalInstance() |
+| Database            | Connection String                                 | Factory Method              |
+|---------------------|---------------------------------------------------|-----------------------------|
+| SQLite              | sqlite:///path/to/file                            | `getDbRelationalInstance()` |
+| MySQL/MariaDB       | mysql://username:password@hostname:port/database  | `getDbRelationalInstance()` |
+| PostgreSQL          | psql://username:password@hostname:port/database   | `getDbRelationalInstance()` |
+| SQL Server (DbLib)  | dblib://username:password@hostname:port/database  | `getDbRelationalInstance()` |
+| SQL Server (Sqlsrv) | sqlsrv://username:password@hostname:port/database | `getDbRelationalInstance()` |
+| Oracle (OCI8)       | oci8://username:password@hostname:port/database   | `getDbRelationalInstance()` |
+| Generic PDO         | pdo://username:password@pdo_driver?PDO_PARAMETERS | `getDbRelationalInstance()` |
+
+Example usage:
 
 ```php
 <?php

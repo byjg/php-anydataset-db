@@ -2,12 +2,13 @@
 sidebar_position: 4
 ---
 
-# Cache results
+# Cache Results
 
-You can easily cache your results to speed up the results of long queries;
-You need to add to your project an implementation of PSR-16. We suggested you add "byjg/cache".
+You can easily cache query results to improve performance, especially for long-running queries.
+To enable caching, you need to include a PSR-16 compliant caching library in your project.
+We recommend using the `byjg/cache` library.
 
-Also, you need to use the `SqlStatement` class to prepare the query and cache the results.
+Additionally, you must use the `SqlStatement` class to prepare the query and cache the results.
 
 ```php
 <?php
@@ -23,10 +24,11 @@ $sql->withCache($cache, 'my_cache_key', 60);
 $iterator = $sql->getIterator($dbDriver, ['param' => 'value']);
 ```
 
-**NOTES**
+## Notes
 
-- It will be saved one cache entry for each different parameters.
-  e.g. `['param' => 'value']` and `['param' => 'value2']` will have one entry for each result.
+- **One cache entry per parameter set:** A separate cache entry will be created for each unique set of parameters.  
+  For example:
+  - `['param' => 'value']` and `['param' => 'value2']` will result in two distinct cache entries.
 
-- If you use the same key for different sql statements it will not differentiate one from another and
-  you can get unexpected results
+- **Key uniqueness:** If you use the same cache key for different SQL statements, they will not be differentiated. This
+  may lead to unexpected results.
