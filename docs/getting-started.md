@@ -15,7 +15,7 @@ composer require byjg/anydataset-db
 ## 2. Connect to the database
 
 Set up a database connection. ByJG AnyDatasetDB supports multiple databases, including MySQL, PostgreSQL, SQL Server,
-and SQLite.
+Oracle and SQLite.
 
 Example: Connecting to a MySQL database:
 
