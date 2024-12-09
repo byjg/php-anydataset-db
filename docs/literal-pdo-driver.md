@@ -4,11 +4,10 @@ sidebar_position: 17
 
 # Literal PDO configuration
 
-If you want to use a PDO driver and this driver is not available in the AnyDatasetDB or and it requires special
-parameters don't fit well
-using the URI model you can use the literal object.
+If you want to use a PDO driver that is not available in AnyDatasetDB or requires special parameters that
+do not align well with the URI model, you can use the `PdoLiteral` object.
 
-The `PdoLiteral` object uses the PDO connection string instead of the URI model.
+The `PdoLiteral` object allows you to use a traditional PDO connection string instead of the URI model.
 
 Example:
 
@@ -18,10 +17,10 @@ Example:
 $literal = new \ByJG\AnyDataset\Db\PdoLiteral("sqlite::memory:");
 ```
 
-Drawbacks:
+### Drawbacks
 
-* You can't use the `Factory::getDbInstance` to get the database instance. You need to use the `PdoLiteral` object
-  directly.
-* The DBHelper won't work with the `PdoLiteral` object.
+- You cannot use the `Factory::getDbInstance` method to obtain the database instance. Instead, you must use the
+  `PdoLiteral` object directly.
+- The `DBHelper` functionality is not compatible with the `PdoLiteral` object.
 
 

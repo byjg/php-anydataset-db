@@ -635,7 +635,7 @@ abstract class BasePdo extends TestCase
      * @return void
      * @psalm-suppress UndefinedMethod
      */
-    public function testPreFetchWhile(int $preFetch, array $rows, array $expected)
+    public function testPreFetchWhile(int $preFetch, array $rows, array $expected, array $expectedCursor)
     {
         $iterator = $this->dbDriver->getIterator('select * from Dogs', preFetch: $preFetch);
 
@@ -644,9 +644,10 @@ abstract class BasePdo extends TestCase
             $row = $iterator->moveNext();
             $this->assertEquals($rows[$i], $row->toArray(), "Row $i");
             $this->assertEquals($i, $iterator->key(), "Key Row $i");
-            $this->assertEquals($expected[$i++], $iterator->getPreFetchBufferSize(), "PreFetchBufferSize Row " . $iterator->key());
+            $this->assertEquals($expected[$i], $iterator->getPreFetchBufferSize(), "PreFetchBufferSize Row " . $iterator->key());
+            $this->assertEquals($expectedCursor[$i], $iterator->isCursorOpen(), "CursorOpen Row " . $iterator->key());
+            $i++;
         }
-        $this->assertFalse($iterator->isCursorOpen());
     }
 
     /**
@@ -654,7 +655,7 @@ abstract class BasePdo extends TestCase
      * @psalm-suppress UndefinedMethod
      * @return void
      */
-    public function testPreFetchForEach(int $preFetch, array $rows, array $expected)
+    public function testPreFetchForEach(int $preFetch, array $rows, array $expected, array $expectedCursor)
     {
         $iterator = $this->dbDriver->getIterator('select * from Dogs', preFetch: $preFetch);
 
@@ -662,9 +663,10 @@ abstract class BasePdo extends TestCase
         foreach ($iterator as $row) {
             $this->assertEquals($rows[$i], $row->toArray(), "Row $i");
             $this->assertEquals($i, $iterator->key(), "Key Row $i");
-            $this->assertEquals($expected[$i++], $iterator->getPreFetchBufferSize(), "PreFetchBufferSize Row $i");
+            $this->assertEquals($expected[$i], $iterator->getPreFetchBufferSize(), "PreFetchBufferSize Row $i");
+            $this->assertEquals($expectedCursor[$i], $iterator->isCursorOpen(), "CursorOpen Row $i");
+            $i++;
         }
-        $this->assertFalse($iterator->isCursorOpen());
     }
 
     protected function dataProviderPreFetch()
@@ -695,11 +697,11 @@ abstract class BasePdo extends TestCase
 
 
         return [
-            [0, $rows, [1, 1, 0]],
-            [1, $rows, [1, 1, 0]],
-            [2, $rows, [2, 1, 0]],
-            [3, $rows, [2, 1, 0]],
-            [50, $rows, [2, 1, 0]],
+            [0, $rows, [1, 1, 0], [true, true, false]],
+            [1, $rows, [1, 1, 0], [true, true, false]],
+            [2, $rows, [2, 1, 0], [true, false, false]],
+            [3, $rows, [2, 1, 0], [false, false, false]],
+            [50, $rows, [2, 1, 0], [false, false, false]],
         ];
     }
 }

@@ -4,8 +4,8 @@ sidebar_position: 8
 
 # Using IteratorFilter
 
-`IteratorFilter` is a class that helps you to create a filter to be used in the Iterator. 
-It is standard across all AnyDataset implementations.
+`IteratorFilter` is a class that simplifies creating filters for use with an `Iterator`.
+It is a standard feature across all AnyDataset implementations.
 
 ## Basic Usage
 
@@ -31,9 +31,10 @@ $iterator = $db->getIterator($sql, $param);
 
 ## Using IteratorFilter with Literal values
 
-Sometimes you need an argument as a Literal value like a function or an explicit conversion.
+Sometimes, you may need to use an argument as a literal value, such as a function or an explicit conversion.
 
-In this case you have to create a class that expose the "__toString()" method
+In such cases, you need to create a class that implements the `__toString()` method.
+This method allows the literal value to be properly represented and used in the filter.
 
 ```php
 <?php
