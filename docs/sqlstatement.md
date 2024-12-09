@@ -4,7 +4,7 @@ sidebar_position: 3
 
 # SQL Statement
 
-The SQL Statement is a class to abstract the SQL query from the database.
+The `SqlStatement` class provides an abstraction for executing SQL queries on the database.
 
 ```php
 <?php
@@ -15,9 +15,12 @@ $sql = new SqlStatement("select * from table where field = :param");
 $iterator = $sql->getIterator($dbDriver, ['param' => 'value']);
 ```
 
-The advantage of using the `SqlStatement` is that you can reuse the same SQL statement with different parameters.
-It saves time preparing the cache.
+## Advantages of Using SqlStatement
 
-Also, you can cache the query (see [Cache results](cache.md)).
+- Reusability: The same SQL statement can be reused with different parameters, reducing the overhead of preparing new
+  queries.
+- Performance: Reusing statements helps optimize performance by leveraging caching mechanisms.
+- Caching Support: Queries can be cached for even faster retrieval (see [Cache results](cache.md)).
+
 
  
