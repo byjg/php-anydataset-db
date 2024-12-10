@@ -461,6 +461,40 @@ class PdoSqliteTest extends TestCase
 
 
     /**
+     * @return void
+     * @psalm-suppress UndefinedMethod
+     */
+    public function testPreFetch()
+    {
+        $iterator = $this->dbDriver->getIterator('select * from info where id = :id', ["id" => 1], preFetch: 50);
+
+        $result = $iterator->toArray();
+
+        $this->assertEquals(
+            [
+                ['id' => 1, 'iduser' => 1, 'number' => 10.45, 'property' => 'xxx'],
+            ],
+            $result
+        );
+    }
+
+    /**
+     * @return void
+     * @psalm-suppress UndefinedMethod
+     */
+    public function testPreFetch2()
+    {
+        $iterator = $this->dbDriver->getIterator('select * from info where id = :id', ["id" => 50], preFetch: 50);
+
+        $result = $iterator->toArray();
+
+        $this->assertEquals(
+            [],
+            $result
+        );
+    }
+
+    /**
      * @dataProvider dataProviderPreFetch
      * @return void
      * @psalm-suppress UndefinedMethod
@@ -479,6 +513,7 @@ class PdoSqliteTest extends TestCase
             $i++;
         }
     }
+
 
     /**
      * @dataProvider dataProviderPreFetch
