@@ -495,6 +495,23 @@ class PdoSqliteTest extends TestCase
     }
 
     /**
+     * @return void
+     * @psalm-suppress UndefinedMethod
+     */
+    public function testPreFetchError()
+    {
+        $iterator = $this->dbDriver->getIterator('select * from info where id = :id', [], preFetch: 50);
+
+        $result = $iterator->toArray();
+
+        $this->assertEquals(
+            [],
+            $result
+        );
+    }
+
+
+    /**
      * @dataProvider dataProviderPreFetch
      * @return void
      * @psalm-suppress UndefinedMethod
