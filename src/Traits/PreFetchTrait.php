@@ -10,7 +10,7 @@ trait PreFetchTrait
     protected int $preFetchRows = 0;
     protected array $rowBuffer = [];
 
-    protected function initPreFetch(int $preFetch = 0)
+    protected function initPreFetch(int $preFetch = 0): void
     {
         $this->rowBuffer = [];
         $this->preFetchRows = $preFetch;
@@ -28,6 +28,8 @@ trait PreFetchTrait
         if ($this->isCursorOpen() && $this->preFetch()) {
             return true;
         }
+
+        $this->releaseCursor();
 
         return false;
     }

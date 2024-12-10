@@ -43,19 +43,19 @@ class DbIterator extends GenericIterator
 
     public function releaseCursor(): void
     {
-        $this->statement->closeCursor();
-        $this->statement = null;
+        if (!is_null($this->statement)) {
+            $this->statement->closeCursor();
+            $this->statement = null;
+        }
     }
 
-    public function fetchRow(): array|bool
+    protected function fetchRow(): array|bool
     {
         return $this->statement->fetch(PDO::FETCH_ASSOC);
     }
 
     public function __destruct()
     {
-        if (!is_null($this->statement)) {
-            $this->releaseCursor();
-        }
+        $this->releaseCursor();
     }
 }
