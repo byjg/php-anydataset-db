@@ -4,9 +4,9 @@ sidebar_position: 1
 
 # Getting Started
 
-## 1. Install the ByJG AnyDatasetDB library
+## 1. Install the ByJG AnyDatasetDB Library
 
-You can install it via Composer:
+Install the library using Composer:
 
 ```bash
 composer require byjg/anydataset-db
@@ -14,9 +14,10 @@ composer require byjg/anydataset-db
 
 ## 2. Connect to the database
 
-First, set up a database connection. ByJG AnyDatasetDB supports multiple databases like MySQL, PostgreSQL, SQL Server, and SQLite.
+Set up a database connection. ByJG AnyDatasetDB supports multiple databases, including MySQL, PostgreSQL, SQL Server,
+Oracle and SQLite.
 
-Here is an example of how to connect to a MySQL database:
+Example: Connecting to a MySQL database:
 
 ```php
 <?php
@@ -33,7 +34,9 @@ $dbDriver = Factory::createDbDriver($connectionString);
 
 ## 3. Perform a query
 
-Once you have your database connection set up, you can perform queries using the DbDriver object. Here's an example of a simple SELECT query:
+Once your database connection is established, you can perform queries using the DbDriver object.
+
+Example: Simple SELECT query:
 
 ```php
 <?php
@@ -56,7 +59,7 @@ foreach ($iterator as $row) {
 
 ## 4. Insert, Update, or Delete data
 
-Here is an example of how to insert, update, or delete data using execute:
+You can use the execute method for data manipulation operations.
 
 Insert data:
 

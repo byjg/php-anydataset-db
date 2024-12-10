@@ -2,12 +2,13 @@
 sidebar_position: 6
 ---
 
-# Load balancing
+# Load Balancing
 
-The API have support for connection load balancing, connection pooling and persistent connection.
+The API supports connection load balancing, connection pooling, and persistent connections.
 
-There is the Route class an DbDriverInterface implementation with route capabilities. Basically you have to define
-the routes and the system will choose the proper DbDriver based on your route definition.
+The `Route` class, an implementation of the `DbDriverInterface`, provides routing capabilities.
+You can define routes, and the system will automatically select the appropriate `DbDriver` based on your route
+definitions.
 
 Example:
 
@@ -35,15 +36,14 @@ $iterator = $dbDriver->getIterator('select * from othertable'); // Will select r
 $dbDriver->execute('insert into table (a) values (1)'); // Will select route1;
 ```  
 
-The possible route types are:
+## Available Route Types
 
-| Method                                        | Description                                                   |
-|-----------------------------------------------|---------------------------------------------------------------|
-| addRouteForWrite($routeName, $table = null)   | Filter any insert, update and delete. Optional specific table |
-| addRouteForRead($routeName, $table = null)    | Filter any select. Optional specific table                    |
-| addRouteForInsert($routeName, $table = null)  | Filter any insert. Optional specific table                    |
-| addRouteForDelete($routeName, $table = null)  | Filter any delete. Optional specific table                    |
-| addRouteForUpdate($routeName, $table = null)  | Filter any update. Optional specific table                    |
-| addRouteForFilter($routeName, $field, $value) | Filter any WHERE clause based on FIELD = VALUE                |
-| addCustomRoute($routeName, $regEx)            | Filter by a custom regular expression.                        |
-
+| Method                                          | Description                                                                                        |
+|-------------------------------------------------|----------------------------------------------------------------------------------------------------|
+| `addRouteForWrite($routeName, $table = null)`   | Routes any `INSERT`, `UPDATE`, or `DELETE` operation. An optional specific table can be specified. |
+| `addRouteForRead($routeName, $table = null)`    | Routes any `SELECT` operation. An optional specific table can be specified.                        |
+| `addRouteForInsert($routeName, $table = null)`  | Routes any `INSERT` operation. An optional specific table can be specified.                        |
+| `addRouteForDelete($routeName, $table = null)`  | Routes any `DELETE` operation. An optional specific table can be specified.                        |
+| `addRouteForUpdate($routeName, $table = null)`  | Routes any `UPDATE` operation. An optional specific table can be specified.                        |
+| `addRouteForFilter($routeName, $field, $value)` | Routes based on `WHERE` clauses with specific `FIELD = VALUE` conditions.                          |
+| `addCustomRoute($routeName, $regEx)`            | Routes based on a custom regular expression.                                                       |

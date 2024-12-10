@@ -4,6 +4,11 @@ sidebar_position: 5
 
 # Database Transaction
 
+A database transaction is a sequence of operations performed as a single, logical unit of work.
+Transactions ensure data consistency and integrity by adhering to the ACID (Atomicity, Consistency, Isolation,
+Durability) properties.
+If any operation in the sequence fails, the transaction can be rolled back to its previous state.
+
 ## Basics
 
 ```php
@@ -12,7 +17,7 @@ $dbDriver = \ByJG\AnyDataset\Db\Factory::getDbInstance('mysql://username:passwor
 
 $dbDriver->beginTransaction(\ByJG\AnyDataset\Db\IsolationLevelEnum::SERIALIZABLE);
 try {
-    // ... Do your queries
+    // ... Perform your queries
 
     $dbDriver->commitTransaction(); // or rollbackTransaction()
 } catch (\Exception $ex) {
@@ -23,25 +28,25 @@ try {
 
 ## Nested Transactions
 
-It is possible to nest transactions between methods and functions. 
+Nested transactions allow you to manage transactions within different functions or methods.
 
-To make it possible, you need to pass the `allowJoin` parameter as `true` 
-in the `beginTransaction` method of all nested transaction.
+To enable nested transactions, pass the `allowJoin` parameter as `true` to the `beginTransaction` method in all nested
+transactions.
 
-The commit process uses a technique called "Two-Phase Commit" to ensure that all participant 
-transactions are committed or rolled back.
+### Two-Phase Commit
 
-Simplifying:
-1. The transaction is committed only when all participants commit the transaction.
-2. If any participant rolls back the transaction, all participants will roll back the transaction.
+Nested transactions use a "Two-Phase Commit" process to ensure consistency:
 
-**Important:**
+- The transaction is only committed when all participants successfully commit.
+- If any participant rolls back, all participants will roll back.
 
-- The nested transaction needs to have the same IsolationLevel as the
-parent transaction, otherwise will fail.
-- All participants in the database transaction needs to share the same
-instance of the DbDriver object. If you use different instances even if they
-are using the same connection Uri, you'll have unpredictable results.
+### Important Points:
+
+- The nested transaction must use the same `IsolationLevel` as the parent transaction; otherwise, it will fail.
+- All participants in the transaction must share the same instance of the `DbDriver` object.
+  Using different instances, even with the same connection URI, can result in unpredictable behavior.
+
+### Example of Nested Transactions
 
 ```php
 <?php
@@ -82,15 +87,19 @@ mainFunction($dbDriver);
 ```
 
 Explanation:
-1. The `mainFunction` starts a transaction and run some queries 
-2. The `mainFunction` calls `nestedFunction`.
-3. The `nestedFunction` starts a nested transaction with `allowJoin` as `true`.
-4. The `nestedFunction` commits the transaction, however, the commit will only be executed when the `mainFunction` also commits the transaction.
+
+1. The `mainFunction` starts a transaction and performs some queries.
+2. It calls `nestedFunction`.
+3. The `nestedFunction` starts a nested transaction with `allowJoin` set to `true`.
+4. The `nestedFunction` commits its transaction, but the database commit is deferred until the `mainFunction` commits.
 5. The `mainFunction` commits the transaction.
-6. The transaction is committed in the database.
+6. The entire transaction is committed to the database.
 
-## Good practices when using transactions
+## Good Practices When Using Transactions
 
-1. Always use the `try/catch` block to handle exceptions and rollback the transaction in case of error.
-2. The transaction needs to be committed or rolled back in the same method that started it. **Never** in different methods.
-3. If necessary to nest transactions, use the `allowJoin` parameter as `true` in the `beginTransaction` method.
+1. **Always use a `try/catch` block**: This ensures exceptions are handled, and transactions are rolled back in case of
+   errors.
+2. **Commit or rollback in the same method**: The transaction must be finalized (committed or rolled back) within the
+   same method where it started. Never finalize it in a different method.
+3. **Enable `allowJoin` for nested transactions**: Use the allowJoin parameter as true in the beginTransaction method
+   when nesting transactions.
