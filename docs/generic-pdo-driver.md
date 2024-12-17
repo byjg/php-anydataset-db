@@ -2,46 +2,48 @@
 sidebar_position: 10
 ---
 
-# Generic PDO configuration
+# Generic PDO Configuration
 
-If you want to use a PDO driver that is not mapped into the `anydataset-db` library you can use the generic PDO driver.
+If you want to use a PDO driver that is not mapped in the `anydataset-db` library, you can use the generic PDO driver.
 
-The generic PDO driver uses the format `pdo://username:password@pdo_driver?PDO_ARGUMENTS`.
+The generic PDO driver follows the format:  
+`pdo://username:password@pdo_driver?PDO_ARGUMENTS`.
 
-That are the steps to get it working:
-1. Install the PDO driver properly;
+## Steps to Configure Generic PDO
+
+1. Install the PDO driver properly.
 2. Adapt the connection string URI to the generic PDO format.
-3. Use the `Factory::getDbInstance` to get the database instance.
+3. Use `Factory::getDbInstance` to create the database instance.
 
-**IMPORTANT**:
+### **IMPORTANT**
 
-Avoid to use Generic PDO Driver if there is a specific `Anydataset` driver for your database.
-The specific driver will have more features and better performance. 
+Whenever possible, use a specific `Anydataset` driver for your database instead of the generic PDO driver. Specific
+drivers offer additional features and better performance.
 
-## Adapt the PDO connection string to URI format
+## Adapting the PDO Connection String to URI Format
 
-Let's take as example the Firebird PDO driver. The connection string is:
+For example, consider the Firebird PDO driver. Its typical connection string may look like this:
 
 ```text
 firebird:User=john;Password=mypass;Database=DATABASE.GDE;DataSource=localhost;Port=3050
 ```
 
-and adapting to URI style we remove the information about the driver, user and password. Then we have:
+To adapt it to the URI format, remove information about the driver, user, and password, resulting in:
 
 ```php
 $uri = new Uri("pdo://john:mypass@firebird?Database=DATABASE.GDE&DataSource=localhost&Port=3050");
 ```
 
-Note the configuration:
+### Key Configuration Points:
 
-- The schema for generic PDO is "pdo";
-- The host is the PDO driver. In this example is "firebird";
-- The PDO arguments are passed as query string. Remember to replace the `;` by `&`.
-- The user and password are passed as part of the URI.
+- The schema for the generic PDO driver is `"pdo"`.
+- The host corresponds to the PDO driver (e.g., `"firebird"`).
+- PDO arguments are passed as query parameters in the URI. Replace `;` with `&` to meet URI standards.
+- User and password are included as part of the URI.
 
-## Generic rule
+## Generic Conversion Rule
 
-From:
+Convert:
 ```text
 <pdo-driver>:User=<user>;Password=<password>;[<pdo-arguments>]
 ```
@@ -51,9 +53,9 @@ To:
 pdo://<user>:<password>@<pdo-driver>?<pdo-arguments>
 ```
 
-## Using Generic PDO to connect with Unix Socket
+## Using Generic PDO to Connect with a Unix Socket
 
-If you want to connect to a MySQL database using Unix Socket you can use the following URI:
+To connect to a MySQL database using a Unix Socket, use a URI format like this:
 
 ```php
 $uri = new Uri("pdo://root:password@mysql?unix_socket=/var/run/mysqld/mysqld.sock&dname=mydatabase");

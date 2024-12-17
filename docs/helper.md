@@ -4,28 +4,32 @@ sidebar_position: 7
 
 # Helper - DbFunctions
 
-AnyDataset has a helper `ByJG\AnyDataset\Db\DbFunctionsInterface` that can be return some specific data based on the database connection. 
+The AnyDataset library provides a helper interface, `ByJG\AnyDataset\Db\DbFunctionsInterface`, which returns
+database-specific SQL operations based on the current database connection.
 
-Methods availables:
+## Available Methods
 
-| Method                                                              | Description                                                                              |
-|---------------------------------------------------------------------|------------------------------------------------------------------------------------------|
-| concat($str1, $str2 = null)                                         | Return the proper concatenation operation based on the current connection                |
-| limit($sql, $start, $qty)                                           | Return the proper SQL with the LIMIT based on the current connection                     |
-| top($sql, $qty)                                                     | Return the proper SQL with the TOP based on the current connection                       |
-| hasTop()                                                            | Return true if the current connection has TOP                                            |
-| hasLimit()                                                          | Return true if the current connection has LIMIT                                          |
-| sqlDate($format, $column = null)                                    | Return the proper function to format a date field based on the current connection        |
-| toDate($date, $dateFormat)                                          | Return the proper function to convert a date to a string based on the current connection |
-| fromDate($date, $dateFormat)                                        | Return the proper function to convert a string to a date based on the current connection |
-| executeAndGetInsertedId(DbDriverInterface $dbdataset, $sql, $param) | Execute a SQL and return the inserted ID                                                 |
-| delimiterField($field)                                              | Return the field with proper field delimiter based on the current connection             |
-| delimiterTable($table)                                              | Return the table with proper table delimiter based on the current connection             |
-| forUpdate($sql)                                                     | Return the SQL with the FOR UPDATE based on the current connection                       |
-| hasForUpdate()                                                      | Return true if the current connection has FOR UPDATE                                     |
+| Method                                                                | Description                                                                                |
+|-----------------------------------------------------------------------|--------------------------------------------------------------------------------------------|
+| `concat($str1, $str2 = null)`                                         | Returns the proper concatenation operation for the current connection.                     |
+| `limit($sql, $start, $qty)`                                           | Returns the SQL query with the correct `LIMIT` clause for the current connection.          |
+| `top($sql, $qty)`                                                     | Returns the SQL query with the correct `TOP` clause for the current connection.            |
+| `hasTop()`                                                            | Returns `true` if the current connection supports `TOP`.                                   |
+| `hasLimit()`                                                          | Returns `true` if the current connection supports `LIMIT`.                                 |
+| `sqlDate($format, $column = null)`                                    | Returns the proper function to format a date field based on the current connection.        |
+| `toDate($date, $dateFormat)`                                          | Returns the proper function to convert a date to a string based on the current connection. |
+| `fromDate($date, $dateFormat)`                                        | Returns the proper function to convert a string to a date based on the current connection. |
+| `executeAndGetInsertedId(DbDriverInterface $dbdataset, $sql, $param)` | Executes a SQL query and returns the inserted ID.                                          |
+| `delimiterField($field)`                                              | Returns the field name with the correct field delimiter for the current connection.        |
+| `delimiterTable($table)`                                              | Returns the table name with the correct table delimiter for the current connection.        |
+| `forUpdate($sql)`                                                     | Returns the SQL query with the `FOR UPDATE` clause for the current connection.             |
+| `hasForUpdate()`                                                      | Returns `true` if the current connection supports `FOR UPDATE`.                            |
 
+## Use Case
 
-It is useful when you are working with different database connections and don't want to hard code the information there. 
+The `DbFunctionsInterface` is especially useful when working with multiple database connections. It helps ensure that
+SQL operations are dynamically adapted to the specific database being used, avoiding hardcoding database-specific
+details in your code.
 
 E.g.
 

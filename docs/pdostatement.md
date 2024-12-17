@@ -22,16 +22,13 @@ $this->assertEquals(
 );
 ```
 
-Note:
+## Notes
 
-* Although you can use a PDO Statement, it is recommended to use the
-  `SqlStatement` or `DbDriverInterface` to get the Query.
-* Use this feature with legacy code or when you have a specific need to use a PDO Statement.
+- While you can use a PDO Statement, it is recommended to use the
+  `SqlStatement` or `DbDriverInterface` for executing queries whenever possible.
+- This feature is best suited for legacy code or situations where using a PDO Statement is necessary.
 
 ## Benefits
 
-You can integrate the AnyDatasetDB library with your legacy code and get the benefits of the library
-as for example the standard `GenericIterator` 
-
-
-
+Using this approach allows you to integrate the AnyDatasetDB library with your legacy code
+while still taking advantage of features like the standard `GenericIterator`.

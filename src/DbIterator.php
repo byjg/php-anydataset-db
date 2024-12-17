@@ -3,18 +3,14 @@
 namespace ByJG\AnyDataset\Db;
 
 use ByJG\AnyDataset\Core\GenericIterator;
-use ByJG\AnyDataset\Core\Row;
-use ByJG\Serializer\Exception\InvalidArgumentException;
+use ByJG\AnyDataset\Db\Traits\PreFetchTrait;
 use PDO;
 use PDOStatement;
+use ReturnTypeWillChange;
 
 class DbIterator extends GenericIterator
 {
-
-    const RECORD_BUFFER = 50;
-
-    private array $rowBuffer;
-    private int $currentRow = 0;
+    use PreFetchTrait;
 
     /**
      * @var PDOStatement|null
@@ -23,71 +19,43 @@ class DbIterator extends GenericIterator
 
     /**
      * @param PDOStatement $recordset
+     * @param int $preFetch
      */
-    public function __construct(PDOStatement $recordset)
+    public function __construct(PDOStatement $recordset, int $preFetch = 0)
     {
         $this->statement = $recordset;
-        $this->rowBuffer = array();
+        $this->initPreFetch($preFetch);
     }
 
     /**
      * @return int
      */
-    #[\ReturnTypeWillChange]
+    #[ReturnTypeWillChange]
     public function count(): int
     {
         return $this->statement->rowCount();
     }
 
-    /**
-     * @return bool
-     * @throws InvalidArgumentException
-     */
-    public function hasNext(): bool
+    public function isCursorOpen(): bool
     {
-        if (count($this->rowBuffer) >= DbIterator::RECORD_BUFFER) {
-            return true;
-        }
-
-        if (is_null($this->statement)) {
-            return (count($this->rowBuffer) > 0);
-        }
-
-        $rowArray = $this->statement->fetch(PDO::FETCH_ASSOC);
-        if (!empty($rowArray)) {
-            $singleRow = new Row($rowArray);
-
-            $this->rowBuffer[] = $singleRow;
-            if (count($this->rowBuffer) < DbIterator::RECORD_BUFFER) {
-                $this->hasNext();
-            }
-
-            return true;
-        }
-
-        $this->statement->closeCursor();
-        $this->statement = null;
-
-        return (count($this->rowBuffer) > 0);
+        return !is_null($this->statement);
     }
 
-    /**
-     * @return Row|null
-     * @throws InvalidArgumentException
-     */
-    public function moveNext(): ?Row
+    public function releaseCursor(): void
     {
-        if (!$this->hasNext()) {
-            return null;
+        if (!is_null($this->statement)) {
+            $this->statement->closeCursor();
+            $this->statement = null;
         }
-
-        $singleRow = array_shift($this->rowBuffer);
-        $this->currentRow++;
-        return $singleRow;
     }
 
-    public function key(): int
+    protected function fetchRow(): array|bool
     {
-        return $this->currentRow;
+        return $this->statement->fetch(PDO::FETCH_ASSOC);
+    }
+
+    public function __destruct()
+    {
+        $this->releaseCursor();
     }
 }

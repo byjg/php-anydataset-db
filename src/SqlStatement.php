@@ -64,7 +64,7 @@ class SqlStatement
     }
 
 
-    public function getIterator(DbDriverInterface $dbDriver, ?array $param = [])
+    public function getIterator(DbDriverInterface $dbDriver, ?array $param = [], int $preFetch = 0): GenericIterator
     {
         $cacheKey = "";
         if (!empty($this->cache)) {
@@ -87,7 +87,7 @@ class SqlStatement
                 $statement = $dbDriver->prepareStatement($this->sql, $param, $this->cachedStatement);
 
                 $dbDriver->executeCursor($statement);
-                $iterator = $dbDriver->getIterator($statement);
+                $iterator = $dbDriver->getIterator($statement, preFetch: $preFetch);
 
                 if (!empty($this->cache)) {
                     $cachedItem = $iterator->toArray();

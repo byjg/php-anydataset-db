@@ -129,10 +129,10 @@ abstract class DbPdoDriver implements DbDriverInterface
         $statement->execute();
     }
 
-    public function getIterator(mixed $sql, ?array $params = null, ?CacheInterface $cache = null, DateInterval|int $ttl = 60): GenericIterator
+    public function getIterator(mixed $sql, ?array $params = null, ?CacheInterface $cache = null, DateInterval|int $ttl = 60, int $preFetch = 0): GenericIterator
     {
         if ($sql instanceof PDOStatement) {
-            return new DbIterator($sql);
+            return new DbIterator($sql, $preFetch);
         }
 
         if (is_string($sql)) {
@@ -144,7 +144,7 @@ abstract class DbPdoDriver implements DbDriverInterface
             throw new InvalidArgumentException("The SQL must be a cursor, string or a SqlStatement object");
         }
 
-        return $sql->getIterator($this, $params);
+        return $sql->getIterator($this, $params, $preFetch);
     }
 
     public function getScalar(mixed $sql, ?array $array = null): mixed
