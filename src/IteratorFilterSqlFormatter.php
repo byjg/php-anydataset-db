@@ -87,6 +87,12 @@ class IteratorFilterSqlFormatter extends IteratorFilterFormatter
                 }
                 return " $name NOT IN ($placeholders) ";
             },
+            Relation::IS_NULL => function (&$param, $name, $paramName, $value) {
+                return " $name IS NULL ";
+            },
+            Relation::IS_NOT_NULL => function (&$param, $name, $paramName, $value) {
+                return " $name IS NOT NULL ";
+            },
         };
 
         return $data($param, $name, $paramName, $value);    }
