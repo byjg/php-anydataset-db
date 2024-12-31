@@ -151,6 +151,40 @@ class IteratorFilterTest extends TestCase
         $this->assertEquals('select * from tablename  where  field = :field  or  field2 = :field2  ', $sql);
     }
 
+    public function testRelationIsNull()
+    {
+        $this->object->and('field', Relation::IS_NULL, null);
+
+        $params = [];
+        $returnFields = '*';
+        $sql = $this->object->format(
+            new IteratorFilterSqlFormatter(),
+            'tablename',
+            $params,
+            $returnFields
+        );
+
+        $this->assertEquals([], $params);
+        $this->assertEquals('select * from tablename  where  field IS NULL  ', $sql);
+    }
+
+    public function testRelationIsNotNull()
+    {
+        $this->object->and('field', Relation::IS_NOT_NULL, null);
+
+        $params = [];
+        $returnFields = '*';
+        $sql = $this->object->format(
+            new IteratorFilterSqlFormatter(),
+            'tablename',
+            $params,
+            $returnFields
+        );
+
+        $this->assertEquals([], $params);
+        $this->assertEquals('select * from tablename  where  field IS NOT NULL  ', $sql);
+    }
+
     public function testGroup()
     {
         $this->object->startGroup();
