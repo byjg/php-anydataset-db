@@ -55,9 +55,7 @@ trait PreFetchTrait
             return $this->preFetch();
         }
 
-        if ($rowArray === false) {
-            $this->releaseCursor();
-        }
+        $this->releaseCursor();
 
         return false;
     }
