@@ -43,7 +43,7 @@ class DbIterator extends GenericIterator
 
     public function releaseCursor(): void
     {
-        if (!is_null($this->statement)) {
+        if ($this->isCursorOpen()) {
             $this->statement->closeCursor();
             $this->statement = null;
         }
