@@ -4,6 +4,8 @@ namespace ByJG\AnyDataset\Db;
 
 use ByJG\AnyDataset\Core\GenericIterator;
 use ByJG\AnyDataset\Db\Traits\PreFetchTrait;
+use Override;
+use ReturnTypeWillChange;
 
 class Oci8Iterator extends GenericIterator
 {
@@ -54,5 +56,42 @@ class Oci8Iterator extends GenericIterator
         if (!is_null($this->cursor)) {
             $this->releaseCursor();
         }
+    }
+
+    #[Override] #[ReturnTypeWillChange] public function current(): mixed
+    {
+        if (empty($this->rowBuffer)) {
+            return null;
+        }
+
+        return $this->rowBuffer[0];
+    }
+
+    #[Override] #[ReturnTypeWillChange] public function next(): void
+    {
+        if (!empty($this->rowBuffer)) {
+            array_shift($this->rowBuffer);
+            $this->currentRow++;
+            $this->preFetch();
+        }
+    }
+
+    #[Override] #[ReturnTypeWillChange] public function valid(): bool
+    {
+        if (count($this->rowBuffer) > 0) {
+            return true;
+        }
+
+        if ($this->isCursorOpen()) {
+            $this->preFetch();
+            return count($this->rowBuffer) > 0;
+        }
+
+        return false;
+    }
+
+    #[Override] #[ReturnTypeWillChange] public function key(): mixed
+    {
+        return $this->currentRow;
     }
 }

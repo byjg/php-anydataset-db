@@ -2,8 +2,10 @@
 
 namespace ByJG\AnyDataset\Db;
 
+use ByJG\AnyDataset\Core\AnyDataset;
 use ByJG\AnyDataset\Core\GenericIterator;
-use ByJG\AnyDataset\Lists\ArrayDataset;
+use ByJG\XmlUtil\Exception\FileException;
+use ByJG\XmlUtil\Exception\XmlUtilException;
 use DateInterval;
 use Psr\SimpleCache\CacheInterface;
 use Psr\SimpleCache\InvalidArgumentException;
@@ -64,6 +66,11 @@ class SqlStatement
     }
 
 
+    /**
+     * @throws XmlUtilException
+     * @throws FileException
+     * @throws InvalidArgumentException
+     */
     public function getIterator(DbDriverInterface $dbDriver, ?array $param = [], int $preFetch = 0): GenericIterator
     {
         $cacheKey = "";
@@ -71,7 +78,7 @@ class SqlStatement
             ksort($param);
             $cacheKey = $this->cacheKey . ':' . md5(json_encode($param));
             if ($this->cache->has($cacheKey)) {
-                return (new ArrayDataset($this->cache->get($cacheKey)))->getIterator();
+                return (new AnyDataset($this->cache->get($cacheKey)))->getIterator();
             }
         }
 
@@ -92,7 +99,7 @@ class SqlStatement
                 if (!empty($this->cache)) {
                     $cachedItem = $iterator->toArray();
                     $this->cache->set($cacheKey, $cachedItem, $this->cacheTime);
-                    return (new ArrayDataset($cachedItem))->getIterator();
+                    return (new AnyDataset($cachedItem))->getIterator();
                 }
 
                 return $iterator;
@@ -117,12 +124,17 @@ class SqlStatement
     }
 
 
+    /**
+     * @throws FileException
+     * @throws XmlUtilException
+     * @throws InvalidArgumentException
+     */
     protected function cacheResult($key, GenericIterator $iterator, ?CacheInterface $cache, $ttl): GenericIterator
     {
         if (!empty($cache)) {
             $cachedItem = $iterator->toArray();
             $cache->set($key, $cachedItem, $ttl);
-            return (new ArrayDataset($cachedItem))->getIterator();
+            return (new AnyDataset($cachedItem))->getIterator();
         }
 
         return $iterator;

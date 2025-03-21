@@ -25,8 +25,8 @@ trait PreFetchTrait
             return true;
         }
 
-        if ($this->isCursorOpen() && $this->preFetch()) {
-            return true;
+        if ($this->isCursorOpen()) {
+            return $this->preFetch();
         }
 
         $this->releaseCursor();

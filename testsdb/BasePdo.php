@@ -334,7 +334,7 @@ abstract class BasePdo extends TestCase
         $iterator = $this->dbDriver->getIterator('select * from Dogs where id = :id', ['id' => 1], $cacheEngine, 60);
         $this->assertEquals(
             [
-                [ 'id'=> 1, 'breed' => "Mutt", 'name' => 'Spyke', "age" => 8, "weight" => 8.5, "__id" => 0, "__key" => 0],
+                ['id' => 1, 'breed' => "Mutt", 'name' => 'Spyke', "age" => 8, "weight" => 8.5],
             ],
             $iterator->toArray()
         );
@@ -346,7 +346,7 @@ abstract class BasePdo extends TestCase
         $iterator = $this->dbDriver->getIterator('select * from Dogs where id = :id', ['id' => 1], $cacheEngine, 60);
         $this->assertEquals(
             [
-                [ 'id'=> 1, 'breed' => "Mutt", 'name' => 'Spyke', "age" => 8, "weight" => 8.5, "__id" => 0, "__key" => 0],
+                ['id' => 1, 'breed' => "Mutt", 'name' => 'Spyke', "age" => 8, "weight" => 8.5],
             ],
             $iterator->toArray()
         );
@@ -365,7 +365,7 @@ abstract class BasePdo extends TestCase
         $iterator = $this->dbDriver->getIterator('select * from Dogs where id = :id', ['id' => 1], $cacheEngine, 60);
         $this->assertEquals(
             [
-                [ 'id'=> 1, 'breed' => "Mutt", 'name' => 'Spyke', "age" => 8, "weight" => 8.5, "__id" => 0, "__key" => 0],
+                ['id' => 1, 'breed' => "Mutt", 'name' => 'Spyke', "age" => 8, "weight" => 8.5],
             ],
             $iterator->toArray()
         );
@@ -377,7 +377,7 @@ abstract class BasePdo extends TestCase
         $iterator = $this->dbDriver->getIterator('select * from Dogs where id = :id', ['id' => 1], $cacheEngine, 60);
         $this->assertEquals(
             [
-                [ 'id'=> 1, 'breed' => "Mutt", 'name' => 'Spyke', "age" => 8, "weight" => 8.5, "__id" => 0, "__key" => 0],
+                ['id' => 1, 'breed' => "Mutt", 'name' => 'Spyke', "age" => 8, "weight" => 8.5],
             ],
             $iterator->toArray()
         );

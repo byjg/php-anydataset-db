@@ -284,7 +284,7 @@ class PdoSqliteTest extends TestCase
         $iterator = $this->dbDriver->getIterator('select * from info where id = :id', ['id' => 1], $cache, 60);
         $this->assertEquals(
             [
-                [ "__id" => 0, "__key" => 0, 'id'=> 1, 'iduser' => 1, 'number' => 10.45, 'property' => 'xxx'],
+                ['id' => 1, 'iduser' => 1, 'number' => 10.45, 'property' => 'xxx'],
             ],
             $iterator->toArray()
         );
@@ -296,7 +296,7 @@ class PdoSqliteTest extends TestCase
         $iterator = $this->dbDriver->getIterator('select * from info where id = :id', ['id' => 1], $cache, 60);
         $this->assertEquals(
             [
-                [ "__id" => 0, "__key" => 0, 'id'=> 1, 'iduser' => 1, 'number' => 10.45, 'property' => 'xxx'],
+                ['id' => 1, 'iduser' => 1, 'number' => 10.45, 'property' => 'xxx'],
             ],
             $iterator->toArray()
         );
@@ -370,14 +370,14 @@ class PdoSqliteTest extends TestCase
         $iterator = $sqlStatement->getIterator($this->dbDriver, ['id' => 4]);
         $this->assertEquals(
             [
-                ["id" => 4, "iduser" => 2, "number" => 20, "property" => '40', '__id' => 0, '__key' => 0],
+                ["id" => 4, "iduser" => 2, "number" => 20, "property" => '40'],
             ],
             $iterator->toArray()
         );
         $iterator = $sqlStatement->getIterator($this->dbDriver, ['id' => 5]);
         $this->assertEquals(
             [
-                ["id" => 5, "iduser" => 3, "number" => 30, "property" => '60', '__id' => 0, '__key' => 0],
+                ["id" => 5, "iduser" => 3, "number" => 30, "property" => '60'],
             ],
             $iterator->toArray()
         );
@@ -390,14 +390,14 @@ class PdoSqliteTest extends TestCase
         $iterator = $sqlStatement->getIterator($this->dbDriver, ['id' => 4]);
         $this->assertEquals(
             [
-                ["id" => 4, "iduser" => 2, "number" => 20, "property" => '40', '__id' => 0, '__key' => 0],
+                ["id" => 4, "iduser" => 2, "number" => 20, "property" => '40'],
             ],
             $iterator->toArray()
         );
         $iterator = $sqlStatement->getIterator($this->dbDriver, ['id' => 5]);
         $this->assertEquals(
             [
-                ["id" => 5, "iduser" => 3, "number" => 30, "property" => '60', '__id' => 0, '__key' => 0],
+                ["id" => 5, "iduser" => 3, "number" => 30, "property" => '60'],
             ],
             $iterator->toArray()
         );
@@ -418,7 +418,7 @@ class PdoSqliteTest extends TestCase
         $iterator = $this->dbDriver->getIterator('select * from info where id = :id', ['id' => 1], $cache, 60);
         $this->assertEquals(
             [
-                [ "__id" => 0, "__key" => 0, 'id'=> 1, 'iduser' => 1, 'number' => 10.45, 'property' => 'xxx'],
+                ['id' => 1, 'iduser' => 1, 'number' => 10.45, 'property' => 'xxx'],
             ],
             $iterator->toArray()
         );
@@ -437,7 +437,7 @@ class PdoSqliteTest extends TestCase
         $iterator = $this->dbDriver->getIterator('select * from info where id = :id', ['id' => 1], $cache, 60);
         $this->assertEquals(
             [
-                [ "__id" => 0, "__key" => 0, 'id'=> 1, 'iduser' => 1, 'number' => 10.45, 'property' => 'xxx'],
+                ['id' => 1, 'iduser' => 1, 'number' => 10.45, 'property' => 'xxx'],
             ],
             $iterator->toArray()
         );
