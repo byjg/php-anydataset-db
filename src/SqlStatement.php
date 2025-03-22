@@ -65,48 +65,66 @@ class SqlStatement
         return $this->cacheKey;
     }
 
-
     /**
+     * Get an iterator for this SQL statement.
+     *
+     * If cache is enabled, tries to get results from cache first.
+     * Uses mutex locking to prevent multiple processes from generating the same cached results.
+     *
+     * @param DbDriverInterface $dbDriver The database driver
+     * @param array|null $param Parameters for the SQL query
+     * @param int $preFetch Number of rows to prefetch
+     * @return GenericIterator The iterator containing the results
      * @throws XmlUtilException
      * @throws FileException
      * @throws InvalidArgumentException
      */
     public function getIterator(DbDriverInterface $dbDriver, ?array $param = [], int $preFetch = 0): GenericIterator
     {
-        $cacheKey = "";
-        if (!empty($this->cache)) {
-            ksort($param);
-            $cacheKey = $this->cacheKey . ':' . md5(json_encode($param));
+        // If no cache is configured, just execute the query
+        if (empty($this->cache)) {
+            $statement = $dbDriver->prepareStatement($this->sql, $param, $this->cachedStatement);
+            $dbDriver->executeCursor($statement);
+            return $dbDriver->getIterator($statement, preFetch: $preFetch);
+        }
+
+        // Prepare cache key
+        ksort($param);
+        $cacheKey = $this->cacheKey . ':' . md5(json_encode($param));
+
+        // Try to get from cache first
+        if ($this->cache->has($cacheKey)) {
+            return (new AnyDataset($this->cache->get($cacheKey)))->getIterator();
+        }
+
+        // Wait until no other process is generating this cache
+        while ($this->mutexIsLocked($cacheKey) !== false) {
+            usleep(200);
+        }
+
+        // Lock the mutex to prevent other processes from generating the same cache
+        $this->mutexLock($cacheKey);
+
+        try {
+            // Check again if cache was created while waiting for lock
             if ($this->cache->has($cacheKey)) {
                 return (new AnyDataset($this->cache->get($cacheKey)))->getIterator();
             }
+
+            // Execute the query
+            $statement = $dbDriver->prepareStatement($this->sql, $param, $this->cachedStatement);
+            $dbDriver->executeCursor($statement);
+            $iterator = $dbDriver->getIterator($statement, preFetch: $preFetch);
+
+            // Convert to array for caching and cache it
+            $cachedItem = $iterator->toArray();
+            $this->cache->set($cacheKey, $cachedItem, $this->cacheTime);
+
+            // Return a new iterator from the cached array
+            return (new AnyDataset($cachedItem))->getIterator();
+        } finally {
+            $this->mutexRelease($cacheKey);
         }
-
-        do {
-            $lock = $this->mutexIsLocked($cacheKey);
-            if ($lock !== false) {
-                usleep(200);
-                continue;
-            }
-
-            $this->mutexLock($cacheKey);
-            try {
-                $statement = $dbDriver->prepareStatement($this->sql, $param, $this->cachedStatement);
-
-                $dbDriver->executeCursor($statement);
-                $iterator = $dbDriver->getIterator($statement, preFetch: $preFetch);
-
-                if (!empty($this->cache)) {
-                    $cachedItem = $iterator->toArray();
-                    $this->cache->set($cacheKey, $cachedItem, $this->cacheTime);
-                    return (new AnyDataset($cachedItem))->getIterator();
-                }
-
-                return $iterator;
-            } finally {
-                $this->mutexRelease($cacheKey);
-            }
-        } while (true);
     }
 
     public function getScalar(DbDriverInterface $dbDriver, ?array $array = null): mixed
@@ -121,23 +139,6 @@ class SqlStatement
     {
         $stmt = $dbDriver->prepareStatement($this->sql, $array, $this->cachedStatement);
         $dbDriver->executeCursor($stmt);
-    }
-
-
-    /**
-     * @throws FileException
-     * @throws XmlUtilException
-     * @throws InvalidArgumentException
-     */
-    protected function cacheResult($key, GenericIterator $iterator, ?CacheInterface $cache, $ttl): GenericIterator
-    {
-        if (!empty($cache)) {
-            $cachedItem = $iterator->toArray();
-            $cache->set($key, $cachedItem, $ttl);
-            return (new AnyDataset($cachedItem))->getIterator();
-        }
-
-        return $iterator;
     }
 
     /**
@@ -173,5 +174,4 @@ class SqlStatement
         }
         $this->cache->delete($cacheKey . ".lock");
     }
-
 }

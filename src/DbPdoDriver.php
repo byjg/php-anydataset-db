@@ -134,22 +134,42 @@ abstract class DbPdoDriver implements DbDriverInterface
         $statement->execute();
     }
 
+    /**
+     * Get an iterator for the provided SQL or execute an existing PDOStatement.
+     *
+     * This method has three different behaviors based on the $sql parameter type:
+     * 1. When $sql is a PDOStatement: Returns a DbIterator for that statement
+     * 2. When $sql is a string: Converts to SqlStatement and calls getIterator on it
+     * 3. When $sql is a SqlStatement: Calls getIterator on it
+     *
+     * @param mixed $sql PDOStatement, string SQL, or SqlStatement object
+     * @param array|null $params Parameters if $sql is a string
+     * @param CacheInterface|null $cache Optional cache implementation
+     * @param DateInterval|int $ttl Cache time-to-live (in seconds or as DateInterval)
+     * @param int $preFetch Number of rows to prefetch
+     * @return GenericIterator The iterator for the query results
+     * @throws InvalidArgumentException If $sql is not a supported type
+     */
     #[Override]
     public function getIterator(mixed $sql, ?array $params = null, ?CacheInterface $cache = null, DateInterval|int $ttl = 60, int $preFetch = 0): GenericIterator
     {
+        // Case 1: Direct PDOStatement - return a DbIterator for it
         if ($sql instanceof PDOStatement) {
             return new DbIterator($sql, $preFetch);
         }
 
+        // Case 2: SQL string - convert to SqlStatement
         if (is_string($sql)) {
             $sql = new SqlStatement($sql);
             if (!empty($cache)) {
                 $sql->withCache($cache, $this->getQueryKey($cache, $sql->getSql(), $params), $ttl);
             }
-        } elseif (!($sql instanceof SqlStatement)) {
-            throw new InvalidArgumentException("The SQL must be a cursor, string or a SqlStatement object");
+        } // Case 3: SqlStatement - nothing to do
+        elseif (!($sql instanceof SqlStatement)) {
+            throw new InvalidArgumentException("The SQL must be a PDOStatement, string or a SqlStatement object");
         }
 
+        // Execute the SqlStatement
         return $sql->getIterator($this, $params, $preFetch);
     }
 
