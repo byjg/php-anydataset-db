@@ -42,8 +42,8 @@ $sql->withCache($cache, 'my_cache_key', 60);
 
 Parameters:
 
-- `$cache`: A PSR-16 compliant cache implementation
-- `$cacheKey`: A unique key for the cache entry
+- `$cache`: A PSR-16 compliant cache implementation (implementing `Psr\SimpleCache\CacheInterface`)
+- `$cacheKey`: A unique key prefix for the cache entry
 - `$cacheTime`: Time-to-live in seconds (default: 60)
 
 ### withoutCache
@@ -54,17 +54,67 @@ Disables caching for the SQL statement.
 $sql->withoutCache();
 ```
 
+## Accessor Methods
+
+The `SqlStatement` class also provides getter methods to access cache information:
+
+```php
+// Get the cache implementation
+$cacheInstance = $sql->getCache();
+
+// Get the cache TTL
+$ttl = $sql->getCacheTime();
+
+// Get the cache key prefix
+$key = $sql->getCacheKey();
+```
+
 ## Implementation Details
 
-The caching mechanism is implemented in the `SqlStatement` class and uses the `DbCacheTrait` trait. When caching is
-enabled:
+The caching mechanism is implemented in the `SqlStatement` class. When caching is enabled:
 
-1. A unique cache key is generated based on the SQL statement and the parameters.
+1. A unique cache key is generated based on the base key and the query parameters:
+   ```php
+   // Internal key generation (simplified)
+   $cacheKey = $this->cacheKey . ':' . md5(json_encode($param));
+   ```
+
 2. Before executing the query, the cache is checked for an existing entry.
 3. If a cache entry exists, the results are returned directly from the cache.
 4. If no cache entry exists, the query is executed, and the results are stored in the cache.
-5. A mutex locking mechanism is used to prevent cache stampede (multiple processes trying to generate the same cache
-   entry simultaneously).
+
+## Mutex Locking Mechanism
+
+To prevent cache stampede (when multiple processes try to generate the same cache entry simultaneously), the library
+implements a mutex locking mechanism:
+
+1. Before regenerating a cache entry, the system checks for an existing lock:
+   ```php
+   $lock = $this->mutexIsLocked($cacheKey);
+   ```
+
+2. If a lock exists, the process waits briefly and tries again:
+   ```php
+   if ($lock !== false) {
+       usleep(200); // Wait 200 microseconds
+       continue;
+   }
+   ```
+
+3. If no lock exists, the process acquires a lock, generates the cache, and then releases the lock:
+   ```php
+   $this->mutexLock($cacheKey);
+   try {
+       // Generate cache content
+   } finally {
+       $this->mutexRelease($cacheKey);
+   }
+   ```
+
+4. The lock uses the same cache implementation with a `.lock` suffix:
+   ```php
+   $this->cache->set($cacheKey . ".lock", time(), DateInterval::createFromDateString('5 min'));
+   ```
 
 ## Advanced Examples
 
@@ -117,6 +167,28 @@ $orderQuery->withCache($cache, 'recent_orders', 300); // 5 minutes
 $recentOrders = $orderQuery->getIterator($dbDriver, ['date' => '2023-01-01']);
 ```
 
+## Cache Key Generation
+
+The actual cache key used is a combination of:
+
+1. The base key you provide (`$cacheKey`)
+2. A colon (`:`)
+3. An MD5 hash of the JSON-encoded parameters
+
+For example:
+
+```php
+// If you specify this cache key and parameters:
+$sql->withCache($cache, 'user_list', 60);
+$iterator = $sql->getIterator($dbDriver, ['status' => 'active', 'role' => 'admin']);
+
+// The actual cache key used internally will be:
+// 'user_list:' + md5(json_encode(['status' => 'active', 'role' => 'admin']))
+// Something like: 'user_list:a1b2c3d4e5f6...'
+```
+
+Note: Parameters are sorted by key before hashing to ensure consistent cache keys regardless of parameter order.
+
 ## Notes
 
 - **One cache entry per parameter set:** A separate cache entry will be created for each unique set of parameters.  
@@ -124,7 +196,7 @@ $recentOrders = $orderQuery->getIterator($dbDriver, ['date' => '2023-01-01']);
   - `['param' => 'value']` and `['param' => 'value2']` will result in two distinct cache entries.
 
 - **Key uniqueness:** If you use the same cache key for different SQL statements, they will not be differentiated. This
-  may lead to unexpected results.
+  may lead to unexpected results. Always use distinct base cache keys for different queries.
 
 - **Cache invalidation:** The library does not automatically invalidate cache entries when data changes. You need to
   manage cache invalidation yourself by:
@@ -137,6 +209,3 @@ $recentOrders = $orderQuery->getIterator($dbDriver, ['date' => '2023-01-01']);
 // Manually clear cache entries when data changes
 $cache->delete('my_cache_key');
 ```
-
-- **Mutex locking:** The library uses a mutex locking mechanism to prevent cache stampede. This ensures that only one
-  process generates the cache entry while others wait for it to be completed.
