@@ -3,10 +3,13 @@
 namespace ByJG\AnyDataset\Db\Traits;
 
 use ByJG\AnyDataset\Core\Row;
+use ByJG\AnyDataset\Core\RowInterface;
+use Override;
+use ReturnTypeWillChange;
 
 trait PreFetchTrait
 {
-    protected int $currentRow = -1;
+    protected int $currentRow = 0;
     protected int $preFetchRows = 0;
     protected array $rowBuffer = [];
 
@@ -17,21 +20,6 @@ trait PreFetchTrait
         if ($preFetch > 0) {
             $this->preFetch();
         }
-    }
-
-    public function hasNext(): bool
-    {
-        if (count($this->rowBuffer) > 0) {
-            return true;
-        }
-
-        if ($this->isCursorOpen()) {
-            return $this->preFetch();
-        }
-
-        $this->releaseCursor();
-
-        return false;
     }
 
     protected function preFetch(): bool
@@ -49,9 +37,9 @@ trait PreFetchTrait
             $rowArray = array_change_key_case($rowArray, CASE_LOWER);
             $singleRow = new Row($rowArray);
 
-            // Enfileira o registo
+            // Enqueue the record
             $this->rowBuffer[] = $singleRow;
-            // Traz novos até encher o Buffer
+            // Fetch new ones until the buffer is full
             return $this->preFetch();
         }
 
@@ -90,23 +78,41 @@ trait PreFetchTrait
         return count($this->rowBuffer);
     }
 
-    /**
-     * @return Row|null
-     */
-    public function moveNext(): ?Row
-    {
-        if (!$this->hasNext()) {
-            return null;
-        }
-
-        $singleRow = array_shift($this->rowBuffer);
-        $this->currentRow++;
-        $this->preFetch();
-        return $singleRow;
-    }
-
     public function key(): int
     {
         return $this->currentRow;
+    }
+
+    #[ReturnTypeWillChange]
+    #[Override]
+    public function current(): ?RowInterface
+    {
+        if ($this->valid()) {
+            return $this->rowBuffer[0] ?? null;
+        }
+
+        return null;
+    }
+
+    #[ReturnTypeWillChange]
+    #[Override]
+    public function next(): void
+    {
+        if (!empty($this->rowBuffer)) {
+            array_shift($this->rowBuffer);
+            $this->currentRow++;
+            $this->preFetch();
+        }
+    }
+
+    #[Override]
+    #[ReturnTypeWillChange]
+    public function valid(): bool
+    {
+        if (count($this->rowBuffer) > 0) {
+            return true;
+        }
+
+        return $this->preFetch();
     }
 }

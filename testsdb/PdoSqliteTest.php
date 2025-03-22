@@ -35,7 +35,7 @@ class PdoSqliteTest extends BasePdo
 
     public function testGetAllFields()
     {
-        $this->markTestSkipped('Skipped: SqlLite does not support get all fields');
+        $this->markTestSkipped('SQLite does not support getAllFields() method');
     }
 
     public function testGetDate() {

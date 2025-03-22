@@ -3,6 +3,7 @@
 namespace Test;
 
 use ByJG\AnyDataset\Db\PdoLiteral;
+use PDOException;
 use TestDb\BasePdo;
 
 
@@ -29,30 +30,30 @@ class PdoLiteralTest extends BasePdo
 
     public function testGetAllFields()
     {
-        $this->markTestSkipped('SqlLite does not have this method');
+        $this->markTestSkipped('SQLite does not support getAllFields() method');
     }
 
     public function testGetDate()
     {
-        $this->markTestSkipped('Do not use here');
+        $this->markTestSkipped('Date formatting test not applicable for SQLite in-memory database');
     }
 
     public function testDontParseParam()
     {
         // Ignoring because is using a connection into the memory.
-        $this->markTestSkipped();
+        $this->markTestSkipped('Parameter parsing test not applicable for in-memory database connections');
     }
 
     public function testDontParseParam_2()
     {
         // Ignoring because is using a connection into the memory.
-        $this->markTestSkipped();
+        $this->markTestSkipped('Parameter parsing test not applicable for in-memory database connections');
     }
 
     public function testDontParseParam_3()
     {
         // Ignoring because is using a connection into the memory.
-        $this->markTestSkipped();
+        $this->markTestSkipped('Parameter parsing test not applicable for in-memory database connections');
     }
 
     public function testReconnect()
@@ -61,13 +62,13 @@ class PdoLiteralTest extends BasePdo
         $this->assertTrue($this->dbDriver->reconnect(true));
 
         // The connection is on memory, it means, when reconnect will be in an empty DB
-        $this->expectException(\PDOException::class);
+        $this->expectException(PDOException::class);
         $this->expectExceptionMessageMatches('/no such table/');
         $iterator = $this->dbDriver->getIterator('select Id, Breed, Name, Age from Dogs where id = 1');
     }
 
     public function testTwoDifferentTransactions()
     {
-        $this->markTestSkipped('Databases are in memory, so the transaction with two different connections is not possible');
+        $this->markTestSkipped('In-memory databases cannot support transactions across different connections');
     }
 }
