@@ -13,6 +13,7 @@ use ByJG\AnyDataset\Db\IsolationLevelEnum;
 use ByJG\AnyDataset\Db\SqlStatement;
 use ByJG\Cache\Psr16\ArrayCacheEngine;
 use Exception;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
 abstract class BasePdo extends TestCase
@@ -631,10 +632,10 @@ abstract class BasePdo extends TestCase
     }
 
     /**
-     * @dataProvider dataProviderPreFetch
      * @return void
      * @psalm-suppress UndefinedMethod
      */
+    #[DataProvider('dataProviderPreFetch')]
     public function testPreFetchWhile(int $preFetch, array $rows, array $expected, array $expectedCursor)
     {
         $iterator = $this->dbDriver->getIterator('select * from Dogs', preFetch: $preFetch);
@@ -650,10 +651,10 @@ abstract class BasePdo extends TestCase
     }
 
     /**
-     * @dataProvider dataProviderPreFetch
      * @psalm-suppress UndefinedMethod
      * @return void
      */
+    #[DataProvider('dataProviderPreFetch')]
     public function testPreFetchForEach(int $preFetch, array $rows, array $expected, array $expectedCursor)
     {
         $iterator = $this->dbDriver->getIterator('select * from Dogs', preFetch: $preFetch);
@@ -670,10 +671,10 @@ abstract class BasePdo extends TestCase
     }
 
     /**
-     * @dataProvider dataProviderPreFetch
      * @psalm-suppress UndefinedMethod
      * @return void
      */
+    #[DataProvider('dataProviderPreFetch')]
     public function testPreFetchPhpIterator(int $preFetch, array $rows, array $expected, array $expectedCursor)
     {
         $iterator = $this->dbDriver->getIterator('select * from Dogs', preFetch: $preFetch);

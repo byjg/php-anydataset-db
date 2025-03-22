@@ -83,9 +83,7 @@ class SqlStatement
     {
         // If no cache is configured, just execute the query
         if (empty($this->cache)) {
-            $statement = $dbDriver->prepareStatement($this->sql, $param, $this->cachedStatement);
-            $dbDriver->executeCursor($statement);
-            return $dbDriver->getIterator($statement, preFetch: $preFetch);
+            return $this->executeQuery($dbDriver, $param, $preFetch);
         }
 
         // Prepare cache key
@@ -94,7 +92,7 @@ class SqlStatement
 
         // Try to get from cache first
         if ($this->cache->has($cacheKey)) {
-            return (new AnyDataset($this->cache->get($cacheKey)))->getIterator();
+            return $this->getIteratorFromCache($cacheKey);
         }
 
         // Wait until no other process is generating this cache
@@ -108,23 +106,67 @@ class SqlStatement
         try {
             // Check again if cache was created while waiting for lock
             if ($this->cache->has($cacheKey)) {
-                return (new AnyDataset($this->cache->get($cacheKey)))->getIterator();
+                return $this->getIteratorFromCache($cacheKey);
             }
 
-            // Execute the query
-            $statement = $dbDriver->prepareStatement($this->sql, $param, $this->cachedStatement);
-            $dbDriver->executeCursor($statement);
-            $iterator = $dbDriver->getIterator($statement, preFetch: $preFetch);
-
-            // Convert to array for caching and cache it
-            $cachedItem = $iterator->toArray();
-            $this->cache->set($cacheKey, $cachedItem, $this->cacheTime);
-
-            // Return a new iterator from the cached array
-            return (new AnyDataset($cachedItem))->getIterator();
+            // Execute the query and cache the results
+            return $this->executeAndCacheQuery($dbDriver, $param, $preFetch, $cacheKey);
         } finally {
             $this->mutexRelease($cacheKey);
         }
+    }
+
+    /**
+     * Execute the query without caching
+     *
+     * @param DbDriverInterface $dbDriver
+     * @param array|null $param
+     * @param int $preFetch
+     * @return GenericIterator
+     */
+    protected function executeQuery(DbDriverInterface $dbDriver, ?array $param, int $preFetch): GenericIterator
+    {
+        $statement = $dbDriver->prepareStatement($this->sql, $param, $this->cachedStatement);
+        $dbDriver->executeCursor($statement);
+        return $dbDriver->getIterator($statement, preFetch: $preFetch);
+    }
+
+    /**
+     * Get iterator from cache
+     *
+     * @param string $cacheKey
+     * @return GenericIterator
+     * @throws FileException
+     * @throws InvalidArgumentException
+     * @throws XmlUtilException
+     */
+    protected function getIteratorFromCache(string $cacheKey): GenericIterator
+    {
+        return (new AnyDataset($this->cache->get($cacheKey)))->getIterator();
+    }
+
+    /**
+     * Execute query and cache the results
+     *
+     * @param DbDriverInterface $dbDriver
+     * @param array|null $param
+     * @param int $preFetch
+     * @param string $cacheKey
+     * @return GenericIterator
+     * @throws FileException
+     * @throws InvalidArgumentException
+     * @throws XmlUtilException
+     */
+    protected function executeAndCacheQuery(DbDriverInterface $dbDriver, ?array $param, int $preFetch, string $cacheKey): GenericIterator
+    {
+        $iterator = $this->executeQuery($dbDriver, $param, $preFetch);
+
+        // Convert to array for caching and cache it
+        $cachedItem = $iterator->toArray();
+        $this->cache->set($cacheKey, $cachedItem, $this->cacheTime);
+
+        // Return a new iterator from the cached array
+        return (new AnyDataset($cachedItem))->getIterator();
     }
 
     public function getScalar(DbDriverInterface $dbDriver, ?array $array = null): mixed

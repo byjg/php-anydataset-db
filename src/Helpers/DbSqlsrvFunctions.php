@@ -30,17 +30,8 @@ class DbSqlsrvFunctions extends DbDblibFunctions
     public function executeAndGetInsertedId(DbDriverInterface $dbdataset, string $sql, ?array $param = null): mixed
     {
         // For SQLSRV, we use a more efficient method to get the inserted ID
-        $insertedId = parent::executeAndGetInsertedId($dbdataset, $sql, $param);
+        $dbdataset->execute($sql, $param);
 
-        // SQLSRV can directly use SCOPE_IDENTITY() which is faster
-        if ($insertedId === null) {
-            $iterator = $dbdataset->getIterator("select SCOPE_IDENTITY() as id");
-            if ($iterator->hasNext()) {
-                $singleRow = $iterator->moveNext();
-                $insertedId = $singleRow->get("id");
-            }
-        }
-
-        return $insertedId;
+        return $dbdataset->getScalar("select SCOPE_IDENTITY() as id");
     }
 }
