@@ -11,6 +11,9 @@ use ByJG\AnyDataset\Db\Helpers\SqlHelper;
 use ByJG\AnyDataset\Db\Traits\DbCacheTrait;
 use ByJG\AnyDataset\Db\Traits\TransactionTrait;
 use ByJG\Util\Uri;
+use ByJG\XmlUtil\Exception\FileException;
+use ByJG\XmlUtil\Exception\XmlUtilException;
+use Closure;
 use DateInterval;
 use Exception;
 use InvalidArgumentException;
@@ -149,13 +152,18 @@ class DbOci8Driver implements DbDriverInterface
      * @param int|DateInterval $ttl
      * @param int $preFetch
      * @param string|null $entityClass
+     * @param Closure|null $entityTransformer
      * @return GenericIterator
+     * @throws FileException
+     * @throws XmlUtilException
+     * @throws InvalidArgumentException
+     * @throws \Psr\SimpleCache\InvalidArgumentException
      */
     #[Override]
-    public function getIterator(mixed $sql, ?array $params = null, ?CacheInterface $cache = null, DateInterval|int $ttl = 60, int $preFetch = 0, ?string $entityClass = null): GenericIterator
+    public function getIterator(mixed $sql, ?array $params = null, ?CacheInterface $cache = null, DateInterval|int $ttl = 60, int $preFetch = 0, ?string $entityClass = null, ?Closure $entityTransformer = null): GenericIterator
     {
         if (is_resource($sql)) {
-            return new Oci8Iterator($sql, $preFetch, $entityClass);
+            return new Oci8Iterator($sql, $preFetch, $entityClass, $entityTransformer);
         }
 
         if (is_string($sql)) {
@@ -167,7 +175,7 @@ class DbOci8Driver implements DbDriverInterface
             throw new InvalidArgumentException("The SQL must be a cursor, string or a SqlStatement object");
         }
 
-        return $sql->getIterator($this, $params, $preFetch, $entityClass);
+        return $sql->getIterator($this, $params, $preFetch, $entityClass, $entityTransformer);
     }
 
     /**

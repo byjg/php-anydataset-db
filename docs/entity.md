@@ -63,6 +63,72 @@ For best results:
 - Properties should be declared as `public` to allow direct assignment
 - Use type declarations for better type safety
 
+## Custom Property Transformation
+
+In some cases, you might want to customize how database field values are mapped to your entity properties. For this, you
+can use the `entityTransformer` parameter to provide a custom transformation function:
+
+```php
+<?php
+// Define your entity class
+class Product {
+    public int $id;
+    public string $name;
+    public float $price;
+    public string $currency;
+    public float $priceInUSD;
+}
+
+// Create a custom transformer function
+$transformer = function ($sourceField) {
+    // Convert snake_case to camelCase
+    if ($sourceField === 'product_id') {
+        return 'id';
+    }
+    
+    // For all other fields, use the original name
+    return $sourceField;
+};
+
+// Pass the transformer along with the entity class
+$iterator = $conn->getIterator(
+    "SELECT 
+        product_id, 
+        name, 
+        price, 
+        currency
+     FROM products", 
+    [],
+    null,               // cache
+    60,                 // cache TTL
+    0,                  // prefetch
+    Product::class,     // Entity class name
+    $transformer        // Custom transformer function
+);
+
+// Iterate through transformed Product objects
+foreach ($iterator as $row) {
+    $product = $row->entity();
+    // Now product_id field was mapped to id property
+}
+```
+
+You can also use the transformer to perform more complex transformations, such as combining multiple fields:
+
+```php
+<?php
+// Create transformer that calculates values on the fly
+$priceTransformer = function ($sourceField, $targetField, $value) {
+    // Convert price to USD based on currency
+    if ($sourceField === 'price' && !empty($this->currency)) {
+        // Calculate USD price based on currency
+        $this->priceInUSD = $value * getCurrencyRate($this->currency);
+    }
+    
+    return $value;
+};
+```
+
 ## Benefits of Entity Mapping
 
 ### 1. Type Safety

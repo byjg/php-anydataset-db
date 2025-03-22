@@ -41,7 +41,14 @@ trait PreFetchTrait
             // Create row based on entityClass if provided
             if (!empty($this->entityClass)) {
                 $entityObj = new $this->entityClass();
-                ObjectCopy::copy($rowFetched, $entityObj);
+
+                // Use entityTransformer if provided
+                if (!empty($this->entityTransformer)) {
+                    ObjectCopy::copy($rowFetched, $entityObj, $this->entityTransformer);
+                } else {
+                    ObjectCopy::copy($rowFetched, $entityObj);
+                }
+                
                 $rowFetched = $entityObj;
             }
             $singleRow = new Row($rowFetched);

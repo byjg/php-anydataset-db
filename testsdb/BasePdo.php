@@ -15,6 +15,9 @@ use ByJG\Cache\Psr16\ArrayCacheEngine;
 use Exception;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
+use Test\Models\DogEntity;
+use Test\Models\DogEntityComplex;
+use Test\Models\Dogs;
 
 abstract class BasePdo extends TestCase
 {
@@ -121,29 +124,16 @@ abstract class BasePdo extends TestCase
 
     public function testGetIteratorWithEntityClass()
     {
-        // Define a simple entity class
-        if (!class_exists('TestDb\DogEntity')) {
-            eval('
-                namespace TestDb;
-                class DogEntity {
-                    public $id;
-                    public $name;
-                    public $breed;
-                    public $weight;
-                }
-            ');
-        }
-
         $array = $this->allData();
 
         // Get iterator with entity class
-        $iterator = $this->dbDriver->getIterator('select * from Dogs', entityClass: 'TestDb\DogEntity');
+        $iterator = $this->dbDriver->getIterator('select * from Dogs', entityClass: Dogs::class);
 
         // Verify we get objects of the correct type
         $i = 0;
         foreach ($iterator as $singleRow) {
             $entity = $singleRow->entity();
-            $this->assertInstanceOf('TestDb\DogEntity', $entity);
+            $this->assertInstanceOf(Dogs::class, $entity);
 
             // Verify properties were populated correctly
             $this->assertEquals($array[$i]['id'], $entity->id);
@@ -765,6 +755,115 @@ abstract class BasePdo extends TestCase
             [3, $rows, [3, 2, 1], [true, false, false]],
             [50, $rows, [3, 2, 1], [false, false, false]],
         ];
+    }
+
+    public function testEntityWithTransformer()
+    {
+        // Create a custom property mapping transformer
+        $transformer = function ($sourceField) {
+            // Map database column names to custom property names
+            switch (strtolower($sourceField)) {
+                case 'id':
+                    return 'dogId';
+                case 'name':
+                    return 'dogName';
+                case 'breed':
+                    return 'dogBreed';
+                case 'weight':
+                    return 'dogWeight';
+                default:
+                    return $sourceField;
+            }
+        };
+
+        $array = $this->allData();
+
+        // Get iterator with entity class and transformer
+        $iterator = $this->dbDriver->getIterator(
+            'select * from Dogs',
+            entityClass: DogEntity::class,
+            entityTransformer: $transformer
+        );
+
+        // Verify we get objects of the correct type with transformed property names
+        $i = 0;
+        foreach ($iterator as $singleRow) {
+            $entity = $singleRow->entity();
+            $this->assertInstanceOf(DogEntity::class, $entity);
+
+            // Verify properties were transformed and populated correctly
+            $this->assertEquals($array[$i]['id'], $entity->dogId);
+            $this->assertEquals($array[$i]['name'], $entity->dogName);
+            $this->assertEquals($array[$i]['breed'], $entity->dogBreed);
+            $this->assertEquals($array[$i]['weight'], $entity->dogWeight);
+
+            $i++;
+        }
+
+        // Verify we got all the expected rows
+        $this->assertEquals(count($array), $i);
+    }
+
+    public function testEntityWithComplexTransformer()
+    {
+        // Create a complex property name transformer
+        $transformer = function ($sourceField) {
+            switch (strtolower($sourceField)) {
+                case 'id':
+                    return 'animalId';
+                case 'name':
+                    return 'animalName';
+                case 'breed':
+                    return 'animalType';
+                case 'weight':
+                    return 'weightKg';
+                default:
+                    return $sourceField;
+            }
+        };
+
+        $array = $this->allData();
+
+        // Get iterator with entity class and transformer
+        $iterator = $this->dbDriver->getIterator(
+            'select * from Dogs',
+            entityClass: DogEntityComplex::class,
+            entityTransformer: $transformer
+        );
+
+        // Verify we get objects of the correct type with transformed property names
+        $i = 0;
+        foreach ($iterator as $singleRow) {
+            $entity = $singleRow->entity();
+            $this->assertInstanceOf(DogEntityComplex::class, $entity);
+
+            // Verify properties were transformed and populated correctly
+            $this->assertEquals($array[$i]['id'], $entity->animalId);
+            $this->assertEquals($array[$i]['name'], $entity->animalName);
+            $this->assertEquals($array[$i]['breed'], $entity->animalType);
+
+            if (!empty($array[$i]['weight'])) {
+                $this->assertEquals($array[$i]['weight'], $entity->weightKg);
+
+                // Test the calculated property method
+                $expectedPounds = $entity->weightKg * 2.20462;
+                $this->assertEquals($expectedPounds, $entity->getWeightInPounds());
+
+                // Test the description method
+                $expectedDescription = sprintf("%s is a %s with ID #%d weighing %.1f kg",
+                    $entity->animalName,
+                    $entity->animalType,
+                    $entity->animalId,
+                    $entity->weightKg
+                );
+                $this->assertEquals($expectedDescription, $entity->getDescription());
+            }
+
+            $i++;
+        }
+
+        // Verify we got all the expected rows
+        $this->assertEquals(count($array), $i);
     }
 }
 

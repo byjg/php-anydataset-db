@@ -5,6 +5,7 @@ namespace ByJG\AnyDataset\Db;
 use ByJG\AnyDataset\Core\GenericIterator;
 use ByJG\AnyDataset\Db\Interfaces\DbTransactionInterface;
 use ByJG\Util\Uri;
+use Closure;
 use DateInterval;
 use Psr\Log\LoggerInterface;
 use Psr\SimpleCache\CacheInterface;
@@ -25,9 +26,10 @@ interface DbDriverInterface extends DbTransactionInterface
      * @param int|DateInterval $ttl
      * @param int $preFetch
      * @param string|null $entityClass
+     * @param Closure|null $entityTransformer
      * @return GenericIterator
      */
-    public function getIterator(mixed $sql, ?array $params = null, ?CacheInterface $cache = null, DateInterval|int $ttl = 60, int $preFetch = 0, ?string $entityClass = null): GenericIterator;
+    public function getIterator(mixed $sql, ?array $params = null, ?CacheInterface $cache = null, DateInterval|int $ttl = 60, int $preFetch = 0, ?string $entityClass = null, ?Closure $entityTransformer = null): GenericIterator;
 
     public function getScalar(mixed $sql, ?array $array = null): mixed;
 

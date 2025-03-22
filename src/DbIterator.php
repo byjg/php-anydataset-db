@@ -4,6 +4,7 @@ namespace ByJG\AnyDataset\Db;
 
 use ByJG\AnyDataset\Core\GenericIterator;
 use ByJG\AnyDataset\Db\Traits\PreFetchTrait;
+use Closure;
 use Override;
 use PDO;
 use PDOStatement;
@@ -23,14 +24,21 @@ class DbIterator extends GenericIterator
     private ?string $entityClass;
 
     /**
+     * @var Closure|null
+     */
+    private ?Closure $entityTransformer;
+
+    /**
      * @param PDOStatement $recordset
      * @param int $preFetch
      * @param string|null $entityClass
+     * @param Closure|null $entityTransformer
      */
-    public function __construct(PDOStatement $recordset, int $preFetch = 0, ?string $entityClass = null)
+    public function __construct(PDOStatement $recordset, int $preFetch = 0, ?string $entityClass = null, ?Closure $entityTransformer = null)
     {
         $this->statement = $recordset;
         $this->entityClass = $entityClass;
+        $this->entityTransformer = $entityTransformer;
         $this->initPreFetch($preFetch);
     }
 

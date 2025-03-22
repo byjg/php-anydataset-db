@@ -9,6 +9,7 @@ use ByJG\AnyDataset\Db\Helpers\SqlHelper;
 use ByJG\AnyDataset\Db\Traits\DbCacheTrait;
 use ByJG\AnyDataset\Db\Traits\TransactionTrait;
 use ByJG\Util\Uri;
+use Closure;
 use DateInterval;
 use Exception;
 use InvalidArgumentException;
@@ -148,15 +149,16 @@ abstract class DbPdoDriver implements DbDriverInterface
      * @param DateInterval|int $ttl Cache time-to-live (in seconds or as DateInterval)
      * @param int $preFetch Number of rows to prefetch
      * @param string|null $entityClass Optional entity class name to return rows as objects
+     * @param Closure|null $entityTransformer Optional transformation function for customizing entity mapping
      * @return GenericIterator The iterator for the query results
      * @throws InvalidArgumentException If $sql is not a supported type
      */
     #[Override]
-    public function getIterator(mixed $sql, ?array $params = null, ?CacheInterface $cache = null, DateInterval|int $ttl = 60, int $preFetch = 0, ?string $entityClass = null): GenericIterator
+    public function getIterator(mixed $sql, ?array $params = null, ?CacheInterface $cache = null, DateInterval|int $ttl = 60, int $preFetch = 0, ?string $entityClass = null, ?Closure $entityTransformer = null): GenericIterator
     {
         // Case 1: Direct PDOStatement - return a DbIterator for it
         if ($sql instanceof PDOStatement) {
-            return new DbIterator($sql, $preFetch, $entityClass);
+            return new DbIterator($sql, $preFetch, $entityClass, $entityTransformer);
         }
 
         // Case 2: SQL string - convert to SqlStatement
@@ -171,7 +173,7 @@ abstract class DbPdoDriver implements DbDriverInterface
         }
 
         // Execute the SqlStatement
-        return $sql->getIterator($this, $params, $preFetch, $entityClass);
+        return $sql->getIterator($this, $params, $preFetch, $entityClass, $entityTransformer);
     }
 
     #[Override]
