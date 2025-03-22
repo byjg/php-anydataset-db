@@ -147,15 +147,16 @@ abstract class DbPdoDriver implements DbDriverInterface
      * @param CacheInterface|null $cache Optional cache implementation
      * @param DateInterval|int $ttl Cache time-to-live (in seconds or as DateInterval)
      * @param int $preFetch Number of rows to prefetch
+     * @param string|null $entityClass Optional entity class name to return rows as objects
      * @return GenericIterator The iterator for the query results
      * @throws InvalidArgumentException If $sql is not a supported type
      */
     #[Override]
-    public function getIterator(mixed $sql, ?array $params = null, ?CacheInterface $cache = null, DateInterval|int $ttl = 60, int $preFetch = 0): GenericIterator
+    public function getIterator(mixed $sql, ?array $params = null, ?CacheInterface $cache = null, DateInterval|int $ttl = 60, int $preFetch = 0, ?string $entityClass = null): GenericIterator
     {
         // Case 1: Direct PDOStatement - return a DbIterator for it
         if ($sql instanceof PDOStatement) {
-            return new DbIterator($sql, $preFetch);
+            return new DbIterator($sql, $preFetch, $entityClass);
         }
 
         // Case 2: SQL string - convert to SqlStatement
@@ -170,7 +171,7 @@ abstract class DbPdoDriver implements DbDriverInterface
         }
 
         // Execute the SqlStatement
-        return $sql->getIterator($this, $params, $preFetch);
+        return $sql->getIterator($this, $params, $preFetch, $entityClass);
     }
 
     #[Override]

@@ -16,12 +16,20 @@ class Oci8Iterator extends GenericIterator
     private $cursor;
 
     /**
+     * @var string|null
+     */
+    private ?string $entityClass;
+
+    /**
      *
      * @param resource $cursor
+     * @param int $preFetch
+     * @param string|null $entityClass
      */
-    public function __construct($cursor, int $preFetch = 0)
+    public function __construct($cursor, int $preFetch = 0, ?string $entityClass = null)
     {
         $this->cursor = $cursor;
+        $this->entityClass = $entityClass;
         $this->initPreFetch($preFetch);
     }
 

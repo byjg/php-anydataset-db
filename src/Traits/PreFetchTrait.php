@@ -4,6 +4,7 @@ namespace ByJG\AnyDataset\Db\Traits;
 
 use ByJG\AnyDataset\Core\Row;
 use ByJG\AnyDataset\Core\RowInterface;
+use ByJG\Serializer\ObjectCopy;
 use Override;
 use ReturnTypeWillChange;
 use SplDoublyLinkedList;
@@ -33,10 +34,17 @@ trait PreFetchTrait
             return false;
         }
 
-        $rowArray = $this->fetchRow();
-        if (!empty($rowArray)) {
-            $rowArray = array_change_key_case($rowArray, CASE_LOWER);
-            $singleRow = new Row($rowArray);
+        $rowFetched = $this->fetchRow();
+        if (!empty($rowFetched)) {
+            $rowFetched = array_change_key_case($rowFetched, CASE_LOWER);
+
+            // Create row based on entityClass if provided
+            if (!empty($this->entityClass)) {
+                $entityObj = new $this->entityClass();
+                ObjectCopy::copy($rowFetched, $entityObj);
+                $rowFetched = $entityObj;
+            }
+            $singleRow = new Row($rowFetched);
 
             // Enqueue the record
             $this->rowBuffer->push($singleRow);

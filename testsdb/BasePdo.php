@@ -119,6 +119,45 @@ abstract class BasePdo extends TestCase
         $this->assertFalse($iterator->isCursorOpen());
     }
 
+    public function testGetIteratorWithEntityClass()
+    {
+        // Define a simple entity class
+        if (!class_exists('TestDb\DogEntity')) {
+            eval('
+                namespace TestDb;
+                class DogEntity {
+                    public $id;
+                    public $name;
+                    public $breed;
+                    public $weight;
+                }
+            ');
+        }
+
+        $array = $this->allData();
+
+        // Get iterator with entity class
+        $iterator = $this->dbDriver->getIterator('select * from Dogs', entityClass: 'TestDb\DogEntity');
+
+        // Verify we get objects of the correct type
+        $i = 0;
+        foreach ($iterator as $singleRow) {
+            $entity = $singleRow->entity();
+            $this->assertInstanceOf('TestDb\DogEntity', $entity);
+
+            // Verify properties were populated correctly
+            $this->assertEquals($array[$i]['id'], $entity->id);
+            $this->assertEquals($array[$i]['name'], $entity->name);
+            $this->assertEquals($array[$i]['breed'], $entity->breed);
+            $this->assertEquals($array[$i]['weight'], $entity->weight);
+
+            $i++;
+        }
+
+        // Verify we got all the expected rows
+        $this->assertEquals(count($array), $i);
+    }
+
     public function testExecuteAndGetId()
     {
         $idInserted = $this->dbDriver->executeAndGetId(

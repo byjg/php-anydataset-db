@@ -1,5 +1,5 @@
 ---
-sidebar_position: 9
+sidebar_position: 10
 ---
 
 # Database Driver Interface
@@ -33,14 +33,14 @@ interface DbDriverInterface extends DbTransactionInterface
 
 ### Query Execution
 
-| Method                                                                                                                                           | Description                                                                     |
-|--------------------------------------------------------------------------------------------------------------------------------------------------|---------------------------------------------------------------------------------|
-| `prepareStatement(string $sql, ?array $params = null, ?array &$cacheInfo = []): mixed`                                                           | Prepares an SQL statement for execution                                         |
-| `executeCursor(mixed $statement): void`                                                                                                          | Executes a prepared statement                                                   |
-| `getIterator(mixed $sql, ?array $params = null, ?CacheInterface $cache = null, DateInterval\|int $ttl = 60, int $preFetch = 0): GenericIterator` | Executes a SELECT query and returns an iterator to navigate through the results |
-| `getScalar(mixed $sql, ?array $array = null): mixed`                                                                                             | Returns a single value from the first column of the first row of a result set   |
-| `execute(mixed $sql, ?array $array = null): bool`                                                                                                | Executes a non-query SQL statement (INSERT, UPDATE, DELETE)                     |
-| `executeAndGetId(string $sql, ?array $array = null): mixed`                                                                                      | Executes a query and returns the last inserted ID                               |
+| Method                                                                                                                                                                        | Description                                                                                                                                                   |
+|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `prepareStatement(string $sql, ?array $params = null, ?array &$cacheInfo = []): mixed`                                                                                        | Prepares an SQL statement for execution                                                                                                                       |
+| `executeCursor(mixed $statement): void`                                                                                                                                       | Executes a prepared statement                                                                                                                                 |
+| `getIterator(mixed $sql, ?array $params = null, ?CacheInterface $cache = null, DateInterval\|int $ttl = 60, int $preFetch = 0, ?string $entityClass = null): GenericIterator` | Executes a SELECT query and returns an iterator to navigate through the results. When `entityClass` is provided, maps results to entity objects of that class |
+| `getScalar(mixed $sql, ?array $array = null): mixed`                                                                                                                          | Returns a single value from the first column of the first row of a result set                                                                                 |
+| `execute(mixed $sql, ?array $array = null): bool`                                                                                                                             | Executes a non-query SQL statement (INSERT, UPDATE, DELETE)                                                                                                   |
+| `executeAndGetId(string $sql, ?array $array = null): mixed`                                                                                                                   | Executes a query and returns the last inserted ID                                                                                                             |
 
 ### Database Metadata
 
@@ -96,6 +96,29 @@ if (!$dbDriver->isConnected()) {
 $iterator = $dbDriver->getIterator("SELECT * FROM users WHERE active = :active", [':active' => true]);
 foreach ($iterator as $row) {
     echo $row->get('name') . "\n";
+}
+
+// Using entity mapping
+class User {
+    public int $id;
+    public string $name;
+    public string $email;
+    public bool $active;
+}
+
+// The query results will be mapped to User objects
+$entityIterator = $dbDriver->getIterator(
+    "SELECT * FROM users WHERE active = :active", 
+    [':active' => true],
+    null,
+    60,
+    0,
+    User::class
+);
+
+foreach ($entityIterator as $user) {
+    // $user is now a User object
+    echo $user->name . " - " . $user->email . "\n";
 }
 
 // Transaction example

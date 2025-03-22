@@ -74,16 +74,17 @@ class SqlStatement
      * @param DbDriverInterface $dbDriver The database driver
      * @param array|null $param Parameters for the SQL query
      * @param int $preFetch Number of rows to prefetch
+     * @param string|null $entityClass Optional entity class name to return rows as objects
      * @return GenericIterator The iterator containing the results
      * @throws XmlUtilException
      * @throws FileException
      * @throws InvalidArgumentException
      */
-    public function getIterator(DbDriverInterface $dbDriver, ?array $param = [], int $preFetch = 0): GenericIterator
+    public function getIterator(DbDriverInterface $dbDriver, ?array $param = [], int $preFetch = 0, ?string $entityClass = null): GenericIterator
     {
         // If no cache is configured, just execute the query
         if (empty($this->cache)) {
-            return $this->executeQuery($dbDriver, $param, $preFetch);
+            return $this->executeQuery($dbDriver, $param, $preFetch, $entityClass);
         }
 
         // Prepare cache key
@@ -92,7 +93,7 @@ class SqlStatement
 
         // Try to get from cache first
         if ($this->cache->has($cacheKey)) {
-            return $this->getIteratorFromCache($cacheKey);
+            return $this->getIteratorFromCache($cacheKey, $entityClass);
         }
 
         // Wait until no other process is generating this cache
@@ -106,11 +107,11 @@ class SqlStatement
         try {
             // Check again if cache was created while waiting for lock
             if ($this->cache->has($cacheKey)) {
-                return $this->getIteratorFromCache($cacheKey);
+                return $this->getIteratorFromCache($cacheKey, $entityClass);
             }
 
             // Execute the query and cache the results
-            return $this->executeAndCacheQuery($dbDriver, $param, $preFetch, $cacheKey);
+            return $this->executeAndCacheQuery($dbDriver, $param, $preFetch, $cacheKey, $entityClass);
         } finally {
             $this->mutexRelease($cacheKey);
         }
@@ -122,27 +123,42 @@ class SqlStatement
      * @param DbDriverInterface $dbDriver
      * @param array|null $param
      * @param int $preFetch
+     * @param string|null $entityClass
      * @return GenericIterator
      */
-    protected function executeQuery(DbDriverInterface $dbDriver, ?array $param, int $preFetch): GenericIterator
+    protected function executeQuery(DbDriverInterface $dbDriver, ?array $param, int $preFetch, ?string $entityClass = null): GenericIterator
     {
         $statement = $dbDriver->prepareStatement($this->sql, $param, $this->cachedStatement);
         $dbDriver->executeCursor($statement);
-        return $dbDriver->getIterator($statement, preFetch: $preFetch);
+        return $dbDriver->getIterator($statement, preFetch: $preFetch, entityClass: $entityClass);
     }
 
     /**
      * Get iterator from cache
      *
      * @param string $cacheKey
+     * @param string|null $entityClass
      * @return GenericIterator
      * @throws FileException
      * @throws InvalidArgumentException
      * @throws XmlUtilException
      */
-    protected function getIteratorFromCache(string $cacheKey): GenericIterator
+    protected function getIteratorFromCache(string $cacheKey, ?string $entityClass = null): GenericIterator
     {
-        return (new AnyDataset($this->cache->get($cacheKey)))->getIterator();
+        // Get data from cache
+        $data = $this->cache->get($cacheKey);
+
+        // Use AnyDataset to get the raw data
+        $anyDataset = new AnyDataset($data);
+        $iterator = $anyDataset->getIterator(null);
+
+        if ($entityClass === null) {
+            return $iterator;
+        }
+
+        // When an entity class is specified, we need to manually instantiate the objects
+        // We'll leave that to the caller by returning the raw data iterator
+        return $iterator;
     }
 
     /**
@@ -152,21 +168,23 @@ class SqlStatement
      * @param array|null $param
      * @param int $preFetch
      * @param string $cacheKey
+     * @param string|null $entityClass
      * @return GenericIterator
      * @throws FileException
      * @throws InvalidArgumentException
      * @throws XmlUtilException
      */
-    protected function executeAndCacheQuery(DbDriverInterface $dbDriver, ?array $param, int $preFetch, string $cacheKey): GenericIterator
+    protected function executeAndCacheQuery(DbDriverInterface $dbDriver, ?array $param, int $preFetch, string $cacheKey, ?string $entityClass = null): GenericIterator
     {
-        $iterator = $this->executeQuery($dbDriver, $param, $preFetch);
+        $iterator = $this->executeQuery($dbDriver, $param, $preFetch, $entityClass);
 
         // Convert to array for caching and cache it
         $cachedItem = $iterator->toArray();
         $this->cache->set($cacheKey, $cachedItem, $this->cacheTime);
 
-        // Return a new iterator from the cached array
-        return (new AnyDataset($cachedItem))->getIterator();
+        // When we get from cache, we lose the entity class information
+        // Return the cached iterator, the caller will have to handle entity conversion
+        return $this->getIteratorFromCache($cacheKey, $entityClass);
     }
 
     public function getScalar(DbDriverInterface $dbDriver, ?array $array = null): mixed

@@ -18,12 +18,19 @@ class DbIterator extends GenericIterator
     private ?PDOStatement $statement;
 
     /**
+     * @var string|null
+     */
+    private ?string $entityClass;
+
+    /**
      * @param PDOStatement $recordset
      * @param int $preFetch
+     * @param string|null $entityClass
      */
-    public function __construct(PDOStatement $recordset, int $preFetch = 0)
+    public function __construct(PDOStatement $recordset, int $preFetch = 0, ?string $entityClass = null)
     {
         $this->statement = $recordset;
+        $this->entityClass = $entityClass;
         $this->initPreFetch($preFetch);
     }
 

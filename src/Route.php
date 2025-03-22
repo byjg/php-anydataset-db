@@ -244,14 +244,15 @@ class Route implements DbDriverInterface
      * @param CacheInterface|null $cache
      * @param int|DateInterval $ttl
      * @param int $preFetch
+     * @param string|null $entityClass
      * @return GenericIterator
      * @throws RouteNotMatchedException
      */
     #[Override]
-    public function getIterator(mixed $sql, ?array $params = null, ?CacheInterface $cache = null, DateInterval|int $ttl = 60, int $preFetch = 0): GenericIterator
+    public function getIterator(mixed $sql, ?array $params = null, ?CacheInterface $cache = null, DateInterval|int $ttl = 60, int $preFetch = 0, ?string $entityClass = null): GenericIterator
     {
         $dbDriver = $this->matchRoute($sql);
-        return $dbDriver->getIterator($sql, $params, $cache, $ttl, $preFetch);
+        return $dbDriver->getIterator($sql, $params, $cache, $ttl, $preFetch, $entityClass);
     }
 
     /**
