@@ -35,16 +35,19 @@ class Oci8Iterator extends GenericIterator
         return -1;
     }
 
+    #[Override]
     public function fetchRow(): array|bool
     {
         return oci_fetch_assoc($this->cursor);
     }
 
+    #[Override]
     public function isCursorOpen(): bool
     {
         return !is_null($this->cursor);
     }
 
+    #[Override]
     public function releaseCursor(): void
     {
         oci_free_statement($this->cursor);

@@ -4,6 +4,7 @@ namespace ByJG\AnyDataset\Db;
 
 use ByJG\AnyDataset\Core\GenericIterator;
 use ByJG\AnyDataset\Db\Traits\PreFetchTrait;
+use Override;
 use PDO;
 use PDOStatement;
 
@@ -26,11 +27,13 @@ class DbIterator extends GenericIterator
         $this->initPreFetch($preFetch);
     }
 
+    #[Override]
     public function isCursorOpen(): bool
     {
         return !is_null($this->statement);
     }
 
+    #[Override]
     public function releaseCursor(): void
     {
         if ($this->isCursorOpen()) {
@@ -39,6 +42,7 @@ class DbIterator extends GenericIterator
         }
     }
 
+    #[Override]
     protected function fetchRow(): array|bool
     {
         return $this->statement->fetch(PDO::FETCH_ASSOC);

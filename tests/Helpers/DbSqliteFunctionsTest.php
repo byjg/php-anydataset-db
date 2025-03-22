@@ -4,6 +4,7 @@ namespace Test\Helpers;
 
 use ByJG\AnyDataset\Core\Exception\NotAvailableException;
 use ByJG\AnyDataset\Db\Helpers\DbSqliteFunctions;
+use Override;
 use PHPUnit\Framework\TestCase;
 
 class DbSqliteFunctionsTest extends TestCase
@@ -13,11 +14,13 @@ class DbSqliteFunctionsTest extends TestCase
      */
     private ?DbSqliteFunctions $object;
 
+    #[Override]
     protected function setUp(): void
     {
         $this->object = new DbSqliteFunctions();
     }
 
+    #[Override]
     protected function tearDown(): void
     {
         $this->object = null;

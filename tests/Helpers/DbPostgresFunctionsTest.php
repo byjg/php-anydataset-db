@@ -3,6 +3,7 @@
 namespace Test\Helpers;
 
 use ByJG\AnyDataset\Db\Helpers\DbPgsqlFunctions;
+use Override;
 use PHPUnit\Framework\TestCase;
 
 class DbPostgresFunctionsTest extends TestCase
@@ -12,11 +13,13 @@ class DbPostgresFunctionsTest extends TestCase
      */
     private ?DbPgsqlFunctions $object;
 
+    #[Override]
     protected function setUp(): void
     {
         $this->object = new DbPgsqlFunctions();
     }
 
+    #[Override]
     protected function tearDown(): void
     {
         $this->object = null;

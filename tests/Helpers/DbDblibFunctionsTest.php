@@ -4,6 +4,7 @@ namespace Test\Helpers;
 
 use ByJG\AnyDataset\Core\Exception\NotAvailableException;
 use ByJG\AnyDataset\Db\Helpers\DbDblibFunctions;
+use Override;
 use PHPUnit\Framework\TestCase;
 
 class DbDblibFunctionsTest extends TestCase
@@ -13,11 +14,13 @@ class DbDblibFunctionsTest extends TestCase
      */
     protected ?DbDblibFunctions $object;
 
+    #[Override]
     protected function setUp(): void
     {
         $this->object = new DbDblibFunctions();
     }
 
+    #[Override]
     protected function tearDown(): void
     {
         $this->object = null;

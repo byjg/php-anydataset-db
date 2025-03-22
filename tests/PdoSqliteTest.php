@@ -8,6 +8,7 @@ use ByJG\AnyDataset\Db\Helpers\DbSqliteFunctions;
 use ByJG\AnyDataset\Db\SqlStatement;
 use ByJG\Cache\Psr16\ArrayCacheEngine;
 use ByJG\Util\Uri;
+use Override;
 use PDO;
 use PHPUnit\Framework\TestCase;
 
@@ -18,6 +19,7 @@ class PdoSqliteTest extends TestCase
      */
     protected $dbDriver;
 
+    #[Override]
     public function setUp(): void
     {
         $this->dbDriver = Factory::getDbInstance('sqlite:///tmp/test.db');
@@ -45,6 +47,7 @@ class PdoSqliteTest extends TestCase
         $this->dbDriver->execute("insert into info (iduser, number, property) values (3, 20.02, 'bbb')");
     }
 
+    #[Override]
     public function tearDown(): void
     {
         unlink('/tmp/test.db');
@@ -572,7 +575,7 @@ class PdoSqliteTest extends TestCase
         $this->assertFalse($iterator->isCursorOpen());
     }
 
-    protected function dataProviderPreFetch()
+    public static function dataProviderPreFetch()
     {
         $rows = [
             ['id' => 1, 'iduser' => 1, 'number' => 10.45, 'property' => 'xxx'],

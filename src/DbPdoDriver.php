@@ -12,6 +12,7 @@ use ByJG\Util\Uri;
 use DateInterval;
 use Exception;
 use InvalidArgumentException;
+use Override;
 use PDO;
 use PDOStatement;
 use Psr\Log\LoggerInterface;
@@ -65,6 +66,7 @@ abstract class DbPdoDriver implements DbDriverInterface
     /**
      * @throws DbDriverNotConnected
      */
+    #[Override]
     public function reconnect(bool $force = false): bool
     {
         if ($this->isConnected() && !$force) {
@@ -80,6 +82,7 @@ abstract class DbPdoDriver implements DbDriverInterface
         return true;
     }
 
+    #[Override]
     public function disconnect(): void
     {
         $this->instance = null;
@@ -98,6 +101,7 @@ abstract class DbPdoDriver implements DbDriverInterface
      * @return PDOStatement
      * @throws DbDriverNotConnected
      */
+    #[Override]
     public function prepareStatement(string $sql, ?array $params = null, ?array &$cacheInfo = []): PDOStatement
     {
         if (!$this->getUri()->hasQueryKey(self::DONT_PARSE_PARAM)) {
@@ -124,11 +128,13 @@ abstract class DbPdoDriver implements DbDriverInterface
         return $stmt;
     }
 
+    #[Override]
     public function executeCursor(mixed $statement): void
     {
         $statement->execute();
     }
 
+    #[Override]
     public function getIterator(mixed $sql, ?array $params = null, ?CacheInterface $cache = null, DateInterval|int $ttl = 60, int $preFetch = 0): GenericIterator
     {
         if ($sql instanceof PDOStatement) {
@@ -147,6 +153,7 @@ abstract class DbPdoDriver implements DbDriverInterface
         return $sql->getIterator($this, $params, $preFetch);
     }
 
+    #[Override]
     public function getScalar(mixed $sql, ?array $array = null): mixed
     {
         if ($sql instanceof PDOStatement) {
@@ -164,6 +171,7 @@ abstract class DbPdoDriver implements DbDriverInterface
         return $sql->getScalar($this, $array);
     }
 
+    #[Override]
     public function getAllFields(string $tablename): array
     {
         $fields = array();
@@ -184,6 +192,7 @@ abstract class DbPdoDriver implements DbDriverInterface
     }
 
 
+    #[Override]
     public function execute(mixed $sql, ?array $array = null): bool
     {
         if ($sql instanceof PDOStatement) {
@@ -208,6 +217,7 @@ abstract class DbPdoDriver implements DbDriverInterface
         return true;
     }
 
+    #[Override]
     public function executeAndGetId(string $sql, ?array $array = null): mixed
     {
         return $this->getDbHelper()->executeAndGetInsertedId($this, $sql, $array);
@@ -217,6 +227,7 @@ abstract class DbPdoDriver implements DbDriverInterface
      *
      * @return PDO|null
      */
+    #[Override]
     public function getDbConnection(): ?PDO
     {
         return $this->instance;
@@ -224,6 +235,7 @@ abstract class DbPdoDriver implements DbDriverInterface
 
     protected ?DbFunctionsInterface $dbHelper = null;
 
+    #[Override]
     public function getDbHelper(): DbFunctionsInterface
     {
         if (empty($this->dbHelper)) {
@@ -232,6 +244,7 @@ abstract class DbPdoDriver implements DbDriverInterface
         return $this->dbHelper;
     }
 
+    #[Override]
     public function getUri(): Uri
     {
         return $this->pdoObj->getUri();
@@ -240,6 +253,7 @@ abstract class DbPdoDriver implements DbDriverInterface
     /**
      * @return bool
      */
+    #[Override]
     public function isSupportMultiRowset(): bool
     {
         return $this->supportMultiRowset;
@@ -248,12 +262,14 @@ abstract class DbPdoDriver implements DbDriverInterface
     /**
      * @param bool $multipleRowSet
      */
+    #[Override]
     public function setSupportMultiRowset(bool $multipleRowSet): void
     {
         $this->supportMultiRowset = $multipleRowSet;
     }
 
 
+    #[Override]
     public function isConnected(bool $softCheck = false, bool $throwError = false): bool
     {
         if (empty($this->instance)) {
@@ -285,11 +301,13 @@ abstract class DbPdoDriver implements DbDriverInterface
         return $this->instance;
     }
 
+    #[Override]
     public function enableLogger(LoggerInterface $logger): void
     {
         $this->logger = $logger;
     }
 
+    #[Override]
     public function log(string $message, array $context = []): void
     {
         $this->logger->debug($message, $context);

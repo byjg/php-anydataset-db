@@ -8,7 +8,7 @@ use PHPUnit\Framework\TestCase;
 
 class SqlBindTest extends TestCase
 {
-    public function getDataTest()
+    public static function getDataTest()
     {
         $paramIn = [
             'name' => 'John',
@@ -102,7 +102,7 @@ class SqlBindTest extends TestCase
     }
 
     /**
-     * @dataProvider getDataTest()
+     * @dataProvider getDataTest
      */
     public function testSqlBind($uri, $subject, $expected, $paramsIn, $paramsExpected)
     {

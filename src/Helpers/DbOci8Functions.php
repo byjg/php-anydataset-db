@@ -4,6 +4,7 @@ namespace ByJG\AnyDataset\Db\Helpers;
 
 use ByJG\AnyDataset\Db\DbDriverInterface;
 use ByJG\AnyDataset\Db\IsolationLevelEnum;
+use Override;
 
 class DbOci8Functions extends DbBaseFunctions
 {
@@ -16,6 +17,7 @@ class DbOci8Functions extends DbBaseFunctions
         $this->deliTableRight = '"';
     }
 
+    #[Override]
     public function concat(string $str1, ?string $str2 = null): string
     {
         return implode(' || ', func_get_args());
@@ -28,17 +30,19 @@ class DbOci8Functions extends DbBaseFunctions
      * @param int $qty
      * @return string
      */
+    #[Override]
     public function limit(string $sql, int $start, int $qty = 50): string
     {
         if (stripos($sql, ' OFFSET ') === false && stripos($sql, ' FETCH NEXT ') === false) {
-            $sql = $sql . " OFFSET x ROWS FETCH NEXT y ROWS ONLY";
+            return $sql . " OFFSET $start ROWS FETCH NEXT $qty ROWS ONLY";
         }
 
-        return preg_replace(
+        $result = preg_replace(
             '~(\s[Oo][Ff][Ff][Ss][Ee][Tt])\s.*?\s([Rr][Oo][Ww][Ss])\s.*?\s([Ff][Ee][Tt][Cc][Hh]\s[Nn][Ee][Xx][Tt])\s.*~',
             '$1 ' . $start . ' $2 ' . '$3 ' . $qty . ' ROWS ONLY',
             $sql
         );
+        return $result !== null ? $result : $sql;
     }
 
     /**
@@ -47,6 +51,7 @@ class DbOci8Functions extends DbBaseFunctions
      * @param int $qty
      * @return string
      */
+    #[Override]
     public function top(string $sql, int $qty): string
     {
         return $this->limit($sql, 0, $qty);
@@ -56,6 +61,7 @@ class DbOci8Functions extends DbBaseFunctions
      * Return if the database provider have a top or similar function
      * @return bool
      */
+    #[Override]
     public function hasTop(): bool
     {
         return true;
@@ -65,6 +71,7 @@ class DbOci8Functions extends DbBaseFunctions
      * Return if the database provider have a limit function
      * @return bool
      */
+    #[Override]
     public function hasLimit(): bool
     {
         return true;
@@ -78,6 +85,7 @@ class DbOci8Functions extends DbBaseFunctions
      * @return string
      * @example $db->getDbFunctions()->SQLDate("d/m/Y H:i", "dtcriacao")
      */
+    #[Override]
     public function sqlDate(string $format, ?string $column = null): string
     {
         if (is_null($column)) {
@@ -114,6 +122,7 @@ class DbOci8Functions extends DbBaseFunctions
      * @param array|null $param
      * @return mixed
      */
+    #[Override]
     public function executeAndGetInsertedId(DbDriverInterface $dbdataset, string $sql, ?array $param = null): mixed
     {
         preg_match('/INSERT INTO ([a-zA-Z0-9_]+)/i', $sql, $matches);
@@ -156,11 +165,13 @@ class DbOci8Functions extends DbBaseFunctions
 
     }
 
+    #[Override]
     public function hasForUpdate(): bool
     {
         return true;
     }
 
+    #[Override]
     public function getTableMetadata(DbDriverInterface $dbdataset, string $tableName): array
     {
         $tableName = strtoupper($tableName);
@@ -180,6 +191,7 @@ class DbOci8Functions extends DbBaseFunctions
         return $this->getTableMetadataFromSql($dbdataset, $sql);
     }
 
+    #[Override]
     protected function parseColumnMetadata($metadata)
     {
         $return = [];
@@ -196,6 +208,7 @@ class DbOci8Functions extends DbBaseFunctions
         return $return;
     }
 
+    #[Override]
     public function getIsolationLevelCommand(?IsolationLevelEnum $isolationLevel = null): string
     {
         return match ($isolationLevel) {

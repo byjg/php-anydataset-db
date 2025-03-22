@@ -9,11 +9,13 @@ use ByJG\AnyDataset\Db\Exception\RouteNotMatchedException;
 use ByJG\Util\Uri;
 use DateInterval;
 use InvalidArgumentException;
+use Override;
 use Psr\Log\LoggerInterface;
 use Psr\SimpleCache\CacheInterface;
 
 class Route implements DbDriverInterface
 {
+    #[Override]
     public static function schema()
     {
         return null;
@@ -223,12 +225,14 @@ class Route implements DbDriverInterface
 
     //<editor-fold desc="DbDriverInterface">
 
+    #[Override]
     public function prepareStatement(string $sql, ?array $params = null, ?array &$cacheInfo = []): mixed
     {
         // TODO: Implement prepareStatement() method.
         return null;
     }
 
+    #[Override]
     public function executeCursor(mixed $statement): void
     {
         // TODO: Implement executeCursor() method.
@@ -243,6 +247,7 @@ class Route implements DbDriverInterface
      * @return GenericIterator
      * @throws RouteNotMatchedException
      */
+    #[Override]
     public function getIterator(mixed $sql, ?array $params = null, ?CacheInterface $cache = null, DateInterval|int $ttl = 60, int $preFetch = 0): GenericIterator
     {
         $dbDriver = $this->matchRoute($sql);
@@ -255,6 +260,7 @@ class Route implements DbDriverInterface
      * @return mixed
      * @throws RouteNotMatchedException
      */
+    #[Override]
     public function getScalar(mixed $sql, ?array $array = null): mixed
     {
         $dbDriver = $this->matchRoute($sql);
@@ -265,6 +271,7 @@ class Route implements DbDriverInterface
      * @param string $tablename
      * @throws NotImplementedException
      */
+    #[Override]
     public function getAllFields(string $tablename): array
     {
         throw new NotImplementedException('Feature not available');
@@ -276,6 +283,7 @@ class Route implements DbDriverInterface
      * @return bool
      * @throws RouteNotMatchedException
      */
+    #[Override]
     public function execute(mixed $sql, ?array $array = null): bool
     {
         $dbDriver = $this->matchRoute($sql);
@@ -286,6 +294,7 @@ class Route implements DbDriverInterface
      * @param IsolationLevelEnum|null $isolationLevel
      * @throws NotImplementedException
      */
+    #[Override]
     public function beginTransaction(IsolationLevelEnum $isolationLevel = null, bool $allowJoin = false)
     {
         throw new NotImplementedException('Feature not available');
@@ -294,6 +303,7 @@ class Route implements DbDriverInterface
     /**
      * @throws NotImplementedException
      */
+    #[Override]
     public function commitTransaction(): void
     {
         throw new NotImplementedException('Feature not available');
@@ -302,6 +312,7 @@ class Route implements DbDriverInterface
     /**
      * @throws NotImplementedException
      */
+    #[Override]
     public function rollbackTransaction(): void
     {
         throw new NotImplementedException('Feature not available');
@@ -311,6 +322,7 @@ class Route implements DbDriverInterface
      * @return mixed
      * @throws NotImplementedException
      */
+    #[Override]
     public function getDbConnection(): mixed
     {
         throw new NotImplementedException('Feature not available');
@@ -341,6 +353,7 @@ class Route implements DbDriverInterface
      * @return mixed
      * @throws RouteNotMatchedException
      */
+    #[Override]
     public function executeAndGetId(string $sql, ?array $array = null): mixed
     {
         $dbDriver = $this->matchRoute($sql);
@@ -351,6 +364,7 @@ class Route implements DbDriverInterface
      * @return DbFunctionsInterface
      * @throws NotImplementedException
      */
+    #[Override]
     public function getDbHelper(): DbFunctionsInterface
     {
         throw new NotImplementedException('Feature not available');
@@ -360,6 +374,7 @@ class Route implements DbDriverInterface
      * @return Uri
      * @throws NotImplementedException
      */
+    #[Override]
     public function getUri(): Uri
     {
         throw new NotImplementedException('Feature not available');
@@ -368,6 +383,7 @@ class Route implements DbDriverInterface
     /**
      * @throws NotImplementedException
      */
+    #[Override]
     public function isSupportMultiRowset(): bool
     {
         throw new NotImplementedException('Feature not available');
@@ -377,6 +393,7 @@ class Route implements DbDriverInterface
      * @param bool $multipleRowSet
      * @throws NotImplementedException
      */
+    #[Override]
     public function setSupportMultiRowset(bool $multipleRowSet): void
     {
         throw new NotImplementedException('Feature not available');
@@ -397,46 +414,55 @@ class Route implements DbDriverInterface
         throw new NotImplementedException('Feature not available');
     }
     //</editor-fold>
+    #[Override]
     public function reconnect(bool $force = false): bool
     {
         throw new NotImplementedException('Feature not available');
     }
 
+    #[Override]
     public function disconnect(): void
     {
         throw new NotImplementedException('Feature not available');
     }
 
+    #[Override]
     public function isConnected(bool $softCheck = false, bool $throwError = false): bool
     {
         throw new NotImplementedException('Feature not available');
     }
 
+    #[Override]
     public function enableLogger(LoggerInterface $logger): void
     {
         throw new NotImplementedException('Feature not available');
     }
 
+    #[Override]
     public function log(string $message, array $context = []): void
     {
         throw new NotImplementedException('Feature not available');
     }
 
+    #[Override]
     public function hasActiveTransaction(): bool
     {
         throw new NotImplementedException('Feature not available');
     }
 
+    #[Override]
     public function requiresTransaction(): void
     {
         throw new NotImplementedException('Feature not available');
     }
 
+    #[Override]
     public function activeIsolationLevel(): ?IsolationLevelEnum
     {
         throw new NotImplementedException('Feature not available');
     }
 
+    #[Override]
     public function remainingCommits(): int
     {
         throw new NotImplementedException('Feature not available');

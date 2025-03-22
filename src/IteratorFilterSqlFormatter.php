@@ -5,9 +5,11 @@ namespace ByJG\AnyDataset\Db;
 use ByJG\AnyDataset\Core\Enum\Relation;
 use ByJG\AnyDataset\Core\IteratorFilterFormatter;
 use ByJG\AnyDataset\Db\Helpers\SqlHelper;
+use Override;
 
 class IteratorFilterSqlFormatter extends IteratorFilterFormatter
 {
+    #[Override]
     public function format(array $filters, string $tableName = null, array &$params = [], string $returnFields = "*"): string
     {
         $params = array();
@@ -28,6 +30,7 @@ class IteratorFilterSqlFormatter extends IteratorFilterFormatter
         );
     }
 
+    #[Override]
     public function getRelation(string $name, Relation $relation, mixed $value, array &$param): string
     {
         $paramName = $name;

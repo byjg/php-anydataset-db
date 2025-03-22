@@ -4,9 +4,11 @@ namespace ByJG\AnyDataset\Db;
 
 use ByJG\AnyDataset\Core\Exception\NotAvailableException;
 use ByJG\Util\Uri;
+use Override;
 
 class PdoDblib extends PdoPdo
 {
+    #[Override]
     public static function schema(): array
     {
         return ['dblib'];
@@ -49,7 +51,7 @@ class PdoDblib extends PdoPdo
         return $uri
             ->withUserInfo($connUri->getUsername(), $connUri->getPassword())
             ->withHost($connUri->getScheme())
-            ->withQueryKeyValue("host" , $connUri->getHost() . (!empty($connUri->getPort()) ? "," . $connUri->getPort() : ""))
+            ->withQueryKeyValue("host", $connUri->getHost() . (!empty($connUri->getPort()) ? "," . (string)$connUri->getPort() : ""))
             ->withQueryKeyValue("dbname", ltrim($connUri->getPath(), "/"))
         ;
     }

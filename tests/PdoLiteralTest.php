@@ -3,6 +3,7 @@
 namespace Test;
 
 use ByJG\AnyDataset\Db\PdoLiteral;
+use Override;
 use PDOException;
 use TestDb\BasePdo;
 
@@ -10,6 +11,7 @@ use TestDb\BasePdo;
 class PdoLiteralTest extends BasePdo
 {
 
+    #[Override]
     protected function createInstance()
     {
         $dbDriver = new PdoLiteral("sqlite::memory:");
@@ -18,44 +20,52 @@ class PdoLiteralTest extends BasePdo
         return $dbDriver;
     }
 
+    #[Override]
     protected function createDatabase()
     {
         //create the database
     }
 
+    #[Override]
     public function deleteDatabase()
     {
         // Do nothing. Executing in memory.
     }
 
+    #[Override]
     public function testGetAllFields()
     {
         $this->markTestSkipped('SQLite does not support getAllFields() method');
     }
 
+    #[Override]
     public function testGetDate()
     {
         $this->markTestSkipped('Date formatting test not applicable for SQLite in-memory database');
     }
 
+    #[Override]
     public function testDontParseParam()
     {
         // Ignoring because is using a connection into the memory.
         $this->markTestSkipped('Parameter parsing test not applicable for in-memory database connections');
     }
 
+    #[Override]
     public function testDontParseParam_2()
     {
         // Ignoring because is using a connection into the memory.
         $this->markTestSkipped('Parameter parsing test not applicable for in-memory database connections');
     }
 
+    #[Override]
     public function testDontParseParam_3()
     {
         // Ignoring because is using a connection into the memory.
         $this->markTestSkipped('Parameter parsing test not applicable for in-memory database connections');
     }
 
+    #[Override]
     public function testReconnect()
     {
         $this->assertFalse($this->dbDriver->reconnect());
@@ -67,6 +77,7 @@ class PdoLiteralTest extends BasePdo
         $iterator = $this->dbDriver->getIterator('select Id, Breed, Name, Age from Dogs where id = 1');
     }
 
+    #[Override]
     public function testTwoDifferentTransactions()
     {
         $this->markTestSkipped('In-memory databases cannot support transactions across different connections');

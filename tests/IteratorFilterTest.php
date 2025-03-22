@@ -5,6 +5,7 @@ namespace Test;
 use ByJG\AnyDataset\Core\Enum\Relation;
 use ByJG\AnyDataset\Core\IteratorFilter;
 use ByJG\AnyDataset\Db\IteratorFilterSqlFormatter;
+use Override;
 use PHPUnit\Framework\TestCase;
 
 class IteratorFilterTest extends TestCase
@@ -19,6 +20,7 @@ class IteratorFilterTest extends TestCase
      * Sets up the fixture, for example, opens a network connection.
      * This method is called before a test is executed.
      */
+    #[Override]
     protected function setUp(): void
     {
         $this->object = new IteratorFilter();

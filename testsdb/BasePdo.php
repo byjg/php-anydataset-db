@@ -691,7 +691,7 @@ abstract class BasePdo extends TestCase
         $this->assertFalse($iterator->isCursorOpen());
     }
 
-    protected function dataProviderPreFetch()
+    public static function dataProviderPreFetch()
     {
         $rows = [
             [

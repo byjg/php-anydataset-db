@@ -4,10 +4,12 @@ namespace ByJG\AnyDataset\Db;
 
 use ByJG\AnyDataset\Core\Exception\NotAvailableException;
 use ByJG\Util\Uri;
+use Override;
 
 class PdoSqlsrv extends PdoDblib
 {
 
+    #[Override]
     public static function schema(): array
     {
         return ['sqlsrv'];
@@ -24,6 +26,7 @@ class PdoSqlsrv extends PdoDblib
         parent::__construct($connUri);
     }
 
+    #[Override]
     protected function getMssqlUri(Uri $connUri): Uri
     {
         /** @var Uri $uri */
@@ -32,7 +35,7 @@ class PdoSqlsrv extends PdoDblib
         return $uri
             ->withUserInfo($connUri->getUsername(), $connUri->getPassword())
             ->withHost($connUri->getScheme())
-            ->withQueryKeyValue("Server" , $connUri->getHost() . (!empty($connUri->getPort()) ? "," . $connUri->getPort() : ""))
+            ->withQueryKeyValue("Server", $connUri->getHost() . (!empty($connUri->getPort()) ? "," . (string)$connUri->getPort() : ""))
             ->withQueryKeyValue("Database", ltrim($connUri->getPath(), "/"))
             ->withQueryKeyValue('TrustServerCertificate', 'true')
         ;
