@@ -7,6 +7,7 @@ use ByJG\AnyDataset\Db\DbFunctionsInterface;
 use ByJG\AnyDataset\Db\IsolationLevelEnum;
 use DateTime;
 use Exception;
+use Override;
 
 abstract class DbBaseFunctions implements DbFunctionsInterface
 {
@@ -29,6 +30,7 @@ abstract class DbBaseFunctions implements DbFunctionsInterface
      * @param string|null $str2
      * @return string
      */
+    #[Override]
     abstract public function concat(string $str1, ?string $str2 = null): string;
 
     /**
@@ -39,6 +41,7 @@ abstract class DbBaseFunctions implements DbFunctionsInterface
      * @param int $qty
      * @return string
      */
+    #[Override]
     abstract public function limit(string $sql, int $start, int $qty = 50): string;
 
     /**
@@ -48,6 +51,7 @@ abstract class DbBaseFunctions implements DbFunctionsInterface
      * @param int $qty
      * @return string
      */
+    #[Override]
     abstract public function top(string $sql, int $qty): string;
 
     /**
@@ -55,6 +59,7 @@ abstract class DbBaseFunctions implements DbFunctionsInterface
      *
      * @return bool
      */
+    #[Override]
     public function hasTop(): bool
     {
         return false;
@@ -65,6 +70,7 @@ abstract class DbBaseFunctions implements DbFunctionsInterface
      *
      * @return bool
      */
+    #[Override]
     public function hasLimit(): bool
     {
         return false;
@@ -78,6 +84,7 @@ abstract class DbBaseFunctions implements DbFunctionsInterface
      * @return string
      * @example $db->getDbFunctions()->SQLDate("d/m/Y H:i", "dtcriacao")
      */
+    #[Override]
     abstract public function sqlDate(string $format, ?string $column = null): string;
 
 
@@ -109,6 +116,7 @@ abstract class DbBaseFunctions implements DbFunctionsInterface
      * @param string $dateFormat
      * @return string
      */
+    #[Override]
     public function toDate(string $date, string $dateFormat): string
     {
         $dateTime = DateTime::createFromFormat($dateFormat, $date);
@@ -123,6 +131,7 @@ abstract class DbBaseFunctions implements DbFunctionsInterface
      * @param string $dateFormat
      * @return string
      */
+    #[Override]
     public function fromDate(string $date, string $dateFormat): string
     {
         $dateTime = DateTime::createFromFormat(self::YMDH, $date);
@@ -136,6 +145,7 @@ abstract class DbBaseFunctions implements DbFunctionsInterface
      * @param array|null $param
      * @return mixed
      */
+    #[Override]
     public function executeAndGetInsertedId(DbDriverInterface $dbdataset, string $sql, ?array $param = null): mixed
     {
         $dbdataset->execute($sql, $param);
@@ -152,6 +162,7 @@ abstract class DbBaseFunctions implements DbFunctionsInterface
      * @param string|array $field
      * @return string|array
      */
+    #[Override]
     public function delimiterField(string|array $field): string|array
     {
         $result = [];
@@ -169,6 +180,7 @@ abstract class DbBaseFunctions implements DbFunctionsInterface
         return $result;
     }
 
+    #[Override]
     public function delimiterTable(string|array $table): string
     {
         $tableAr = explode('.', $table);
@@ -178,6 +190,7 @@ abstract class DbBaseFunctions implements DbFunctionsInterface
             . $this->deliTableRight;
     }
 
+    #[Override]
     public function forUpdate(string $sql): string
     {
         if (!preg_match('#\bfor update\b#i', $sql)) {
@@ -187,8 +200,10 @@ abstract class DbBaseFunctions implements DbFunctionsInterface
         return $sql;
     }
 
+    #[Override]
     abstract public function hasForUpdate(): bool;
 
+    #[Override]
     public function getTableMetadata(DbDriverInterface $dbdataset, string $tableName): array
     {
         throw new Exception("Not implemented");
@@ -240,11 +255,13 @@ abstract class DbBaseFunctions implements DbFunctionsInterface
         return [ 'phpType' => 'string', 'length' => null, 'precision' => null ];
     }
 
+    #[Override]
     public function getIsolationLevelCommand(?IsolationLevelEnum $isolationLevel = null): string
     {
         return "";
     }
 
+    #[Override]
     public function getJoinTablesUpdate(array $tables): array
     {
         return [

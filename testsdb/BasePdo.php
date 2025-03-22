@@ -13,6 +13,7 @@ use ByJG\AnyDataset\Db\IsolationLevelEnum;
 use ByJG\AnyDataset\Db\SqlStatement;
 use ByJG\Cache\Psr16\ArrayCacheEngine;
 use Exception;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
 abstract class BasePdo extends TestCase
@@ -118,6 +119,45 @@ abstract class BasePdo extends TestCase
         $this->assertFalse($iterator->isCursorOpen());
     }
 
+    public function testGetIteratorWithEntityClass()
+    {
+        // Define a simple entity class
+        if (!class_exists('TestDb\DogEntity')) {
+            eval('
+                namespace TestDb;
+                class DogEntity {
+                    public $id;
+                    public $name;
+                    public $breed;
+                    public $weight;
+                }
+            ');
+        }
+
+        $array = $this->allData();
+
+        // Get iterator with entity class
+        $iterator = $this->dbDriver->getIterator('select * from Dogs', entityClass: 'TestDb\DogEntity');
+
+        // Verify we get objects of the correct type
+        $i = 0;
+        foreach ($iterator as $singleRow) {
+            $entity = $singleRow->entity();
+            $this->assertInstanceOf('TestDb\DogEntity', $entity);
+
+            // Verify properties were populated correctly
+            $this->assertEquals($array[$i]['id'], $entity->id);
+            $this->assertEquals($array[$i]['name'], $entity->name);
+            $this->assertEquals($array[$i]['breed'], $entity->breed);
+            $this->assertEquals($array[$i]['weight'], $entity->weight);
+
+            $i++;
+        }
+
+        // Verify we got all the expected rows
+        $this->assertEquals(count($array), $i);
+    }
+
     public function testExecuteAndGetId()
     {
         $idInserted = $this->dbDriver->executeAndGetId(
@@ -168,7 +208,7 @@ abstract class BasePdo extends TestCase
     public function testMultipleRowset()
     {
         if (!$this->dbDriver->isSupportMultiRowset()) {
-            $this->markTestSkipped('Skipped: This DbDriver does not support multiple row set');
+            $this->markTestSkipped('This database driver does not support multiple result sets');
         }
 
         $sql = "INSERT INTO Dogs (Breed, Name, Age, Weight) VALUES ('Cat', 'Doris', 7, 4.2); " .
@@ -334,7 +374,7 @@ abstract class BasePdo extends TestCase
         $iterator = $this->dbDriver->getIterator('select * from Dogs where id = :id', ['id' => 1], $cacheEngine, 60);
         $this->assertEquals(
             [
-                [ 'id'=> 1, 'breed' => "Mutt", 'name' => 'Spyke', "age" => 8, "weight" => 8.5, "__id" => 0, "__key" => 0],
+                ['id' => 1, 'breed' => "Mutt", 'name' => 'Spyke', "age" => 8, "weight" => 8.5],
             ],
             $iterator->toArray()
         );
@@ -346,7 +386,7 @@ abstract class BasePdo extends TestCase
         $iterator = $this->dbDriver->getIterator('select * from Dogs where id = :id', ['id' => 1], $cacheEngine, 60);
         $this->assertEquals(
             [
-                [ 'id'=> 1, 'breed' => "Mutt", 'name' => 'Spyke', "age" => 8, "weight" => 8.5, "__id" => 0, "__key" => 0],
+                ['id' => 1, 'breed' => "Mutt", 'name' => 'Spyke', "age" => 8, "weight" => 8.5],
             ],
             $iterator->toArray()
         );
@@ -365,7 +405,7 @@ abstract class BasePdo extends TestCase
         $iterator = $this->dbDriver->getIterator('select * from Dogs where id = :id', ['id' => 1], $cacheEngine, 60);
         $this->assertEquals(
             [
-                [ 'id'=> 1, 'breed' => "Mutt", 'name' => 'Spyke', "age" => 8, "weight" => 8.5, "__id" => 0, "__key" => 0],
+                ['id' => 1, 'breed' => "Mutt", 'name' => 'Spyke', "age" => 8, "weight" => 8.5],
             ],
             $iterator->toArray()
         );
@@ -377,7 +417,7 @@ abstract class BasePdo extends TestCase
         $iterator = $this->dbDriver->getIterator('select * from Dogs where id = :id', ['id' => 1], $cacheEngine, 60);
         $this->assertEquals(
             [
-                [ 'id'=> 1, 'breed' => "Mutt", 'name' => 'Spyke', "age" => 8, "weight" => 8.5, "__id" => 0, "__key" => 0],
+                ['id' => 1, 'breed' => "Mutt", 'name' => 'Spyke', "age" => 8, "weight" => 8.5],
             ],
             $iterator->toArray()
         );
@@ -631,10 +671,10 @@ abstract class BasePdo extends TestCase
     }
 
     /**
-     * @dataProvider dataProviderPreFetch
      * @return void
      * @psalm-suppress UndefinedMethod
      */
+    #[DataProvider('dataProviderPreFetch')]
     public function testPreFetchWhile(int $preFetch, array $rows, array $expected, array $expectedCursor)
     {
         $iterator = $this->dbDriver->getIterator('select * from Dogs', preFetch: $preFetch);
@@ -643,33 +683,55 @@ abstract class BasePdo extends TestCase
         while ($iterator->hasNext()) {
             $row = $iterator->moveNext();
             $this->assertEquals($rows[$i], $row->toArray(), "Row $i");
-            $this->assertEquals($i, $iterator->key(), "Key Row $i");
-            $this->assertEquals($expected[$i], $iterator->getPreFetchBufferSize(), "PreFetchBufferSize Row " . $iterator->key());
-            $this->assertEquals($expectedCursor[$i], $iterator->isCursorOpen(), "CursorOpen Row " . $iterator->key());
+            $this->assertEquals($i + 1, $iterator->key(), "Key Row $i");
             $i++;
         }
+        $this->assertFalse($iterator->isCursorOpen());
     }
 
     /**
-     * @dataProvider dataProviderPreFetch
      * @psalm-suppress UndefinedMethod
      * @return void
      */
+    #[DataProvider('dataProviderPreFetch')]
     public function testPreFetchForEach(int $preFetch, array $rows, array $expected, array $expectedCursor)
     {
         $iterator = $this->dbDriver->getIterator('select * from Dogs', preFetch: $preFetch);
 
         $i = 0;
         foreach ($iterator as $row) {
-            $this->assertEquals($rows[$i], $row->toArray(), "Row $i");
-            $this->assertEquals($i, $iterator->key(), "Key Row $i");
-            $this->assertEquals($expected[$i], $iterator->getPreFetchBufferSize(), "PreFetchBufferSize Row $i");
-            $this->assertEquals($expectedCursor[$i], $iterator->isCursorOpen(), "CursorOpen Row $i");
+            $this->assertEquals($rows[$i], $row->toArray(), "Row[$preFetch] $i");
+            $this->assertEquals($i, $iterator->key(), "Key Row[$preFetch] $i");
+            $this->assertEquals($expected[$i], $iterator->getPreFetchBufferSize(), "PreFetchBufferSize Row[$preFetch] $i");
+            $this->assertEquals($expectedCursor[$i], $iterator->isCursorOpen(), "CursorOpen Row[$preFetch] $i");
             $i++;
         }
+        $this->assertFalse($iterator->isCursorOpen());
     }
 
-    protected function dataProviderPreFetch()
+    /**
+     * @psalm-suppress UndefinedMethod
+     * @return void
+     */
+    #[DataProvider('dataProviderPreFetch')]
+    public function testPreFetchPhpIterator(int $preFetch, array $rows, array $expected, array $expectedCursor)
+    {
+        $iterator = $this->dbDriver->getIterator('select * from Dogs', preFetch: $preFetch);
+
+        $i = 0;
+        while ($iterator->valid()) {
+            $row = $iterator->current();
+            $this->assertEquals($rows[$i], $row->toArray(), "Row[$preFetch] $i");
+            $this->assertEquals($i, $iterator->key(), "Key Row[$preFetch] $i");
+            $this->assertEquals($expected[$i], $iterator->getPreFetchBufferSize(), "PreFetchBufferSize Row[$preFetch] $i");
+            $this->assertEquals($expectedCursor[$i], $iterator->isCursorOpen(), "CursorOpen Row[$preFetch] $i");
+            $i++;
+            $iterator->next();
+        }
+        $this->assertFalse($iterator->isCursorOpen());
+    }
+
+    public static function dataProviderPreFetch()
     {
         $rows = [
             [
@@ -697,11 +759,11 @@ abstract class BasePdo extends TestCase
 
 
         return [
-            [0, $rows, [1, 1, 0], [true, true, false]],
-            [1, $rows, [1, 1, 0], [true, true, false]],
-            [2, $rows, [2, 1, 0], [true, false, false]],
-            [3, $rows, [2, 1, 0], [false, false, false]],
-            [50, $rows, [2, 1, 0], [false, false, false]],
+            [0, $rows, [1, 1, 1], [true, true, true]],
+            [1, $rows, [1, 1, 1], [true, true, true]],
+            [2, $rows, [2, 2, 1], [true, true, false]],
+            [3, $rows, [3, 2, 1], [true, false, false]],
+            [50, $rows, [3, 2, 1], [false, false, false]],
         ];
     }
 }

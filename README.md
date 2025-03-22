@@ -52,9 +52,11 @@ $conn = \ByJG\AnyDataset\Db\Factory::getDbInstance("mysql://root:password@10.0.1
 - [Load Balance and Connection Pooling](docs/load-balance.md)
 - [Database Helper](docs/helper.md)
 - [Filtering the Query](docs/iteratorfilter.md)
+- [Entity Mapping](docs/entity.md)
 
 ## Advanced Topics
 
+- [Database Driver Interface](docs/db-driver-interface.md)
 - [Passing Parameters to PDODriver](docs/parameters.md)
 - [Generic PDO Driver](docs/generic-pdo-driver.md)
 - [Running Tests](docs/tests.md)

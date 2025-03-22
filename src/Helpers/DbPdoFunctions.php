@@ -2,6 +2,8 @@
 
 namespace ByJG\AnyDataset\Db\Helpers;
 
+use Override;
+
 class DbPdoFunctions extends DbBaseFunctions
 {
 
@@ -13,6 +15,7 @@ class DbPdoFunctions extends DbBaseFunctions
         $this->deliTableRight = '';
     }
 
+    #[Override]
     public function concat(string $str1, ?string $str2 = null): string
     {
         return "";
@@ -25,6 +28,7 @@ class DbPdoFunctions extends DbBaseFunctions
      * @param int $qty
      * @return string
      */
+    #[Override]
     public function limit(string $sql, int $start, int $qty = 50): string
     {
         return "";
@@ -36,6 +40,7 @@ class DbPdoFunctions extends DbBaseFunctions
      * @param int $qty
      * @return string
      */
+    #[Override]
     public function top(string $sql, int $qty): string
     {
         return "";
@@ -45,6 +50,7 @@ class DbPdoFunctions extends DbBaseFunctions
      * Return if the database provider have a top or similar function
      * @return bool
      */
+    #[Override]
     public function hasTop(): bool
     {
         return false;
@@ -54,6 +60,7 @@ class DbPdoFunctions extends DbBaseFunctions
      * Return if the database provider have a limit function
      * @return bool
      */
+    #[Override]
     public function hasLimit(): bool
     {
         return false;
@@ -67,16 +74,19 @@ class DbPdoFunctions extends DbBaseFunctions
      * @return string
      * @example $db->getDbFunctions()->SQLDate("d/m/Y H:i", "dtcriacao")
      */
+    #[Override]
     public function sqlDate(string $format, ?string $column = null): string
     {
         return "";
     }
 
+    #[Override]
     public function hasForUpdate(): bool
     {
         return false;
     }
 
+    #[Override]
     protected function parseColumnMetadata($metadata)
     {
         return $metadata;

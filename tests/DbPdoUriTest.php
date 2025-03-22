@@ -19,7 +19,7 @@ class DbPdoUriTest extends TestCase
         $this->assertEquals($expected, $dbPdoUri->getConnStr());
     }
 
-    public function providerPdoConnectionString()
+    public static function providerPdoConnectionString()
     {
         return [
             [
@@ -92,7 +92,7 @@ class DbPdoUriTest extends TestCase
        $this->assertEquals($expected, PdoObj::getUriFromPdoConnStr($connStr, $user, $pass));
     }
 
-    public function providerUriConnectionString()
+    public static function providerUriConnectionString()
     {
         return [
             [

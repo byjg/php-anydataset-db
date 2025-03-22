@@ -8,7 +8,9 @@ use ByJG\AnyDataset\Db\Helpers\DbSqliteFunctions;
 use ByJG\AnyDataset\Db\SqlStatement;
 use ByJG\Cache\Psr16\ArrayCacheEngine;
 use ByJG\Util\Uri;
+use Override;
 use PDO;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
 class PdoSqliteTest extends TestCase
@@ -18,6 +20,7 @@ class PdoSqliteTest extends TestCase
      */
     protected $dbDriver;
 
+    #[Override]
     public function setUp(): void
     {
         $this->dbDriver = Factory::getDbInstance('sqlite:///tmp/test.db');
@@ -45,6 +48,7 @@ class PdoSqliteTest extends TestCase
         $this->dbDriver->execute("insert into info (iduser, number, property) values (3, 20.02, 'bbb')");
     }
 
+    #[Override]
     public function tearDown(): void
     {
         unlink('/tmp/test.db');
@@ -284,7 +288,7 @@ class PdoSqliteTest extends TestCase
         $iterator = $this->dbDriver->getIterator('select * from info where id = :id', ['id' => 1], $cache, 60);
         $this->assertEquals(
             [
-                [ "__id" => 0, "__key" => 0, 'id'=> 1, 'iduser' => 1, 'number' => 10.45, 'property' => 'xxx'],
+                ['id' => 1, 'iduser' => 1, 'number' => 10.45, 'property' => 'xxx'],
             ],
             $iterator->toArray()
         );
@@ -296,7 +300,7 @@ class PdoSqliteTest extends TestCase
         $iterator = $this->dbDriver->getIterator('select * from info where id = :id', ['id' => 1], $cache, 60);
         $this->assertEquals(
             [
-                [ "__id" => 0, "__key" => 0, 'id'=> 1, 'iduser' => 1, 'number' => 10.45, 'property' => 'xxx'],
+                ['id' => 1, 'iduser' => 1, 'number' => 10.45, 'property' => 'xxx'],
             ],
             $iterator->toArray()
         );
@@ -370,14 +374,14 @@ class PdoSqliteTest extends TestCase
         $iterator = $sqlStatement->getIterator($this->dbDriver, ['id' => 4]);
         $this->assertEquals(
             [
-                ["id" => 4, "iduser" => 2, "number" => 20, "property" => '40', '__id' => 0, '__key' => 0],
+                ["id" => 4, "iduser" => 2, "number" => 20, "property" => '40'],
             ],
             $iterator->toArray()
         );
         $iterator = $sqlStatement->getIterator($this->dbDriver, ['id' => 5]);
         $this->assertEquals(
             [
-                ["id" => 5, "iduser" => 3, "number" => 30, "property" => '60', '__id' => 0, '__key' => 0],
+                ["id" => 5, "iduser" => 3, "number" => 30, "property" => '60'],
             ],
             $iterator->toArray()
         );
@@ -390,14 +394,14 @@ class PdoSqliteTest extends TestCase
         $iterator = $sqlStatement->getIterator($this->dbDriver, ['id' => 4]);
         $this->assertEquals(
             [
-                ["id" => 4, "iduser" => 2, "number" => 20, "property" => '40', '__id' => 0, '__key' => 0],
+                ["id" => 4, "iduser" => 2, "number" => 20, "property" => '40'],
             ],
             $iterator->toArray()
         );
         $iterator = $sqlStatement->getIterator($this->dbDriver, ['id' => 5]);
         $this->assertEquals(
             [
-                ["id" => 5, "iduser" => 3, "number" => 30, "property" => '60', '__id' => 0, '__key' => 0],
+                ["id" => 5, "iduser" => 3, "number" => 30, "property" => '60'],
             ],
             $iterator->toArray()
         );
@@ -418,7 +422,7 @@ class PdoSqliteTest extends TestCase
         $iterator = $this->dbDriver->getIterator('select * from info where id = :id', ['id' => 1], $cache, 60);
         $this->assertEquals(
             [
-                [ "__id" => 0, "__key" => 0, 'id'=> 1, 'iduser' => 1, 'number' => 10.45, 'property' => 'xxx'],
+                ['id' => 1, 'iduser' => 1, 'number' => 10.45, 'property' => 'xxx'],
             ],
             $iterator->toArray()
         );
@@ -437,7 +441,7 @@ class PdoSqliteTest extends TestCase
         $iterator = $this->dbDriver->getIterator('select * from info where id = :id', ['id' => 1], $cache, 60);
         $this->assertEquals(
             [
-                [ "__id" => 0, "__key" => 0, 'id'=> 1, 'iduser' => 1, 'number' => 10.45, 'property' => 'xxx'],
+                ['id' => 1, 'iduser' => 1, 'number' => 10.45, 'property' => 'xxx'],
             ],
             $iterator->toArray()
         );
@@ -516,6 +520,7 @@ class PdoSqliteTest extends TestCase
      * @return void
      * @psalm-suppress UndefinedMethod
      */
+    #[DataProvider('dataProviderPreFetch')]
     public function testPreFetchWhile(int $preFetch, array $rows, array $expected, array $expectedCursor)
     {
         $iterator = $this->dbDriver->getIterator('select * from info', preFetch: $preFetch);
@@ -524,34 +529,55 @@ class PdoSqliteTest extends TestCase
         while ($iterator->hasNext()) {
             $row = $iterator->moveNext();
             $this->assertEquals($rows[$i], $row->toArray(), "Row $i");
-            $this->assertEquals($i, $iterator->key(), "Key Row $i");
-            $this->assertEquals($expected[$i], $iterator->getPreFetchBufferSize(), "PreFetchBufferSize Row " . $iterator->key());
-            $this->assertEquals($expectedCursor[$i], $iterator->isCursorOpen(), "CursorOpen Row $i");
+            $this->assertEquals($i + 1, $iterator->key(), "Key Row $i");
             $i++;
         }
     }
 
 
     /**
-     * @dataProvider dataProviderPreFetch
      * @psalm-suppress UndefinedMethod
      * @return void
      */
+    #[DataProvider('dataProviderPreFetch')]
     public function testPreFetchForEach(int $preFetch, array $rows, array $expected, array $expectedCursor)
     {
         $iterator = $this->dbDriver->getIterator('select * from info', preFetch: $preFetch);
 
         $i = 0;
         foreach ($iterator as $row) {
-            $this->assertEquals($rows[$i], $row->toArray(), "Row $i");
-            $this->assertEquals($i, $iterator->key(), "Key Row $i");
-            $this->assertEquals($expected[$i], $iterator->getPreFetchBufferSize(), "PreFetchBufferSize Row $i");
-            $this->assertEquals($expectedCursor[$i], $iterator->isCursorOpen(), "CursorOpen Row $i");
+            $this->assertEquals($rows[$i], $row->toArray(), "Row[$preFetch] $i");
+            $this->assertEquals($i, $iterator->key(), "Key Row[$preFetch] $i");
+            $this->assertEquals($expected[$i], $iterator->getPreFetchBufferSize(), "PreFetchBufferSize Row[$preFetch] $i");
+            $this->assertEquals($expectedCursor[$i], $iterator->isCursorOpen(), "CursorOpen Row[$preFetch] $i");
             $i++;
         }
+        $this->assertFalse($iterator->isCursorOpen());
     }
 
-    protected function dataProviderPreFetch()
+    /**
+     * @psalm-suppress UndefinedMethod
+     * @return void
+     */
+    #[DataProvider('dataProviderPreFetch')]
+    public function testPreFetchPhpIterator(int $preFetch, array $rows, array $expected, array $expectedCursor)
+    {
+        $iterator = $this->dbDriver->getIterator('select * from info', preFetch: $preFetch);
+
+        $i = 0;
+        while ($iterator->valid()) {
+            $row = $iterator->current();
+            $this->assertEquals($rows[$i], $row->toArray(), "Row[$preFetch] $i");
+            $this->assertEquals($i, $iterator->key(), "Key Row[$preFetch] $i");
+            $this->assertEquals($expected[$i], $iterator->getPreFetchBufferSize(), "PreFetchBufferSize Row[$preFetch] $i");
+            $this->assertEquals($expectedCursor[$i], $iterator->isCursorOpen(), "CursorOpen Row[$preFetch] $i");
+            $i++;
+            $iterator->next();
+        }
+        $this->assertFalse($iterator->isCursorOpen());
+    }
+
+    public static function dataProviderPreFetch()
     {
         $rows = [
             ['id' => 1, 'iduser' => 1, 'number' => 10.45, 'property' => 'xxx'],
@@ -560,11 +586,11 @@ class PdoSqliteTest extends TestCase
         ];
 
         return [
-            [0, $rows, [1, 1, 0], [true, true, false]],
-            [1, $rows, [1, 1, 0], [true, true, false]],
-            [2, $rows, [2, 1, 0], [true, false, false]],
-            [3, $rows, [2, 1, 0], [false, false, false]],
-            [50, $rows, [2, 1, 0], [false, false, false]],
+            [0, $rows, [1, 1, 1], [true, true, true]],
+            [1, $rows, [1, 1, 1], [true, true, true]],
+            [2, $rows, [2, 2, 1], [true, true, false]],
+            [3, $rows, [3, 2, 1], [true, false, false]],
+            [50, $rows, [3, 2, 1], [false, false, false]],
         ];
     }
 }

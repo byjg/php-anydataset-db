@@ -12,6 +12,7 @@ use ByJG\Util\Uri;
 use DateInterval;
 use Exception;
 use InvalidArgumentException;
+use Override;
 use PDO;
 use PDOStatement;
 use Psr\Log\LoggerInterface;
@@ -65,6 +66,7 @@ abstract class DbPdoDriver implements DbDriverInterface
     /**
      * @throws DbDriverNotConnected
      */
+    #[Override]
     public function reconnect(bool $force = false): bool
     {
         if ($this->isConnected() && !$force) {
@@ -80,6 +82,7 @@ abstract class DbPdoDriver implements DbDriverInterface
         return true;
     }
 
+    #[Override]
     public function disconnect(): void
     {
         $this->instance = null;
@@ -98,6 +101,7 @@ abstract class DbPdoDriver implements DbDriverInterface
      * @return PDOStatement
      * @throws DbDriverNotConnected
      */
+    #[Override]
     public function prepareStatement(string $sql, ?array $params = null, ?array &$cacheInfo = []): PDOStatement
     {
         if (!$this->getUri()->hasQueryKey(self::DONT_PARSE_PARAM)) {
@@ -124,29 +128,53 @@ abstract class DbPdoDriver implements DbDriverInterface
         return $stmt;
     }
 
+    #[Override]
     public function executeCursor(mixed $statement): void
     {
         $statement->execute();
     }
 
-    public function getIterator(mixed $sql, ?array $params = null, ?CacheInterface $cache = null, DateInterval|int $ttl = 60, int $preFetch = 0): GenericIterator
+    /**
+     * Get an iterator for the provided SQL or execute an existing PDOStatement.
+     *
+     * This method has three different behaviors based on the $sql parameter type:
+     * 1. When $sql is a PDOStatement: Returns a DbIterator for that statement
+     * 2. When $sql is a string: Converts to SqlStatement and calls getIterator on it
+     * 3. When $sql is a SqlStatement: Calls getIterator on it
+     *
+     * @param mixed $sql PDOStatement, string SQL, or SqlStatement object
+     * @param array|null $params Parameters if $sql is a string
+     * @param CacheInterface|null $cache Optional cache implementation
+     * @param DateInterval|int $ttl Cache time-to-live (in seconds or as DateInterval)
+     * @param int $preFetch Number of rows to prefetch
+     * @param string|null $entityClass Optional entity class name to return rows as objects
+     * @return GenericIterator The iterator for the query results
+     * @throws InvalidArgumentException If $sql is not a supported type
+     */
+    #[Override]
+    public function getIterator(mixed $sql, ?array $params = null, ?CacheInterface $cache = null, DateInterval|int $ttl = 60, int $preFetch = 0, ?string $entityClass = null): GenericIterator
     {
+        // Case 1: Direct PDOStatement - return a DbIterator for it
         if ($sql instanceof PDOStatement) {
-            return new DbIterator($sql, $preFetch);
+            return new DbIterator($sql, $preFetch, $entityClass);
         }
 
+        // Case 2: SQL string - convert to SqlStatement
         if (is_string($sql)) {
             $sql = new SqlStatement($sql);
             if (!empty($cache)) {
                 $sql->withCache($cache, $this->getQueryKey($cache, $sql->getSql(), $params), $ttl);
             }
-        } elseif (!($sql instanceof SqlStatement)) {
-            throw new InvalidArgumentException("The SQL must be a cursor, string or a SqlStatement object");
+        } // Case 3: SqlStatement - nothing to do
+        elseif (!($sql instanceof SqlStatement)) {
+            throw new InvalidArgumentException("The SQL must be a PDOStatement, string or a SqlStatement object");
         }
 
-        return $sql->getIterator($this, $params, $preFetch);
+        // Execute the SqlStatement
+        return $sql->getIterator($this, $params, $preFetch, $entityClass);
     }
 
+    #[Override]
     public function getScalar(mixed $sql, ?array $array = null): mixed
     {
         if ($sql instanceof PDOStatement) {
@@ -164,6 +192,7 @@ abstract class DbPdoDriver implements DbDriverInterface
         return $sql->getScalar($this, $array);
     }
 
+    #[Override]
     public function getAllFields(string $tablename): array
     {
         $fields = array();
@@ -184,6 +213,7 @@ abstract class DbPdoDriver implements DbDriverInterface
     }
 
 
+    #[Override]
     public function execute(mixed $sql, ?array $array = null): bool
     {
         if ($sql instanceof PDOStatement) {
@@ -208,6 +238,7 @@ abstract class DbPdoDriver implements DbDriverInterface
         return true;
     }
 
+    #[Override]
     public function executeAndGetId(string $sql, ?array $array = null): mixed
     {
         return $this->getDbHelper()->executeAndGetInsertedId($this, $sql, $array);
@@ -217,6 +248,7 @@ abstract class DbPdoDriver implements DbDriverInterface
      *
      * @return PDO|null
      */
+    #[Override]
     public function getDbConnection(): ?PDO
     {
         return $this->instance;
@@ -224,6 +256,7 @@ abstract class DbPdoDriver implements DbDriverInterface
 
     protected ?DbFunctionsInterface $dbHelper = null;
 
+    #[Override]
     public function getDbHelper(): DbFunctionsInterface
     {
         if (empty($this->dbHelper)) {
@@ -232,6 +265,7 @@ abstract class DbPdoDriver implements DbDriverInterface
         return $this->dbHelper;
     }
 
+    #[Override]
     public function getUri(): Uri
     {
         return $this->pdoObj->getUri();
@@ -240,6 +274,7 @@ abstract class DbPdoDriver implements DbDriverInterface
     /**
      * @return bool
      */
+    #[Override]
     public function isSupportMultiRowset(): bool
     {
         return $this->supportMultiRowset;
@@ -248,12 +283,14 @@ abstract class DbPdoDriver implements DbDriverInterface
     /**
      * @param bool $multipleRowSet
      */
+    #[Override]
     public function setSupportMultiRowset(bool $multipleRowSet): void
     {
         $this->supportMultiRowset = $multipleRowSet;
     }
 
 
+    #[Override]
     public function isConnected(bool $softCheck = false, bool $throwError = false): bool
     {
         if (empty($this->instance)) {
@@ -285,11 +322,13 @@ abstract class DbPdoDriver implements DbDriverInterface
         return $this->instance;
     }
 
+    #[Override]
     public function enableLogger(LoggerInterface $logger): void
     {
         $this->logger = $logger;
     }
 
+    #[Override]
     public function log(string $message, array $context = []): void
     {
         $this->logger->debug($message, $context);

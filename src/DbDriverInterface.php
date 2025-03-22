@@ -24,9 +24,10 @@ interface DbDriverInterface extends DbTransactionInterface
      * @param CacheInterface|null $cache
      * @param int|DateInterval $ttl
      * @param int $preFetch
+     * @param string|null $entityClass
      * @return GenericIterator
      */
-    public function getIterator(mixed $sql, ?array $params = null, ?CacheInterface $cache = null, DateInterval|int $ttl = 60, int $preFetch = 0): GenericIterator;
+    public function getIterator(mixed $sql, ?array $params = null, ?CacheInterface $cache = null, DateInterval|int $ttl = 60, int $preFetch = 0, ?string $entityClass = null): GenericIterator;
 
     public function getScalar(mixed $sql, ?array $array = null): mixed;
 
