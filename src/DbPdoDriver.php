@@ -2,6 +2,7 @@
 
 namespace ByJG\AnyDataset\Db;
 
+use ByJG\AnyDataset\Core\Exception\DatabaseException;
 use ByJG\AnyDataset\Core\GenericIterator;
 use ByJG\AnyDataset\Db\Exception\DbDriverNotConnected;
 use ByJG\AnyDataset\Db\Helpers\SqlBind;
@@ -11,6 +12,8 @@ use ByJG\AnyDataset\Db\Traits\DbCacheTrait;
 use ByJG\AnyDataset\Db\Traits\TransactionTrait;
 use ByJG\Serializer\PropertyHandler\PropertyHandlerInterface;
 use ByJG\Util\Uri;
+use ByJG\XmlUtil\Exception\FileException;
+use ByJG\XmlUtil\Exception\XmlUtilException;
 use Exception;
 use InvalidArgumentException;
 use Override;
@@ -142,10 +145,10 @@ abstract class DbPdoDriver implements DbDriverInterface
      * @param int $preFetch Number of rows to prefetch
      * @param string|null $entityClass Optional entity class name to return rows as objects
      * @param PropertyHandlerInterface|null $entityTransformer Optional transformation function for customizing entity mapping
-     * @return GenericIterator Returns GenericIterator for the statement
+     * @return GenericDbIterator|GenericIterator Returns GenericIterator for the statement
      */
     #[Override]
-    public function getDriverIterator(mixed $statement, int $preFetch = 0, ?string $entityClass = null, ?PropertyHandlerInterface $entityTransformer = null): GenericIterator
+    public function getDriverIterator(mixed $statement, int $preFetch = 0, ?string $entityClass = null, ?PropertyHandlerInterface $entityTransformer = null): GenericDbIterator|GenericIterator
     {
         if ($statement instanceof PDOStatement) {
             return new DbIterator($statement, $preFetch, $entityClass, $entityTransformer);
@@ -162,11 +165,15 @@ abstract class DbPdoDriver implements DbDriverInterface
      * @param int $preFetch Number of rows to prefetch
      * @param string|null $entityClass Optional entity class name to return rows as objects
      * @param PropertyHandlerInterface|null $entityTransformer Optional transformation handler for customizing entity mapping
-     * @return GenericIterator The iterator for the query results
-     * @throws InvalidArgumentException If $sql is not a supported type
+     * @return GenericDbIterator|GenericIterator The iterator for the query results
+     * @throws DbDriverNotConnected
+     * @throws FileException
+     * @throws DatabaseException
+     * @throws XmlUtilException
+     * @throws \Psr\SimpleCache\InvalidArgumentException
      */
     #[Override]
-    public function getIterator(string|SqlStatement $sql, ?array $params = null, int $preFetch = 0, ?string $entityClass = null, ?PropertyHandlerInterface $entityTransformer = null): GenericIterator
+    public function getIterator(string|SqlStatement $sql, ?array $params = null, int $preFetch = 0, ?string $entityClass = null, ?PropertyHandlerInterface $entityTransformer = null): GenericDbIterator|GenericIterator
     {
         // Use the DatabaseExecutorTrait to handle all types of statements
         return $this->executeStatement($sql, $params, $preFetch, $entityClass, $entityTransformer);

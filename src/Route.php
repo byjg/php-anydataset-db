@@ -243,11 +243,11 @@ class Route implements DbDriverInterface
      * @param int $preFetch
      * @param string|null $entityClass
      * @param PropertyHandlerInterface|null $entityTransformer
-     * @return GenericIterator
+     * @return GenericDbIterator|GenericIterator
      * @throws RouteNotMatchedException
      */
     #[Override]
-    public function getIterator(string|SqlStatement $sql, ?array $params = null, int $preFetch = 0, ?string $entityClass = null, ?PropertyHandlerInterface $entityTransformer = null): GenericIterator
+    public function getIterator(string|SqlStatement $sql, ?array $params = null, int $preFetch = 0, ?string $entityClass = null, ?PropertyHandlerInterface $entityTransformer = null): GenericDbIterator|GenericIterator
     {
         $dbDriver = $this->matchRoute($sql);
         return $dbDriver->getIterator($sql, $params, $preFetch, $entityClass, $entityTransformer);
@@ -347,15 +347,16 @@ class Route implements DbDriverInterface
     }
 
     /**
-     * @param string $sql
+     * @param string|SqlStatement $sql
      * @param array|null $array
      * @return mixed
      * @throws RouteNotMatchedException
      */
     #[Override]
-    public function executeAndGetId(string $sql, ?array $array = null): mixed
+    public function executeAndGetId(string|SqlStatement $sql, ?array $array = null): mixed
     {
-        $dbDriver = $this->matchRoute($sql);
+        $sqlString = $sql instanceof SqlStatement ? $sql->getSql() : $sql;
+        $dbDriver = $this->matchRoute($sqlString);
         return $dbDriver->executeAndGetId($sql, $array);
     }
 
@@ -474,11 +475,11 @@ class Route implements DbDriverInterface
      * @param int $preFetch Number of rows to prefetch
      * @param string|null $entityClass Optional entity class name to return rows as objects
      * @param PropertyHandlerInterface|null $entityTransformer Optional transformation function for customizing entity mapping
-     * @return GenericIterator The driver-specific iterator for the query results
+     * @return GenericDbIterator|GenericIterator The driver-specific iterator for the query results
      * @throws NotImplementedException
      */
     #[Override]
-    public function getDriverIterator(mixed $statement, int $preFetch = 0, ?string $entityClass = null, ?PropertyHandlerInterface $entityTransformer = null): GenericIterator
+    public function getDriverIterator(mixed $statement, int $preFetch = 0, ?string $entityClass = null, ?PropertyHandlerInterface $entityTransformer = null): GenericDbIterator|GenericIterator
     {
         // For Route, we don't know which driver to use without SQL context
         // This method should generally not be called directly on Route

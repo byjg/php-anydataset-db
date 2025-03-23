@@ -23,9 +23,9 @@ interface DbDriverInterface extends DbTransactionInterface
      * @param int $preFetch
      * @param string|null $entityClass
      * @param PropertyHandlerInterface|null $entityTransformer
-     * @return GenericIterator
+     * @return GenericDbIterator|GenericIterator
      */
-    public function getIterator(string|SqlStatement $sql, ?array $params = null, int $preFetch = 0, ?string $entityClass = null, ?PropertyHandlerInterface $entityTransformer = null): GenericIterator;
+    public function getIterator(string|SqlStatement $sql, ?array $params = null, int $preFetch = 0, ?string $entityClass = null, ?PropertyHandlerInterface $entityTransformer = null): GenericDbIterator|GenericIterator;
 
     public function getScalar(mixed $sql, ?array $array = null): mixed;
 
@@ -47,9 +47,9 @@ interface DbDriverInterface extends DbTransactionInterface
      * @param int $preFetch Number of rows to prefetch
      * @param string|null $entityClass Optional entity class name to return rows as objects
      * @param PropertyHandlerInterface|null $entityTransformer Optional transformation function for customizing entity mapping
-     * @return GenericIterator The driver-specific iterator for the query results
+     * @return GenericDbIterator|GenericIterator The driver-specific iterator for the query results
      */
-    public function getDriverIterator(mixed $statement, int $preFetch = 0, ?string $entityClass = null, ?PropertyHandlerInterface $entityTransformer = null): GenericIterator;
+    public function getDriverIterator(mixed $statement, int $preFetch = 0, ?string $entityClass = null, ?PropertyHandlerInterface $entityTransformer = null): GenericDbIterator|GenericIterator;
 
     /**
      * @return DbFunctionsInterface

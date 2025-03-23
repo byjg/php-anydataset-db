@@ -13,6 +13,7 @@ use ByJG\AnyDataset\Db\Traits\DbCacheTrait;
 use ByJG\AnyDataset\Db\Traits\TransactionTrait;
 use ByJG\Serializer\PropertyHandler\PropertyHandlerInterface;
 use ByJG\Util\Uri;
+use ByJG\XmlUtil\Exception\FileException;
 use Exception;
 use InvalidArgumentException;
 use Override;
@@ -148,10 +149,10 @@ class DbOci8Driver implements DbDriverInterface
      * @param int $preFetch Number of rows to prefetch
      * @param string|null $entityClass Optional entity class name to return rows as objects
      * @param PropertyHandlerInterface|null $entityTransformer Optional transformation function for customizing entity mapping
-     * @return GenericIterator Returns GenericIterator for the statement
+     * @return GenericDbIterator|GenericIterator Returns GenericIterator for the statement
      */
     #[Override]
-    public function getDriverIterator(mixed $statement, int $preFetch = 0, ?string $entityClass = null, ?PropertyHandlerInterface $entityTransformer = null): GenericIterator
+    public function getDriverIterator(mixed $statement, int $preFetch = 0, ?string $entityClass = null, ?PropertyHandlerInterface $entityTransformer = null): GenericDbIterator|GenericIterator
     {
         if (is_resource($statement)) {
             return new Oci8Iterator($statement, $preFetch, $entityClass, $entityTransformer);
@@ -166,11 +167,12 @@ class DbOci8Driver implements DbDriverInterface
      * @param int $preFetch
      * @param string|null $entityClass
      * @param PropertyHandlerInterface|null $entityTransformer
-     * @return GenericIterator
-     * @throws InvalidArgumentException
+     * @return GenericDbIterator|GenericIterator
+     * @throws FileException
+     * @throws \Psr\SimpleCache\InvalidArgumentException
      */
     #[Override]
-    public function getIterator(string|SqlStatement $sql, ?array $params = null, int $preFetch = 0, ?string $entityClass = null, ?PropertyHandlerInterface $entityTransformer = null): GenericIterator
+    public function getIterator(string|SqlStatement $sql, ?array $params = null, int $preFetch = 0, ?string $entityClass = null, ?PropertyHandlerInterface $entityTransformer = null): GenericDbIterator|GenericIterator
     {
         // Use the DatabaseExecutorTrait to handle all types of statements
         return $this->executeStatement($sql, $params, $preFetch, $entityClass, $entityTransformer);

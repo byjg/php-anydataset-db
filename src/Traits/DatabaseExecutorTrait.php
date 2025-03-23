@@ -3,12 +3,15 @@
 namespace ByJG\AnyDataset\Db\Traits;
 
 use ByJG\AnyDataset\Core\AnyDataset;
+use ByJG\AnyDataset\Core\Exception\DatabaseException;
 use ByJG\AnyDataset\Core\GenericIterator;
+use ByJG\AnyDataset\Db\Exception\DbDriverNotConnected;
+use ByJG\AnyDataset\Db\GenericDbIterator;
 use ByJG\AnyDataset\Db\SqlStatement;
 use ByJG\Serializer\PropertyHandler\PropertyHandlerInterface;
 use ByJG\XmlUtil\Exception\FileException;
+use ByJG\XmlUtil\Exception\XmlUtilException;
 use DateInterval;
-use Exception;
 use InvalidArgumentException;
 use Psr\SimpleCache\CacheInterface;
 use Psr\SimpleCache\InvalidArgumentException as PsrInvalidArgumentException;
@@ -22,9 +25,9 @@ trait DatabaseExecutorTrait
      * @param int $preFetch Number of rows to prefetch
      * @param string|null $entityClass Optional entity class name to return rows as objects
      * @param PropertyHandlerInterface|null $entityTransformer Optional transformation function for customizing entity mapping
-     * @return GenericIterator Returns GenericIterator for the statement
+     * @return GenericDbIterator|GenericIterator Returns GenericIterator for the statement
      */
-    abstract protected function getDriverIterator(mixed $statement, int $preFetch = 0, ?string $entityClass = null, ?PropertyHandlerInterface $entityTransformer = null): GenericIterator;
+    abstract protected function getDriverIterator(mixed $statement, int $preFetch = 0, ?string $entityClass = null, ?PropertyHandlerInterface $entityTransformer = null): GenericDbIterator|GenericIterator;
 
     /**
      * Execute a SQL statement with or without cache
@@ -34,11 +37,12 @@ trait DatabaseExecutorTrait
      * @param int $preFetch Number of rows to prefetch
      * @param string|null $entityClass Optional entity class name to return rows as objects
      * @param PropertyHandlerInterface|null $entityTransformer Optional transformation function for customizing entity mapping
-     * @return GenericIterator The iterator containing the results
-     * @throws Exception
+     * @return GenericDbIterator|GenericIterator The iterator containing the results
+     * @throws DatabaseException
+     * @throws DbDriverNotConnected
      * @throws FileException
      * @throws PsrInvalidArgumentException
-     * @throws InvalidArgumentException
+     * @throws XmlUtilException
      */
     protected function executeStatement(
         string|SqlStatement $sql,
@@ -46,7 +50,7 @@ trait DatabaseExecutorTrait
         int                       $preFetch = 0,
         ?string                   $entityClass = null,
         ?PropertyHandlerInterface $entityTransformer = null
-    ): GenericIterator
+    ): GenericDbIterator|GenericIterator
     {
         // Convert string to SqlStatement if needed
         if (is_string($sql)) {
@@ -118,30 +122,26 @@ trait DatabaseExecutorTrait
      * @param CacheInterface $cache
      * @param string $cacheKey
      * @param string|null $entityClass
-     * @return GenericIterator
+     * @return GenericDbIterator|GenericIterator
      * @throws FileException
-     * @throws InvalidArgumentException
+     * @throws PsrInvalidArgumentException
+     * @throws XmlUtilException
      */
     protected function getIteratorFromCache(
         CacheInterface $cache,
         string         $cacheKey,
         ?string        $entityClass = null
-    ): GenericIterator
+    ): GenericDbIterator|GenericIterator
     {
         // Get data from cache
         $data = $cache->get($cacheKey);
 
         // Use AnyDataset to get the raw data
         $anyDataset = new AnyDataset($data);
-        $iterator = $anyDataset->getIterator(null);
-
-        if ($entityClass === null) {
-            return $iterator;
-        }
+        return $anyDataset->getIterator();
 
         // When an entity class is specified, we need to manually instantiate the objects
         // We'll leave that to the caller by returning the raw data iterator
-        return $iterator;
     }
 
     /**
@@ -150,7 +150,7 @@ trait DatabaseExecutorTrait
      * @param CacheInterface $cache
      * @param string $cacheKey
      * @return mixed
-     * @throws InvalidArgumentException
+     * @throws PsrInvalidArgumentException
      */
     protected function mutexIsLocked(CacheInterface $cache, string $cacheKey): mixed
     {

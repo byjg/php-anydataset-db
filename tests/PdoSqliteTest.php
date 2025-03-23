@@ -7,11 +7,15 @@ use ByJG\AnyDataset\Db\Factory;
 use ByJG\AnyDataset\Db\Helpers\DbSqliteFunctions;
 use ByJG\AnyDataset\Db\SqlStatement;
 use ByJG\Cache\Psr16\ArrayCacheEngine;
+use ByJG\Serializer\PropertyHandler\PropertyNameMapper;
 use ByJG\Util\Uri;
 use Override;
 use PDO;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
+use Test\Models\Info;
+use Test\Models\InfoEntity;
+use Test\Models\UserEntity;
 
 class PdoSqliteTest extends TestCase
 {
@@ -91,6 +95,31 @@ class PdoSqliteTest extends TestCase
     }
 
     /** @psalm-suppress InvalidArrayOffset */
+    public function testGetIteratorWithSqlStatement()
+    {
+        $expected = [
+            ['id' => 1, 'iduser' => 1, 'number' => 10.45, 'property' => 'xxx'],
+            ['id' => 2, 'iduser' => 1, 'number' => 3, 'property' => 'ggg'],
+            ['id' => 3, 'iduser' => 3, 'number' => 20.02, 'property' => 'bbb'],
+        ];
+
+        // Step 1: Basic SqlStatement
+        $sqlStatement = new SqlStatement('select * from info');
+        $iterator = $this->dbDriver->getIterator($sqlStatement);
+        $this->assertEquals($expected, $iterator->toArray());
+
+        // Step 2: SqlStatement with params in constructor
+        $sqlStatement = new SqlStatement('select * from info where id = :id', ['id' => 1]);
+        $iterator = $this->dbDriver->getIterator($sqlStatement);
+        $this->assertEquals([$expected[0]], $iterator->toArray());
+
+        // Step 3: SqlStatement with params passed separately
+        $sqlStatement = new SqlStatement('select * from info where id = :id');
+        $iterator = $this->dbDriver->getIterator($sqlStatement, ['id' => 2]);
+        $this->assertEquals([$expected[1]], $iterator->toArray());
+    }
+
+    /** @psalm-suppress InvalidArrayOffset */
     public function testGetIteratorFilter()
     {
         $iterator = $this->dbDriver->getIterator('select * from info where iduser = :id', ['id' => 1]);
@@ -158,13 +187,13 @@ class PdoSqliteTest extends TestCase
         $this->assertEquals(0, $count3);
     }
 
-    // public function testGetAllFields()
-    // {
-    //     $this->assertEquals(
-    //         ['id', 'iduser', 'info'],
-    //         $this->dbDriver->getAllFields('info')
-    //     );
-    // }
+    public function testGetAllFields()
+    {
+        $this->assertEquals(
+            ['id', 'iduser', 'number', 'property'],
+            $this->dbDriver->getAllFields('info')
+        );
+    }
 
     public function testExecute()
     {
@@ -179,6 +208,55 @@ class PdoSqliteTest extends TestCase
         );
     }
 
+    public function testExecuteWithSqlStatement()
+    {
+        // Using SqlStatement
+        $sqlStatement = new SqlStatement("insert into users (name, createdate) values (:name, :date)");
+        $this->dbDriver->execute(
+            $sqlStatement,
+            [
+                'name' => 'SqlStatement',
+                'date' => '2023-01-15'
+            ]
+        );
+
+        // Verify the record was inserted
+        $iterator = $this->dbDriver->getIterator('select * from users where name = :name', ['name' => 'SqlStatement']);
+        $this->assertEquals(
+            [
+                ['id' => 4, 'name' => 'SqlStatement', 'createdate' => '2023-01-15'],
+            ],
+            $iterator->toArray()
+        );
+    }
+
+    public function testGetScalarWithSqlStatement()
+    {
+        // First add some data
+        $this->dbDriver->execute("insert into users (name, createdate) values ('TestScalar', '2023-05-11')");
+
+        // Use SqlStatement for scalar queries
+        $sqlStatement = new SqlStatement('select count(*) from users where name = :name');
+
+        // With params in constructor
+        $sqlStatementWithParams = new SqlStatement('select count(*) from users where name = :name', ['name' => 'TestScalar']);
+        $count = $this->dbDriver->getScalar($sqlStatementWithParams);
+        $this->assertEquals(1, $count);
+
+        // With params passed separately
+        $count = $this->dbDriver->getScalar($sqlStatement, ['name' => 'TestScalar']);
+        $this->assertEquals(1, $count);
+
+        // Non-existent value should return 0
+        $count = $this->dbDriver->getScalar($sqlStatement, ['name' => 'DoesNotExist']);
+        $this->assertEquals(0, $count);
+
+        // Get actual values
+        $sqlStatement = new SqlStatement('select id from users where name = :name');
+        $id = $this->dbDriver->getScalar($sqlStatement, ['name' => 'TestScalar']);
+        $this->assertEquals(4, $id);
+    }
+
     public function testExecuteAndGetId()
     {
         $newId = $this->dbDriver->executeAndGetId("insert into users (name, createdate) values ('Another', '2017-05-11')");
@@ -189,6 +267,34 @@ class PdoSqliteTest extends TestCase
         $this->assertEquals(
             [
                 ['id' => 4, 'name' => 'Another', 'createdate' => '2017-05-11'],
+            ],
+            $iterator->toArray()
+        );
+    }
+
+    public function testExecuteAndGetIdWithSqlStatement()
+    {
+        // First with direct SQL
+        $newId = $this->dbDriver->executeAndGetId("insert into users (name, createdate) values ('Another', '2017-05-11')");
+        $this->assertEquals(4, $newId);
+
+        // Then with SqlStatement
+        $sqlStatement = new SqlStatement("insert into users (name, createdate) values (:name, :date)");
+        $newId = $this->dbDriver->executeAndGetId(
+            $sqlStatement,
+            [
+                'name' => 'Another2',
+                'date' => '2017-06-11'
+            ]
+        );
+        $this->assertEquals(5, $newId);
+
+        // Verify both records were inserted
+        $iterator = $this->dbDriver->getIterator('select * from users where id in (4, 5) order by id');
+        $this->assertEquals(
+            [
+                ['id' => 4, 'name' => 'Another', 'createdate' => '2017-05-11'],
+                ['id' => 5, 'name' => 'Another2', 'createdate' => '2017-06-11'],
             ],
             $iterator->toArray()
         );
@@ -352,9 +458,9 @@ class PdoSqliteTest extends TestCase
         $sqlStatement = new SqlStatement('select * from info where id = :id');
 
         // Get the first from Db and then cache it;
-        $iterator = $sqlStatement->getIterator($this->dbDriver, ['id' => 4]);
+        $iterator = $this->dbDriver->getIterator($sqlStatement, ['id' => 4]);
         $this->assertEmpty($iterator->toArray());
-        $iterator = $sqlStatement->getIterator($this->dbDriver, ['id' => 5]);
+        $iterator = $this->dbDriver->getIterator($sqlStatement, ['id' => 5]);
         $this->assertEmpty($iterator->toArray());
 
         // Add a new record to DB
@@ -363,14 +469,14 @@ class PdoSqliteTest extends TestCase
         $this->assertEquals(4, $id);
 
         // Get Without Cache
-        $iterator = $sqlStatement->getIterator($this->dbDriver, ['id' => 4]);
+        $iterator = $this->dbDriver->getIterator($sqlStatement, ['id' => 4]);
         $this->assertEquals(
             [
                 ["id" => 4, "iduser" => 2, "number" => 20, "property" => '40'],
             ],
             $iterator->toArray()
         );
-        $iterator = $sqlStatement->getIterator($this->dbDriver, ['id' => 5]);
+        $iterator = $this->dbDriver->getIterator($sqlStatement, ['id' => 5]);
         $this->assertEquals(
             [
                 ["id" => 5, "iduser" => 3, "number" => 30, "property" => '60'],
@@ -378,16 +484,18 @@ class PdoSqliteTest extends TestCase
             $iterator->toArray()
         );
 
-        // Get from cache, should return the same values
+        // Set up cache
         $sqlStatement->withCache($cache, 'info', 60);
-        $iterator = $sqlStatement->getIterator($this->dbDriver, ['id' => 4]);
+
+        // Get with cache, should populate the cache
+        $iterator = $this->dbDriver->getIterator($sqlStatement, ['id' => 4]);
         $this->assertEquals(
             [
                 ["id" => 4, "iduser" => 2, "number" => 20, "property" => '40'],
             ],
             $iterator->toArray()
         );
-        $iterator = $sqlStatement->getIterator($this->dbDriver, ['id' => 5]);
+        $iterator = $this->dbDriver->getIterator($sqlStatement, ['id' => 5]);
         $this->assertEquals(
             [
                 ["id" => 5, "iduser" => 3, "number" => 30, "property" => '60'],
@@ -395,19 +503,19 @@ class PdoSqliteTest extends TestCase
             $iterator->toArray()
         );
 
-        // Delete the record
+        // Delete the records
         $id = $this->dbDriver->execute("delete from info where id = :id", ['id' => 4]);
         $id = $this->dbDriver->execute("delete from info where id = :id", ['id' => 5]);
 
         // Get from cache, should return the same values
-        $iterator = $sqlStatement->getIterator($this->dbDriver, ['id' => 4]);
+        $iterator = $this->dbDriver->getIterator($sqlStatement, ['id' => 4]);
         $this->assertEquals(
             [
                 ["id" => 4, "iduser" => 2, "number" => 20, "property" => '40'],
             ],
             $iterator->toArray()
         );
-        $iterator = $sqlStatement->getIterator($this->dbDriver, ['id' => 5]);
+        $iterator = $this->dbDriver->getIterator($sqlStatement, ['id' => 5]);
         $this->assertEquals(
             [
                 ["id" => 5, "iduser" => 3, "number" => 30, "property" => '60'],
@@ -415,11 +523,11 @@ class PdoSqliteTest extends TestCase
             $iterator->toArray()
         );
 
-        // Get direct from DB, should return empty
+        // Get direct from DB by disabling cache, should return empty
         $sqlStatement->withoutCache();
-        $iterator = $sqlStatement->getIterator($this->dbDriver, ['id' => 4]);
+        $iterator = $this->dbDriver->getIterator($sqlStatement, ['id' => 4]);
         $this->assertEmpty($iterator->toArray());
-        $iterator = $sqlStatement->getIterator($this->dbDriver, ['id' => 5]);
+        $iterator = $this->dbDriver->getIterator($sqlStatement, ['id' => 5]);
         $this->assertEmpty($iterator->toArray());
     }
 
@@ -607,5 +715,127 @@ class PdoSqliteTest extends TestCase
             [3, $rows, [3, 2, 1], [true, false, false]],
             [50, $rows, [3, 2, 1], [false, false, false]],
         ];
+    }
+
+    public function testGetIteratorWithEntityClass()
+    {
+        // Get iterator with entity class
+        $iterator = $this->dbDriver->getIterator('select * from info', entityClass: Info::class);
+
+        // Verify we get objects of the correct type
+        $i = 0;
+        foreach ($iterator as $singleRow) {
+            $entity = $singleRow->entity();
+            $this->assertInstanceOf(Info::class, $entity);
+
+            // Access array values directly instead of using get()
+            $rowArray = $singleRow->toArray();
+
+            // Verify properties were populated correctly
+            $this->assertEquals($rowArray['id'], $entity->id);
+            $this->assertEquals($rowArray['iduser'], $entity->iduser);
+            $this->assertEquals($rowArray['number'], $entity->number);
+            $this->assertEquals($rowArray['property'], $entity->property);
+
+            $i++;
+        }
+
+        // Verify we got all the expected rows
+        $this->assertEquals(3, $i);
+    }
+
+    public function testGetIteratorWithEntityClassAndSqlStatement()
+    {
+        $sqlStatement = new SqlStatement('select * from info');
+
+        // Get iterator with entity class
+        $iterator = $this->dbDriver->getIterator($sqlStatement, entityClass: Info::class);
+
+        // Verify we get objects of the correct type
+        $i = 0;
+        foreach ($iterator as $singleRow) {
+            $entity = $singleRow->entity();
+            $this->assertInstanceOf(Info::class, $entity);
+
+            // Access array values directly instead of using get()
+            $rowArray = $singleRow->toArray();
+
+            // Verify properties were populated correctly
+            $this->assertEquals($rowArray['id'], $entity->id);
+            $this->assertEquals($rowArray['iduser'], $entity->iduser);
+            $this->assertEquals($rowArray['number'], $entity->number);
+            $this->assertEquals($rowArray['property'], $entity->property);
+
+            $i++;
+        }
+
+        // Verify we got all the expected rows
+        $this->assertEquals(3, $i);
+    }
+
+    public function testEntityWithTransformer()
+    {
+        // Get iterator with entity class and transformer
+        $iterator = $this->dbDriver->getIterator(
+            'select * from users',
+            entityClass: UserEntity::class,
+            entityTransformer: new PropertyNameMapper(['id' => 'userId', 'name' => 'userName', 'createdate' => 'userCreatedDate'])
+        );
+
+        // Verify we get objects of the correct type with transformed property names
+        $entities = [];
+        foreach ($iterator as $singleRow) {
+            $entities[] = $singleRow->entity();
+        }
+
+        // Make sure we found rows
+        $this->assertCount(3, $entities);
+
+        // Check entity properties - using the first row as an example
+        $this->assertInstanceOf(UserEntity::class, $entities[0]);
+        $this->assertEquals(1, $entities[0]->userId);
+        $this->assertEquals('John Doe', $entities[0]->userName);
+        $this->assertEquals('2017-01-02', $entities[0]->userCreatedDate);
+    }
+
+    public function testEntityWithComplexTransformer()
+    {
+        $transformer = new PropertyNameMapper(
+            [
+                'id' => 'infoId',
+                'iduser' => 'userId',
+                'number' => 'numericValue',
+                'property' => 'infoProperty'
+            ],
+            function ($sourceField, $targetField, $value) {
+                if ($targetField === 'numericValue' && !is_null($value)) {
+                    return $value * 2; // Double the numeric value for demonstration
+                }
+                return $value;
+            }
+        );
+
+        // Get iterator with entity class and transformer
+        $iterator = $this->dbDriver->getIterator(
+            'select * from info',
+            entityClass: InfoEntity::class,
+            entityTransformer: $transformer
+        );
+
+        // Verify we get objects of the correct type with transformed property names
+        $entities = [];
+        foreach ($iterator as $singleRow) {
+            $entities[] = $singleRow->entity();
+        }
+
+        // Make sure we found rows
+        $this->assertCount(3, $entities);
+
+        // Check entity properties - using the first row as an example
+        $this->assertInstanceOf(InfoEntity::class, $entities[0]);
+        $this->assertEquals(1, $entities[0]->infoId);
+        $this->assertEquals(1, $entities[0]->userId);
+        $this->assertEqualsWithDelta(20.9, $entities[0]->numericValue, 0.01); // Value should be doubled (10.45 * 2)
+        $this->assertEquals('xxx', $entities[0]->infoProperty);
     }
 }
