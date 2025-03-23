@@ -30,7 +30,7 @@ class PdoSqlsrv extends PdoDblib
     protected function getMssqlUri(Uri $connUri): Uri
     {
         /** @var Uri $uri */
-        $uri = Uri::getInstanceFromString("pdo://");
+        $uri = Uri::getInstance("pdo://");
 
         return $uri
             ->withUserInfo($connUri->getUsername(), $connUri->getPassword())
