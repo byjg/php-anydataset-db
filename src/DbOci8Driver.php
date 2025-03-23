@@ -212,6 +212,7 @@ class DbOci8Driver implements DbDriverInterface
         // Execute the scalar query
         $statement = $this->prepareStatement($sql->getSql(), $params);
         $this->executeCursor($statement);
+        /** @psalm-suppress UndefinedConstant */
         $row = oci_fetch_array($statement, OCI_RETURN_NULLS);
         oci_free_statement($statement);
 
