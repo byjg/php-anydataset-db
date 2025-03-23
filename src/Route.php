@@ -254,13 +254,13 @@ class Route implements DbDriverInterface
     }
 
     /**
-     * @param mixed $sql
+     * @param string|SqlStatement $sql
      * @param array|null $array
      * @return mixed
      * @throws RouteNotMatchedException
      */
     #[Override]
-    public function getScalar(mixed $sql, ?array $array = null): mixed
+    public function getScalar(string|SqlStatement $sql, ?array $array = null): mixed
     {
         $dbDriver = $this->matchRoute($sql);
         return $dbDriver->getScalar($sql, $array);
@@ -277,13 +277,13 @@ class Route implements DbDriverInterface
     }
 
     /**
-     * @param mixed $sql
+     * @param string|SqlStatement $sql
      * @param array|null $array
      * @return bool
      * @throws RouteNotMatchedException
      */
     #[Override]
-    public function execute(mixed $sql, ?array $array = null): bool
+    public function execute(string|SqlStatement $sql, ?array $array = null): bool
     {
         $dbDriver = $this->matchRoute($sql);
         return $dbDriver->execute($sql, $array);

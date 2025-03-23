@@ -58,8 +58,7 @@ trait DatabaseExecutorTrait
         } else {
             // If parameters were provided, they override any in the SqlStatement
             if ($param !== null) {
-                $sql = clone $sql;
-                $sql->withParams($param);
+                $sql = $sql->withParams($param);
             }
         }
 
