@@ -32,24 +32,34 @@ class SqlStatement
 
     public function withCache(CacheInterface $cache, string $cacheKey, int $cacheTime = 60): static
     {
-        $this->cache = $cache;
-        $this->cacheTime = $cacheTime;
-        $this->cacheKey = $cacheKey;
-        return $this;
+        $statement = clone $this;
+        $statement->cache = $cache;
+        $statement->cacheTime = $cacheTime;
+        $statement->cacheKey = $cacheKey;
+        return $statement;
     }
 
     public function withoutCache(): static
     {
-        $this->cache = null;
-        $this->cacheTime = null;
-        $this->cacheKey = null;
-        return $this;
+        $statement = clone $this;
+        $statement->cache = null;
+        $statement->cacheTime = null;
+        $statement->cacheKey = null;
+        return $statement;
     }
 
     public function withParams(?array $params): static
     {
-        $this->params = $params;
-        return $this;
+        $statement = clone $this;
+        $statement->params = array_merge($this->params ?? [], $params ?? []);
+        return $statement;
+    }
+
+    public function withoutParams(): static
+    {
+        $statement = clone $this;
+        $statement->params = [];
+        return $statement;
     }
 
     public function getSql(): string

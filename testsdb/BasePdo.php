@@ -143,6 +143,20 @@ abstract class BasePdo extends TestCase
         $this->assertEquals([$array[1]], $iterator->toArray());
     }
 
+    public function testGetIteratorSqlStatementAndPartialParams()
+    {
+        $array = $this->allData();
+
+        $sqlStatement = new SqlStatement('select * from Dogs where age <= :age and name = :name', ['age' => 5]);
+
+        $iterator = $this->dbDriver->getIterator($sqlStatement, ['name' => 'Spyke']);
+        $this->assertCount(0, $iterator->toArray());
+
+        $iterator = $this->dbDriver->getIterator($sqlStatement, ['name' => 'Sandy']);
+        $this->assertCount(1, $iterator->toArray());
+    }
+
+
     public function testGetIteratorWithEntityClass()
     {
         $array = $this->allData();
@@ -463,7 +477,7 @@ abstract class BasePdo extends TestCase
         $cacheEngine = new ArrayCacheEngine();
         // Get the first from Db and then cache it;
         $sqlStatement = new SqlStatement('select * from Dogs where id = :id');
-        $sqlStatement->withCache($cacheEngine, 'dogs', 60);
+        $sqlStatement = $sqlStatement->withCache($cacheEngine, 'dogs', 60);
         $iterator = $this->dbDriver->getIterator($sqlStatement, ['id' => 1]);
         $this->assertEquals(
             [
@@ -490,8 +504,8 @@ abstract class BasePdo extends TestCase
         $cacheEngine = new ArrayCacheEngine();
 
         // Get the first from Db and then cache it;
-        $sqlStatement = new SqlStatement('select * from Dogs where id = :id');
-        $sqlStatement->withCache($cacheEngine, 'dogs_id_test', 60);
+        $sqlStatement = SqlStatement::from('select * from Dogs where id = :id')
+            ->withCache($cacheEngine, 'dogs_id_test', 60);
         $iterator = $this->dbDriver->getIterator($sqlStatement, ['id' => 4]);
         $this->assertEquals(
             [],

@@ -421,8 +421,8 @@ class PdoSqliteTest extends TestCase
         $cache = new ArrayCacheEngine();
 
         // Get the first from Db and then cache it;
-        $sqlStatement = new SqlStatement('select * from info where id = :id');
-        $sqlStatement->withCache($cache, 'info_results_1', 60);
+        $sqlStatement = SqlStatement::from('select * from info where id = :id')
+            ->withCache($cache, 'info_results_1', 60);
         $iterator = $this->dbDriver->getIterator($sqlStatement, ['id' => 4]);
         $this->assertEquals(
             [],
@@ -485,7 +485,7 @@ class PdoSqliteTest extends TestCase
         );
 
         // Set up cache
-        $sqlStatement->withCache($cache, 'info', 60);
+        $sqlStatement = $sqlStatement->withCache($cache, 'info', 60);
 
         // Get with cache, should populate the cache
         $iterator = $this->dbDriver->getIterator($sqlStatement, ['id' => 4]);
@@ -524,7 +524,7 @@ class PdoSqliteTest extends TestCase
         );
 
         // Get direct from DB by disabling cache, should return empty
-        $sqlStatement->withoutCache();
+        $sqlStatement = $sqlStatement->withoutCache();
         $iterator = $this->dbDriver->getIterator($sqlStatement, ['id' => 4]);
         $this->assertEmpty($iterator->toArray());
         $iterator = $this->dbDriver->getIterator($sqlStatement, ['id' => 5]);
@@ -536,8 +536,8 @@ class PdoSqliteTest extends TestCase
         $cache = new ArrayCacheEngine();
 
         // Try get from cache (still return the same values)
-        $sqlStatement = new SqlStatement('select * from info where id = :id');
-        $sqlStatement->withCache($cache, 'info_results_2', 60);
+        $sqlStatement = SqlStatement::from('select * from info where id = :id')
+            ->withCache($cache, 'info_results_2', 60);
         $iterator = $this->dbDriver->getIterator($sqlStatement, ['id' => 1]);
         $this->assertEquals(
             [

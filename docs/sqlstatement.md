@@ -55,14 +55,38 @@ $sql = new SqlStatement(
     ['deptId' => 5]
 );
 
-// 2. Using withParams()
-$sql->withParams(['deptId' => 10]);
+// 2. Using withParams() - returns a new SqlStatement object with merged parameters
+$newSql = $sql->withParams(['deptId' => 10, 'status' => 'active']);
+// Original parameters: ['deptId' => 5]
+// New parameters: ['deptId' => 10, 'status' => 'active']
 
 // 3. When executing with the database driver (overrides any stored parameters)
 $iterator = $dbDriver->getIterator($sql, ['deptId' => 15]);
 
 // 4. Accessing stored parameters
 $params = $sql->getParams();
+
+// 5. Removing all parameters
+$sqlWithoutParams = $sql->withoutParams();
+```
+
+### Immutability
+
+**IMPORTANT**: This class implements the immutability pattern. All modifier methods return a new instance instead of
+modifying the original object:
+
+```php
+// Original SQL statement
+$sql = new SqlStatement("select * from table where field = :param", ['param' => 'value1']);
+
+// Creates a NEW SqlStatement - original remains unchanged
+$newSql = $sql->withParams(['param' => 'value2', 'other' => 'data']);
+
+// $sql still has ['param' => 'value1']
+// $newSql has ['param' => 'value2', 'other' => 'data']
+
+// Method chaining is possible since each call returns a new object
+$anotherSql = $sql->withParams(['status' => 'active'])->withCache($cache, 'cache_key', 120);
 ```
 
 ### Caching Support
@@ -80,13 +104,14 @@ $cache = new ArrayCacheEngine();
 $sql = new SqlStatement("select * from table where field = :param");
 
 // Enable caching with a specific key and TTL (time-to-live in seconds)
-$sql->withCache($cache, 'my_cache_key', 60);
+// Returns a new SqlStatement with caching enabled
+$cachedSql = $sql->withCache($cache, 'my_cache_key', 60);
 
 // Execute the query with the database driver (results will be cached)
-$iterator = $dbDriver->getIterator($sql, ['param' => 'value']);
+$iterator = $dbDriver->getIterator($cachedSql, ['param' => 'value']);
 
-// Disable caching if needed
-$sql->withoutCache();
+// Disable caching if needed - returns a new SqlStatement without caching
+$noCacheSql = $cachedSql->withoutCache();
 ```
 
 ## Using SqlStatement with Database Drivers
@@ -117,6 +142,8 @@ $newId = $dbDriver->executeAndGetId($sql, ['param' => 'value']);
 
 - **Parameter Storage**: SQL and its parameters can be stored together in a single object
 - **Reusability**: The same SQL statement can be reused with different parameters
+- **Immutability**: All modifier methods return new objects, preserving the original
+- **Parameter Merging**: Easily combine parameters from different sources
 - **Caching Support**: Built-in support for caching query results using any PSR-16 compliant cache
 - **Consistent API**: Works consistently across all database drivers in the library
 - **Mutex Locking**: Prevents cache stampede by implementing mutex locking for cache generation

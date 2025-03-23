@@ -65,7 +65,7 @@ trait DatabaseExecutorTrait
 
         $cache = $sql->getCache();
         $sqlText = $sql->getSql();
-        $params = $sql->getParams() ?? [];
+        $params = $sql->withParams($param)->getParams();
 
         // If no cache is configured, directly execute the query
         if (empty($cache)) {
