@@ -8,11 +8,9 @@ use ByJG\AnyDataset\Db\Exception\RouteNotFoundException;
 use ByJG\AnyDataset\Db\Exception\RouteNotMatchedException;
 use ByJG\Serializer\PropertyHandler\PropertyHandlerInterface;
 use ByJG\Util\Uri;
-use DateInterval;
 use InvalidArgumentException;
 use Override;
 use Psr\Log\LoggerInterface;
-use Psr\SimpleCache\CacheInterface;
 
 class Route implements DbDriverInterface
 {
@@ -240,10 +238,8 @@ class Route implements DbDriverInterface
     }
 
     /**
-     * @param string $sql
+     * @param string|SqlStatement $sql
      * @param array|null $params
-     * @param CacheInterface|null $cache
-     * @param int|DateInterval $ttl
      * @param int $preFetch
      * @param string|null $entityClass
      * @param PropertyHandlerInterface|null $entityTransformer
@@ -251,10 +247,10 @@ class Route implements DbDriverInterface
      * @throws RouteNotMatchedException
      */
     #[Override]
-    public function getIterator(mixed $sql, ?array $params = null, ?CacheInterface $cache = null, DateInterval|int $ttl = 60, int $preFetch = 0, ?string $entityClass = null, ?PropertyHandlerInterface $entityTransformer = null): GenericIterator
+    public function getIterator(string|SqlStatement $sql, ?array $params = null, int $preFetch = 0, ?string $entityClass = null, ?PropertyHandlerInterface $entityTransformer = null): GenericIterator
     {
         $dbDriver = $this->matchRoute($sql);
-        return $dbDriver->getIterator($sql, $params, $cache, $ttl, $preFetch, $entityClass, $entityTransformer);
+        return $dbDriver->getIterator($sql, $params, $preFetch, $entityClass, $entityTransformer);
     }
 
     /**
@@ -470,4 +466,23 @@ class Route implements DbDriverInterface
     {
         throw new NotImplementedException('Feature not available');
     }
+
+    /**
+     * Creates a database driver-specific iterator for query results
+     *
+     * @param mixed $statement The statement to create an iterator from (PDOStatement, resource, etc.)
+     * @param int $preFetch Number of rows to prefetch
+     * @param string|null $entityClass Optional entity class name to return rows as objects
+     * @param PropertyHandlerInterface|null $entityTransformer Optional transformation function for customizing entity mapping
+     * @return GenericIterator The driver-specific iterator for the query results
+     * @throws NotImplementedException
+     */
+    #[Override]
+    public function getDriverIterator(mixed $statement, int $preFetch = 0, ?string $entityClass = null, ?PropertyHandlerInterface $entityTransformer = null): GenericIterator
+    {
+        // For Route, we don't know which driver to use without SQL context
+        // This method should generally not be called directly on Route
+        throw new NotImplementedException('getDriverIterator cannot be called directly on Route');
+    }
+
 }

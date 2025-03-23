@@ -363,7 +363,9 @@ abstract class BasePdo extends TestCase
 
         $cacheEngine = new ArrayCacheEngine();
         // Get the first from Db and then cache it;
-        $iterator = $this->dbDriver->getIterator('select * from Dogs where id = :id', ['id' => 1], $cacheEngine, 60);
+        $sqlStatement = new SqlStatement('select * from Dogs where id = :id');
+        $sqlStatement->withCache($cacheEngine, 'dogs', 60);
+        $iterator = $this->dbDriver->getIterator($sqlStatement, ['id' => 1]);
         $this->assertEquals(
             [
                 ['id' => 1, 'breed' => "Mutt", 'name' => 'Spyke', "age" => 8, "weight" => 8.5],
@@ -375,7 +377,7 @@ abstract class BasePdo extends TestCase
         $this->dbDriver->execute("delete from Dogs where id = :id", ['id' => 1]);
 
         // Try get from cache
-        $iterator = $this->dbDriver->getIterator('select * from Dogs where id = :id', ['id' => 1], $cacheEngine, 60);
+        $iterator = $this->dbDriver->getIterator($sqlStatement, ['id' => 1]);
         $this->assertEquals(
             [
                 ['id' => 1, 'breed' => "Mutt", 'name' => 'Spyke', "age" => 8, "weight" => 8.5],
@@ -389,33 +391,60 @@ abstract class BasePdo extends TestCase
         $cacheEngine = new ArrayCacheEngine();
 
         // Get the first from Db and then cache it;
-        $iterator = $this->dbDriver->getIterator('select * from Dogs where id = :id', ['id' => 4], $cacheEngine, 60);
+        $sqlStatement = new SqlStatement('select * from Dogs where id = :id');
+        $sqlStatement->withCache($cacheEngine, 'dogs_id_test', 60);
+        $iterator = $this->dbDriver->getIterator($sqlStatement, ['id' => 4]);
         $this->assertEquals(
             [],
             $iterator->toArray()
         );
-        $iterator = $this->dbDriver->getIterator('select * from Dogs where id = :id', ['id' => 1], $cacheEngine, 60);
+
+        // Get the second from Db and then cache it, since is the same statement
+        // However, the cache key is different because of the different param;
+        $iterator = $this->dbDriver->getIterator($sqlStatement, ['id' => 1]);
         $this->assertEquals(
             [
                 ['id' => 1, 'breed' => "Mutt", 'name' => 'Spyke', "age" => 8, "weight" => 8.5],
             ],
             $iterator->toArray()
         );
+
 
         // Update Record
-        $this->dbDriver->execute("INSERT INTO Dogs (Breed, Name, Age) VALUES (:breed, :name, :age);", ["breed" => "Cat", "name" => "Doris", "age" => 6]);
+        $id = $this->dbDriver->executeAndGetId("INSERT INTO Dogs (Breed, Name, Age) VALUES (:breed, :name, :age);", ["breed" => "Cat", "name" => "Doris", "age" => 6]);
+        $this->assertEquals(4, $id);
+        $this->dbDriver->execute("update Dogs set age = 15 where id = 1");
 
         // Try get from cache (should have the same result from before)
-        $iterator = $this->dbDriver->getIterator('select * from Dogs where id = :id', ['id' => 1], $cacheEngine, 60);
+        $iterator = $this->dbDriver->getIterator($sqlStatement, ['id' => 1]);
         $this->assertEquals(
             [
                 ['id' => 1, 'breed' => "Mutt", 'name' => 'Spyke', "age" => 8, "weight" => 8.5],
             ],
             $iterator->toArray()
         );
-        $iterator = $this->dbDriver->getIterator('select * from Dogs where id = :id', ['id' => 4], $cacheEngine, 60);
+
+        // Try get from cache (should have the same result from before)
+        $iterator = $this->dbDriver->getIterator($sqlStatement, ['id' => 4]);
         $this->assertEquals(
             [],
+            $iterator->toArray()
+        );
+
+        // Create a new Statement with no cache
+        $sqlStatement = new SqlStatement('select * from Dogs where id = :id');
+        $iterator = $this->dbDriver->getIterator($sqlStatement, ['id' => 4]);
+        $this->assertEquals(
+            [
+                ['id' => 4, 'breed' => "Cat", 'name' => 'Doris', "age" => 6, "weight" => null],
+            ],
+            $iterator->toArray()
+        );
+        $iterator = $this->dbDriver->getIterator($sqlStatement, ['id' => 1]);
+        $this->assertEquals(
+            [
+                ['id' => 1, 'breed' => "Mutt", 'name' => 'Spyke', "age" => 15, "weight" => 8.5],
+            ],
             $iterator->toArray()
         );
     }

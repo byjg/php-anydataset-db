@@ -4,6 +4,7 @@ namespace Test\Helpers;
 
 use ByJG\AnyDataset\Db\Helpers\SqlBind;
 use ByJG\Util\Uri;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
 class SqlBindTest extends TestCase
@@ -104,6 +105,7 @@ class SqlBindTest extends TestCase
     /**
      * @dataProvider getDataTest
      */
+    #[DataProvider('getDataTest')]
     public function testSqlBind($uri, $subject, $expected, $paramsIn, $paramsExpected)
     {
         $this->assertEquals(

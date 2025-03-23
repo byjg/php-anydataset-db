@@ -6,11 +6,11 @@ use ByJG\AnyDataset\Core\GenericIterator;
 use ByJG\AnyDataset\Db\Exception\DbDriverNotConnected;
 use ByJG\AnyDataset\Db\Helpers\SqlBind;
 use ByJG\AnyDataset\Db\Helpers\SqlHelper;
+use ByJG\AnyDataset\Db\Traits\DatabaseExecutorTrait;
 use ByJG\AnyDataset\Db\Traits\DbCacheTrait;
 use ByJG\AnyDataset\Db\Traits\TransactionTrait;
 use ByJG\Serializer\PropertyHandler\PropertyHandlerInterface;
 use ByJG\Util\Uri;
-use DateInterval;
 use Exception;
 use InvalidArgumentException;
 use Override;
@@ -18,12 +18,12 @@ use PDO;
 use PDOStatement;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
-use Psr\SimpleCache\CacheInterface;
 
 abstract class DbPdoDriver implements DbDriverInterface
 {
     use DbCacheTrait;
     use TransactionTrait;
+    use DatabaseExecutorTrait;
 
     protected ?PDO $instance = null;
 
@@ -136,17 +136,29 @@ abstract class DbPdoDriver implements DbDriverInterface
     }
 
     /**
+     * Handles PDOStatement specific statement type
+     *
+     * @param mixed $statement The statement to check and handle
+     * @param int $preFetch Number of rows to prefetch
+     * @param string|null $entityClass Optional entity class name to return rows as objects
+     * @param PropertyHandlerInterface|null $entityTransformer Optional transformation function for customizing entity mapping
+     * @return GenericIterator Returns GenericIterator for the statement
+     */
+    #[Override]
+    public function getDriverIterator(mixed $statement, int $preFetch = 0, ?string $entityClass = null, ?PropertyHandlerInterface $entityTransformer = null): GenericIterator
+    {
+        if ($statement instanceof PDOStatement) {
+            return new DbIterator($statement, $preFetch, $entityClass, $entityTransformer);
+        }
+
+        throw new InvalidArgumentException('Invalid statement type');
+    }
+
+    /**
      * Get an iterator for the provided SQL or execute an existing PDOStatement.
      *
-     * This method has three different behaviors based on the $sql parameter type:
-     * 1. When $sql is a PDOStatement: Returns a DbIterator for that statement
-     * 2. When $sql is a string: Converts to SqlStatement and calls getIterator on it
-     * 3. When $sql is a SqlStatement: Calls getIterator on it
-     *
-     * @param mixed $sql PDOStatement, string SQL, or SqlStatement object
+     * @param string|SqlStatement $sql PDOStatement, string SQL, or SqlStatement object
      * @param array|null $params Parameters if $sql is a string
-     * @param CacheInterface|null $cache Optional cache implementation
-     * @param DateInterval|int $ttl Cache time-to-live (in seconds or as DateInterval)
      * @param int $preFetch Number of rows to prefetch
      * @param string|null $entityClass Optional entity class name to return rows as objects
      * @param PropertyHandlerInterface|null $entityTransformer Optional transformation handler for customizing entity mapping
@@ -154,26 +166,10 @@ abstract class DbPdoDriver implements DbDriverInterface
      * @throws InvalidArgumentException If $sql is not a supported type
      */
     #[Override]
-    public function getIterator(mixed $sql, ?array $params = null, ?CacheInterface $cache = null, DateInterval|int $ttl = 60, int $preFetch = 0, ?string $entityClass = null, ?PropertyHandlerInterface $entityTransformer = null): GenericIterator
+    public function getIterator(string|SqlStatement $sql, ?array $params = null, int $preFetch = 0, ?string $entityClass = null, ?PropertyHandlerInterface $entityTransformer = null): GenericIterator
     {
-        // Case 1: Direct PDOStatement - return a DbIterator for it
-        if ($sql instanceof PDOStatement) {
-            return new DbIterator($sql, $preFetch, $entityClass, $entityTransformer);
-        }
-
-        // Case 2: SQL string - convert to SqlStatement
-        if (is_string($sql)) {
-            $sql = new SqlStatement($sql);
-            if (!empty($cache)) {
-                $sql->withCache($cache, $this->getQueryKey($cache, $sql->getSql(), $params), $ttl);
-            }
-        } // Case 3: SqlStatement - nothing to do
-        elseif (!($sql instanceof SqlStatement)) {
-            throw new InvalidArgumentException("The SQL must be a PDOStatement, string or a SqlStatement object");
-        }
-
-        // Execute the SqlStatement
-        return $sql->getIterator($this, $params, $preFetch, $entityClass, $entityTransformer);
+        // Use the DatabaseExecutorTrait to handle all types of statements
+        return $this->executeStatement($sql, $params, $preFetch, $entityClass, $entityTransformer);
     }
 
     #[Override]
@@ -191,7 +187,10 @@ abstract class DbPdoDriver implements DbDriverInterface
             throw new InvalidArgumentException("The SQL must be a cursor, string or a SqlStatement object");
         }
 
-        return $sql->getScalar($this, $array);
+        // Execute the scalar query
+        $statement = $this->prepareStatement($sql->getSql(), $array);
+        $this->executeCursor($statement);
+        return $statement->fetchColumn();
     }
 
     #[Override]
@@ -236,7 +235,9 @@ abstract class DbPdoDriver implements DbDriverInterface
             throw new InvalidArgumentException("The SQL must be a cursor, string or a SqlStatement object");
         }
 
-        $sql->execute($this, $array);
+        // Execute the statement directly
+        $statement = $this->prepareStatement($sql->getSql(), $array);
+        $this->executeCursor($statement);
         return true;
     }
 

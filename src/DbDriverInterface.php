@@ -6,9 +6,7 @@ use ByJG\AnyDataset\Core\GenericIterator;
 use ByJG\AnyDataset\Db\Interfaces\DbTransactionInterface;
 use ByJG\Serializer\PropertyHandler\PropertyHandlerInterface;
 use ByJG\Util\Uri;
-use DateInterval;
 use Psr\Log\LoggerInterface;
-use Psr\SimpleCache\CacheInterface;
 
 interface DbDriverInterface extends DbTransactionInterface
 {
@@ -20,16 +18,14 @@ interface DbDriverInterface extends DbTransactionInterface
     public function executeCursor(mixed $statement): void;
 
     /**
-     * @param string $sql
+     * @param string|SqlStatement $sql
      * @param array|null $params
-     * @param CacheInterface|null $cache
-     * @param int|DateInterval $ttl
      * @param int $preFetch
      * @param string|null $entityClass
      * @param PropertyHandlerInterface|null $entityTransformer
      * @return GenericIterator
      */
-    public function getIterator(mixed $sql, ?array $params = null, ?CacheInterface $cache = null, DateInterval|int $ttl = 60, int $preFetch = 0, ?string $entityClass = null, ?PropertyHandlerInterface $entityTransformer = null): GenericIterator;
+    public function getIterator(string|SqlStatement $sql, ?array $params = null, int $preFetch = 0, ?string $entityClass = null, ?PropertyHandlerInterface $entityTransformer = null): GenericIterator;
 
     public function getScalar(mixed $sql, ?array $array = null): mixed;
 
@@ -38,6 +34,17 @@ interface DbDriverInterface extends DbTransactionInterface
     public function execute(mixed $sql, ?array $array = null): bool;
 
     public function executeAndGetId(string $sql, ?array $array = null): mixed;
+
+    /**
+     * Creates a database driver-specific iterator for query results
+     *
+     * @param mixed $statement The statement to create an iterator from (PDOStatement, resource, etc.)
+     * @param int $preFetch Number of rows to prefetch
+     * @param string|null $entityClass Optional entity class name to return rows as objects
+     * @param PropertyHandlerInterface|null $entityTransformer Optional transformation function for customizing entity mapping
+     * @return GenericIterator The driver-specific iterator for the query results
+     */
+    public function getDriverIterator(mixed $statement, int $preFetch = 0, ?string $entityClass = null, ?PropertyHandlerInterface $entityTransformer = null): GenericIterator;
 
     /**
      * @return DbFunctionsInterface

@@ -287,7 +287,9 @@ class PdoSqliteTest extends TestCase
         $cache = new ArrayCacheEngine();
 
         // Get the first from Db and then cache it;
-        $iterator = $this->dbDriver->getIterator('select * from info where id = :id', ['id' => 1], $cache, 60);
+        $sqlStatement = new SqlStatement('select * from info where id = :id');
+        $sqlStatement->withCache($cache, 'info', 60);
+        $iterator = $this->dbDriver->getIterator($sqlStatement, ['id' => 1]);
         $this->assertEquals(
             [
                 ['id' => 1, 'iduser' => 1, 'number' => 10.45, 'property' => 'xxx'],
@@ -296,10 +298,10 @@ class PdoSqliteTest extends TestCase
         );
 
         // Remove it from DB (Still in cache) - Execute don't use cache
-        $this->dbDriver->execute("delete from users where name = :name", ['name' => 'Another2']);
+        $this->dbDriver->execute("delete from users where id = :name", ['id' => 1]);
 
         // Try get from cache
-        $iterator = $this->dbDriver->getIterator('select * from info where id = :id', ['id' => 1], $cache, 60);
+        $iterator = $this->dbDriver->getIterator($sqlStatement, ['id' => 1]);
         $this->assertEquals(
             [
                 ['id' => 1, 'iduser' => 1, 'number' => 10.45, 'property' => 'xxx'],
@@ -313,7 +315,9 @@ class PdoSqliteTest extends TestCase
         $cache = new ArrayCacheEngine();
 
         // Get the first from Db and then cache it;
-        $iterator = $this->dbDriver->getIterator('select * from info where id = :id', ['id' => 4], $cache, 60);
+        $sqlStatement = new SqlStatement('select * from info where id = :id');
+        $sqlStatement->withCache($cache, 'info_results_1', 60);
+        $iterator = $this->dbDriver->getIterator($sqlStatement, ['id' => 4]);
         $this->assertEquals(
             [],
             $iterator->toArray()
@@ -322,7 +326,10 @@ class PdoSqliteTest extends TestCase
         // Add a new record to DB
         $id = $this->dbDriver->execute("insert into info (iduser, number, property) values (2, 20, 40)");
         $this->assertEquals(4, $id);
-        $iterator = $this->dbDriver->getIterator('select * from info where id = :id', ['id' => 4]);
+
+        // Check if the record is there
+        $sqlStatementNoCache = new SqlStatement('select * from info where id = :id');
+        $iterator = $this->dbDriver->getIterator($sqlStatementNoCache, ['id' => 4]);
         $this->assertEquals(
             [
                 ["id" => 4, "iduser" => 2, "number" => 20, "property" => '40'],
@@ -331,7 +338,7 @@ class PdoSqliteTest extends TestCase
         );
 
         // Get from cache, should return the same values as before the insert
-        $iterator = $this->dbDriver->getIterator('select * from info where id = :id', ['id' => 4], $cache, 60);
+        $iterator = $this->dbDriver->getIterator($sqlStatement, ['id' => 4]);
         $this->assertEquals(
             [],
             $iterator->toArray()
@@ -421,7 +428,9 @@ class PdoSqliteTest extends TestCase
         $cache = new ArrayCacheEngine();
 
         // Try get from cache (still return the same values)
-        $iterator = $this->dbDriver->getIterator('select * from info where id = :id', ['id' => 1], $cache, 60);
+        $sqlStatement = new SqlStatement('select * from info where id = :id');
+        $sqlStatement->withCache($cache, 'info_results_2', 60);
+        $iterator = $this->dbDriver->getIterator($sqlStatement, ['id' => 1]);
         $this->assertEquals(
             [
                 ['id' => 1, 'iduser' => 1, 'number' => 10.45, 'property' => 'xxx'],
@@ -430,8 +439,11 @@ class PdoSqliteTest extends TestCase
         );
 
         // Update a record to DB
-        $id = $this->dbDriver->execute("update info set number = 1500 where id = :id", ["id" => 1]);
-        $iterator = $this->dbDriver->getIterator('select * from info where id = :id', ['id' => 1]);
+        $this->dbDriver->execute("update info set number = 1500 where id = :id", ["id" => 1]);
+
+        // Check if the record is there
+        $sqlStatementNoCache = new SqlStatement('select * from info where id = :id');
+        $iterator = $this->dbDriver->getIterator($sqlStatementNoCache, ['id' => 1]);
         $this->assertEquals(
             [
                 ["id" => 1, "iduser" => 1, "number" => 1500, "property" => 'xxx'],
@@ -440,7 +452,7 @@ class PdoSqliteTest extends TestCase
         );
 
         // Get from cache, should return the same values as before the update
-        $iterator = $this->dbDriver->getIterator('select * from info where id = :id', ['id' => 1], $cache, 60);
+        $iterator = $this->dbDriver->getIterator($sqlStatement, ['id' => 1]);
         $this->assertEquals(
             [
                 ['id' => 1, 'iduser' => 1, 'number' => 10.45, 'property' => 'xxx'],
@@ -455,7 +467,7 @@ class PdoSqliteTest extends TestCase
         $stmt = $pdo->prepare('select * from info where id = :id');
         $stmt->execute(['id' => 1]);
 
-        $iterator = $this->dbDriver->getIterator($stmt);
+        $iterator = $this->dbDriver->getDriverIterator($stmt);
         $this->assertEquals(
             [
                 ['id' => 1, 'iduser' => 1, 'number' => 10.45, 'property' => 'xxx'],
@@ -531,7 +543,7 @@ class PdoSqliteTest extends TestCase
         while ($iterator->valid()) {
             $row = $iterator->current();
             $this->assertEquals($rows[$i], $row->toArray(), "Row $i");
-            $this->assertEquals($i + 1, $iterator->key(), "Key Row $i");
+            $this->assertEquals($i, $iterator->key(), "Key Row $i");
             $i++;
             $iterator->next();
         }
