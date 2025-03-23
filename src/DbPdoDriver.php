@@ -187,8 +187,11 @@ abstract class DbPdoDriver implements DbDriverInterface
             throw new InvalidArgumentException("The SQL must be a cursor, string or a SqlStatement object");
         }
 
+        // Use parameters from SqlStatement if no parameters are provided
+        $params = $array ?? $sql->getParams();
+
         // Execute the scalar query
-        $statement = $this->prepareStatement($sql->getSql(), $array);
+        $statement = $this->prepareStatement($sql->getSql(), $params);
         $this->executeCursor($statement);
         return $statement->fetchColumn();
     }
@@ -235,15 +238,23 @@ abstract class DbPdoDriver implements DbDriverInterface
             throw new InvalidArgumentException("The SQL must be a cursor, string or a SqlStatement object");
         }
 
+        // Use parameters from SqlStatement if no parameters are provided
+        $params = $array ?? $sql->getParams();
+
         // Execute the statement directly
-        $statement = $this->prepareStatement($sql->getSql(), $array);
+        $statement = $this->prepareStatement($sql->getSql(), $params);
         $this->executeCursor($statement);
         return true;
     }
 
     #[Override]
-    public function executeAndGetId(string $sql, ?array $array = null): mixed
+    public function executeAndGetId(string|SqlStatement $sql, ?array $array = null): mixed
     {
+        if ($sql instanceof SqlStatement) {
+            $params = $array ?? $sql->getParams();
+            return $this->getDbHelper()->executeAndGetInsertedId($this, $sql->getSql(), $params);
+        }
+        
         return $this->getDbHelper()->executeAndGetInsertedId($this, $sql, $array);
     }
 

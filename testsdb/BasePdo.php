@@ -124,6 +124,25 @@ abstract class BasePdo extends TestCase
         $this->assertFalse($iterator->isCursorOpen());
     }
 
+    public function testGetIteratorSqlStatement()
+    {
+        $array = $this->allData();
+
+        // Step 1
+        $sqlStatement = new SqlStatement('select * from Dogs');
+        $iterator = $this->dbDriver->getIterator($sqlStatement);
+        $this->assertEquals($array, $iterator->toArray());
+
+        // Step 2
+        $sqlStatement = new SqlStatement('select * from Dogs where id = :id', ['id' => 1]);
+        $iterator = $this->dbDriver->getIterator($sqlStatement);
+        $this->assertEquals([$array[0]], $iterator->toArray());
+
+        // Step 2
+        $iterator = $this->dbDriver->getIterator($sqlStatement, ['id' => 2]);
+        $this->assertEquals([$array[1]], $iterator->toArray());
+    }
+
     public function testGetIteratorWithEntityClass()
     {
         $array = $this->allData();
@@ -150,6 +169,57 @@ abstract class BasePdo extends TestCase
         $this->assertEquals(count($array), $i);
     }
 
+    public function testGetIteratorWithEntityClassAndSqlStatement()
+    {
+        $array = $this->allData();
+
+        $sqlStatement = new SqlStatement('select * from Dogs');
+
+        // Get iterator with entity class
+        $iterator = $this->dbDriver->getIterator($sqlStatement, entityClass: Dogs::class);
+
+        // Verify we get objects of the correct type
+        $i = 0;
+        foreach ($iterator as $singleRow) {
+            $entity = $singleRow->entity();
+            $this->assertInstanceOf(Dogs::class, $entity);
+
+            // Verify properties were populated correctly
+            $this->assertEquals($array[$i]['id'], $entity->id);
+            $this->assertEquals($array[$i]['name'], $entity->name);
+            $this->assertEquals($array[$i]['breed'], $entity->breed);
+            $this->assertEquals($array[$i]['weight'], $entity->weight);
+
+            $i++;
+        }
+
+        // Verify we got all the expected rows
+        $this->assertEquals(count($array), $i);
+    }
+
+    public function testExecute()
+    {
+        $this->dbDriver->execute(
+            "INSERT INTO Dogs (Breed, Name, Age) VALUES ('Cat', 'Doris', 7);"
+        );
+
+        $sqlStatement = new SqlStatement("INSERT INTO Dogs (Breed, Name, Age) VALUES (:breed, :name, :age);");
+        $this->dbDriver->execute(
+            $sqlStatement,
+            [
+                "breed" => "Cat2",
+                "name" => "Doris2",
+                "age" => 8
+            ]
+        );
+
+        $idInserted = $this->dbDriver->getScalar("select id from Dogs where name = 'Doris'");
+        $this->assertEquals(4, $idInserted);
+
+        $idInserted = $this->dbDriver->getScalar("select id from Dogs where name = 'Doris2'");
+        $this->assertEquals(5, $idInserted);
+    }
+
     public function testExecuteAndGetId()
     {
         $idInserted = $this->dbDriver->executeAndGetId(
@@ -157,6 +227,17 @@ abstract class BasePdo extends TestCase
         );
 
         $this->assertEquals(4, $idInserted);
+
+        $sqlStatement = new SqlStatement("INSERT INTO Dogs (Breed, Name, Age) VALUES (:breed, :name, :age);");
+        $idInserted = $this->dbDriver->executeAndGetId(
+            $sqlStatement,
+            [
+                "breed" => "Cat2",
+                "name" => "Doris2",
+                "age" => 8
+            ]
+        );
+        $this->assertEquals(5, $idInserted);
     }
 
     public function testGetAllFields()
@@ -182,12 +263,6 @@ abstract class BasePdo extends TestCase
             $this->dbDriver->getScalar('select count(*) from Dogs where Id = :id', ['id' => 2])
         );
 
-        $sqlStatement = new SqlStatement('select Id from Dogs where Id = :id', ['id' => 2]);
-        $this->assertEquals(
-            2,
-            $this->dbDriver->getScalar($sqlStatement)
-        );
-
         $this->assertEquals(
             2,
             $this->dbDriver->getScalar('select Id from Dogs where Id = :id', ['id' => 2])
@@ -200,6 +275,24 @@ abstract class BasePdo extends TestCase
 
         $this->assertFalse(
             $this->dbDriver->getScalar('select Id from Dogs where Id = :id', ['id' => 9999])
+        );
+    }
+
+    public function testGetScalarWithSqlStatement()
+    {
+        $sqlStatement = new SqlStatement('select Id from Dogs where Id = :id', ['id' => 2]);
+        $this->assertEquals(
+            2,
+            $this->dbDriver->getScalar($sqlStatement)
+        );
+
+        $this->assertEquals(
+            1,
+            $this->dbDriver->getScalar($sqlStatement, ['id' => 1])
+        );
+
+        $this->assertFalse(
+            $this->dbDriver->getScalar($sqlStatement, ['id' => 9999])
         );
     }
 

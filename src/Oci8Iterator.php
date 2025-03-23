@@ -2,12 +2,11 @@
 
 namespace ByJG\AnyDataset\Db;
 
-use ByJG\AnyDataset\Core\GenericIterator;
 use ByJG\AnyDataset\Db\Traits\PreFetchTrait;
 use ByJG\Serializer\PropertyHandler\PropertyHandlerInterface;
 use Override;
 
-class Oci8Iterator extends GenericIterator
+class Oci8Iterator extends GenericDbIterator
 {
     use PreFetchTrait;
 

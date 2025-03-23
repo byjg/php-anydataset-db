@@ -2,14 +2,13 @@
 
 namespace ByJG\AnyDataset\Db;
 
-use ByJG\AnyDataset\Core\GenericIterator;
 use ByJG\AnyDataset\Db\Traits\PreFetchTrait;
 use ByJG\Serializer\PropertyHandler\PropertyHandlerInterface;
 use Override;
 use PDO;
 use PDOStatement;
 
-class DbIterator extends GenericIterator
+class DbIterator extends GenericDbIterator
 {
     use PreFetchTrait;
 

@@ -33,7 +33,12 @@ interface DbDriverInterface extends DbTransactionInterface
 
     public function execute(mixed $sql, ?array $array = null): bool;
 
-    public function executeAndGetId(string $sql, ?array $array = null): mixed;
+    /**
+     * @param string|SqlStatement $sql
+     * @param array|null $array
+     * @return mixed
+     */
+    public function executeAndGetId(string|SqlStatement $sql, ?array $array = null): mixed;
 
     /**
      * Creates a database driver-specific iterator for query results
