@@ -47,9 +47,9 @@ The trait contains these key components:
 ```php
 trait PreFetchTrait
 {
-    protected int $currentRow = 0;       // Tracks the current row for iterator position
-    protected int $preFetchRows = 0;     // Number of rows to pre-fetch
-    protected array $rowBuffer = [];     // Buffer holding pre-fetched rows
+    protected int $currentRow = 0;              // Tracks the current row for iterator position
+    protected int $preFetchRows = 0;            // Number of rows to pre-fetch
+    protected SplDoublyLinkedList $rowBuffer;   // Buffer holding pre-fetched rows using a doubly linked list
     
     // Methods for managing pre-fetching
     protected function initPreFetch(int $preFetch = 0): void { /* ... */ }
@@ -81,6 +81,14 @@ When you specify a pre-fetch value, the following happens:
    - `current()` returns the first record in the buffer
    - `next()` removes the first record from the buffer and calls `preFetch()` to fetch more if needed
    - `valid()` checks if there are more records in the buffer or if more can be fetched
+
+### Efficient Buffer Implementation
+
+The implementation uses `SplDoublyLinkedList` instead of a simple array for the row buffer, which provides:
+
+- O(1) time complexity for adding and removing elements from either end
+- More efficient memory usage when dealing with large result sets
+- Better performance for queue-like operations (push/shift) used in pre-fetching
 
 ### Cursor Management
 
@@ -199,8 +207,9 @@ Example:
 The pre-fetch mechanism optimizes memory usage by:
 
 1. Only storing the pre-fetch count number of records in memory at once
-2. Removing records from the buffer after they've been processed
-3. Automatically closing the database cursor when all records have been fetched
+2. Using an efficient data structure (SplDoublyLinkedList) for the buffer
+3. Removing records from the buffer after they've been processed
+4. Automatically closing the database cursor when all records have been fetched
 
 This ensures efficient memory usage while still providing performance benefits.
 

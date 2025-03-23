@@ -31,8 +31,6 @@ $conn = \ByJG\AnyDataset\Db\Factory::getDbInstance("mysql://root:password@localh
 $iterator = $conn->getIterator(
     "SELECT * FROM users WHERE active = :active", 
     [':active' => true],
-    null,               // cache
-    60,                 // cache TTL
     0,                  // prefetch
     User::class         // Entity class name
 );
@@ -66,10 +64,13 @@ For best results:
 ## Custom Property Transformation
 
 In some cases, you might want to customize how database field values are mapped to your entity properties. For this, you
-can use the `entityTransformer` parameter to provide a custom transformation function:
+can use the `entityTransformer` parameter to provide a custom property handler:
 
 ```php
 <?php
+use ByJG\Serializer\PropertyHandler\PropertyHandlerInterface;
+use ByJG\Serializer\PropertyHandler\PropertyNameMapper;
+
 // Define your entity class
 class Product {
     public int $id;
@@ -79,16 +80,11 @@ class Product {
     public float $priceInUSD;
 }
 
-// Create a custom transformer function
-$transformer = function ($sourceField) {
-    // Convert snake_case to camelCase
-    if ($sourceField === 'product_id') {
-        return 'id';
-    }
-    
-    // For all other fields, use the original name
-    return $sourceField;
-};
+// Create a custom property handler
+$transformer = new PropertyNameMapper([
+    'product_id' => 'id',
+    // Map other fields as needed
+]);
 
 // Pass the transformer along with the entity class
 $iterator = $conn->getIterator(
@@ -99,11 +95,9 @@ $iterator = $conn->getIterator(
         currency
      FROM products", 
     [],
-    null,               // cache
-    60,                 // cache TTL
     0,                  // prefetch
     Product::class,     // Entity class name
-    $transformer        // Custom transformer function
+    $transformer        // Custom property handler
 );
 
 // Iterate through transformed Product objects
@@ -113,20 +107,34 @@ foreach ($iterator as $row) {
 }
 ```
 
-You can also use the transformer to perform more complex transformations, such as combining multiple fields:
+You can also use the transformer to perform more complex transformations, such as modifying field values:
 
 ```php
 <?php
 // Create transformer that calculates values on the fly
-$priceTransformer = function ($sourceField, $targetField, $value) {
-    // Convert price to USD based on currency
-    if ($sourceField === 'price' && !empty($this->currency)) {
-        // Calculate USD price based on currency
-        $this->priceInUSD = $value * getCurrencyRate($this->currency);
+$transformer = new PropertyNameMapper(
+    [
+        // Define field mappings
+        'price' => 'price',
+        'currency' => 'currency'
+    ],
+    function ($sourceField, $targetField, $value) {
+        // Convert price to USD based on currency
+        if ($sourceField === 'price' && !empty($this->currency)) {
+            // Store the original price
+            $result = $value;
+            
+            // Also calculate and set the USD price
+            if ($targetField === 'price') {
+                $this->priceInUSD = $value * getCurrencyRate($this->currency);
+            }
+            
+            return $result;
+        }
+        
+        return $value;
     }
-    
-    return $value;
-};
+);
 ```
 
 ## Benefits of Entity Mapping
@@ -195,7 +203,8 @@ function getUserById(DbDriverInterface $db, int $userId): ?User {
     $iterator = $db->getIterator(
         "SELECT * FROM users WHERE id = :id",
         [':id' => $userId],
-        null, 60, 0, User::class
+        0,          // prefetch
+        User::class // entity class
     );
     
     if ($iterator->valid()) {
@@ -239,39 +248,35 @@ class UserOrder {
     public float $total;
 }
 
-$iterator = $conn->getIterator($sql, [':status' => 'completed'], null, 60, 0, UserOrder::class);
+$iterator = $conn->getIterator($sql, [':status' => 'completed'], 0, UserOrder::class);
 ```
 
 ## Combining with Other Features
 
 Entity mapping works seamlessly with other AnyDataset-DB features:
 
-### With Cache
+### With SqlStatement
 
 ```php
-// Cache results with entity mapping
-$cacheInstance = new \Your\Cache\Implementation();
-$iterator = $conn->getIterator(
-    "SELECT * FROM users", 
-    null,
-    $cacheInstance,
-    300, // 5 minutes
-    0,
-    User::class
+// Create a reusable SQL statement
+$userQuery = new SqlStatement(
+    "SELECT * FROM users WHERE status = :status",
+    ['status' => 'active']
 );
+
+// Execute with entity mapping
+$iterator = $dbDriver->getIterator($userQuery, [], 0, User::class);
 ```
 
-### With PreFetch
+### With Pre-Fetch
 
 ```php
-// Prefetch 100 records at a time with entity mapping
-$iterator = $conn->getIterator(
-    "SELECT * FROM large_table", 
-    null,
-    null,
-    60,
-    100, // Prefetch 100 records
-    LargeEntity::class
+// Combine entity mapping with pre-fetching
+$iterator = $dbDriver->getIterator(
+    "SELECT * FROM users", 
+    [], 
+    100,        // Pre-fetch 100 records
+    User::class // Map to User entities
 );
 ```
 

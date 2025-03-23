@@ -33,14 +33,14 @@ interface DbDriverInterface extends DbTransactionInterface
 
 ### Query Execution
 
-| Method                                                                                                                                                                          | Description                                                                                                                                                   |
-|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `prepareStatement(string $sql, ?array $params = null, ?array &$cacheInfo = []): mixed`                                                                                          | Prepares an SQL statement for execution                                                                                                                       |
-| `executeCursor(mixed $statement): void`                                                                                                                                         | Executes a prepared statement                                                                                                                                 |
-| `getIterator(mixed $sql, ?array $params = null, ?CacheInterface $cache = null, DateInterval\|int $ttl = 60, int $preFetch = 0, ?string $entityClass = null): GenericDbIterator` | Executes a SELECT query and returns an iterator to navigate through the results. When `entityClass` is provided, maps results to entity objects of that class |
-| `getScalar(mixed $sql, ?array $array = null): mixed`                                                                                                                            | Returns a single value from the first column of the first row of a result set                                                                                 |
-| `execute(mixed $sql, ?array $array = null): bool`                                                                                                                               | Executes a non-query SQL statement (INSERT, UPDATE, DELETE)                                                                                                   |
-| `executeAndGetId(string $sql, ?array $array = null): mixed`                                                                                                                     | Executes a query and returns the last inserted ID                                                                                                             |
+| Method                                                                                                                                                                                                   | Description                                                                                                                                                   |
+|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `prepareStatement(string $sql, ?array $params = null, ?array &$cacheInfo = []): mixed`                                                                                                                   | Prepares an SQL statement for execution                                                                                                                       |
+| `executeCursor(mixed $statement): void`                                                                                                                                                                  | Executes a prepared statement                                                                                                                                 |
+| `getIterator(string\|SqlStatement $sql, ?array $params = null, int $preFetch = 0, ?string $entityClass = null, ?PropertyHandlerInterface $entityTransformer = null): GenericDbIterator\|GenericIterator` | Executes a SELECT query and returns an iterator to navigate through the results. When `entityClass` is provided, maps results to entity objects of that class |
+| `getScalar(mixed $sql, ?array $array = null): mixed`                                                                                                                                                     | Returns a single value from the first column of the first row of a result set                                                                                 |
+| `execute(mixed $sql, ?array $array = null): bool`                                                                                                                                                        | Executes a non-query SQL statement (INSERT, UPDATE, DELETE)                                                                                                   |
+| `executeAndGetId(string\|SqlStatement $sql, ?array $array = null): mixed`                                                                                                                                | Executes a query and returns the last inserted ID                                                                                                             |
 
 ### Database Metadata
 
@@ -67,15 +67,13 @@ interface DbDriverInterface extends DbTransactionInterface
 
 The interface extends `DbTransactionInterface`, so it also includes these transaction methods:
 
-| Method                                                                                       | Description                                            |
-|----------------------------------------------------------------------------------------------|--------------------------------------------------------|
-| `beginTransaction(IsolationLevelEnum $isolationLevel = null, bool $allowJoin = false): void` | Starts a new transaction                               |
-| `commitTransaction(): void`                                                                  | Commits the current transaction                        |
-| `rollbackTransaction(): void`                                                                | Rolls back the current transaction                     |
-| `hasActiveTransaction(): bool`                                                               | Checks if there is an active transaction               |
-| `requiresTransaction(): void`                                                                | Throws an exception if there is no active transaction  |
-| `remainingCommits(): int`                                                                    | Returns the number of pending commits                  |
-| `activeIsolationLevel(): ?IsolationLevelEnum`                                                | Returns the isolation level of the current transaction |
+| Method                                                              | Description                                            |
+|---------------------------------------------------------------------|--------------------------------------------------------|
+| `beginTransaction(IsolationLevelEnum $isolationLevel = null): void` | Starts a new transaction                               |
+| `commitTransaction(): void`                                         | Commits the current transaction                        |
+| `rollbackTransaction(): void`                                       | Rolls back the current transaction                     |
+| `hasActiveTransaction(): bool`                                      | Checks if there is an active transaction               |
+| `activeIsolationLevel(): ?IsolationLevelEnum`                       | Returns the isolation level of the current transaction |
 
 ## Usage Example
 
@@ -83,6 +81,8 @@ The interface extends `DbTransactionInterface`, so it also includes these transa
 <?php
 use ByJG\AnyDataset\Db\Factory;
 use ByJG\AnyDataset\Db\DbDriverInterface;
+use ByJG\AnyDataset\Db\SqlStatement;
+use ByJG\AnyDataset\Db\IsolationLevelEnum;
 
 // Get a database driver instance
 $dbDriver = Factory::getDbInstance('mysql://user:password@host/database');
@@ -98,6 +98,13 @@ foreach ($iterator as $row) {
     echo $row->get('name') . "\n";
 }
 
+// Using SqlStatement
+$sqlStatement = new SqlStatement(
+    "SELECT * FROM users WHERE active = :active AND role = :role",
+    [':active' => true]
+);
+$iterator = $dbDriver->getIterator($sqlStatement, [':role' => 'admin']);
+
 // Using entity mapping
 class User {
     public int $id;
@@ -110,9 +117,7 @@ class User {
 $entityIterator = $dbDriver->getIterator(
     "SELECT * FROM users WHERE active = :active", 
     [':active' => true],
-    null,
-    60,
-    0,
+    0,  // preFetch
     User::class
 );
 
@@ -122,7 +127,7 @@ foreach ($entityIterator as $user) {
 }
 
 // Transaction example
-$dbDriver->beginTransaction();
+$dbDriver->beginTransaction(IsolationLevelEnum::SERIALIZABLE);
 try {
     $dbDriver->execute("INSERT INTO users (name, email) VALUES (:name, :email)", [
         ':name' => 'John Doe',
