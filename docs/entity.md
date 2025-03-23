@@ -144,7 +144,7 @@ class Product {
 }
 
 // The price will be a float, not a string
-$product = $iterator->moveNext()->entity();
+$product = $iterator->current()->entity();
 $total = $product->price * 1.1; // Type-safe calculation
 ```
 
@@ -153,7 +153,7 @@ $total = $product->price * 1.1; // Type-safe calculation
 Your IDE can provide code completion for entity properties:
 
 ```php
-$user = $iterator->moveNext()->entity();
+$user = $iterator->current()->entity();
 $user->name // IDE suggests available properties like name, email, etc.
 ```
 
@@ -178,7 +178,7 @@ class User {
 }
 
 // Using the entity methods
-$user = $iterator->moveNext()->entity();
+$user = $iterator->current()->entity();
 echo $user->getFullName();
 if (!$user->isValidEmail()) {
     // Handle invalid email
@@ -198,8 +198,8 @@ function getUserById(DbDriverInterface $db, int $userId): ?User {
         null, 60, 0, User::class
     );
     
-    if ($iterator->hasNext()) {
-        return $iterator->moveNext()->entity();
+    if ($iterator->valid()) {
+        return $iterator->current()->entity();
     }
     
     return null;

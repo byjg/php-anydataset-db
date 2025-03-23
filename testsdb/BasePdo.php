@@ -114,9 +114,10 @@ abstract class BasePdo extends TestCase
         // Step 3
         $iterator = $this->dbDriver->getIterator('select * from Dogs');
         $i = 0;
-        while ($iterator->hasNext()) {
-            $singleRow = $iterator->moveNext();
+        while ($iterator->valid()) {
+            $singleRow = $iterator->current();
             $this->assertEquals($array[$i++], $singleRow->toArray());
+            $iterator->next();
         }
 
         $this->assertFalse($iterator->isCursorOpen());
@@ -670,11 +671,12 @@ abstract class BasePdo extends TestCase
         $iterator = $this->dbDriver->getIterator('select * from Dogs', preFetch: $preFetch);
 
         $i = 0;
-        while ($iterator->hasNext()) {
-            $row = $iterator->moveNext();
+        while ($iterator->valid()) {
+            $row = $iterator->current();
             $this->assertEquals($rows[$i], $row->toArray(), "Row $i");
             $this->assertEquals($i + 1, $iterator->key(), "Key Row $i");
             $i++;
+            $iterator->next();
         }
         $this->assertFalse($iterator->isCursorOpen());
     }

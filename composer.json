@@ -20,7 +20,7 @@
     "psr/cache": "^1.0|^2.0|^3.0",
     "psr/log": "^1.1|^2.0|^3.0",
     "byjg/uri": "^5.1",
-    "byjg/anydataset": "^5.1",
+    "byjg/anydataset": "^6.0",
     "ext-json": "*"
   },
   "require-dev": {

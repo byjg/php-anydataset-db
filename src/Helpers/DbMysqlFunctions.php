@@ -129,13 +129,7 @@ class DbMysqlFunctions extends DbBaseFunctions
     public function executeAndGetInsertedId(DbDriverInterface $dbdataset, string $sql, ?array $param = null): mixed
     {
         $returnedId = parent::executeAndGetInsertedId($dbdataset, $sql, $param);
-        $iterator = $dbdataset->getIterator("select LAST_INSERT_ID() id");
-        if ($iterator->hasNext()) {
-            $singleRow = $iterator->moveNext();
-            $returnedId = $singleRow->get("id");
-        }
-
-        return $returnedId;
+        return $dbdataset->getScalar("select LAST_INSERT_ID() id") ?? $returnedId;
     }
 
     #[Override]

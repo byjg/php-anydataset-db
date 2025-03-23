@@ -5,8 +5,8 @@ sidebar_position: 15
 # Pre-Fetch Records
 
 By default, records are fetched from the database one at a time as you iterate over them using methods like
-`moveNext()`,
-`toArray()`, or a `foreach` loop. However, AnyDataset-DB allows you to pre-fetch a specified number of records into
+`toArray()`, `valid()/next()` or a `foreach` loop. However, AnyDataset-DB allows you to pre-fetch a specified number of
+records into
 memory
 before starting the iteration, which can improve performance in certain scenarios.
 

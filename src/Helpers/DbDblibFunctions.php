@@ -132,13 +132,7 @@ class DbDblibFunctions extends DbBaseFunctions
     public function executeAndGetInsertedId(DbDriverInterface $dbdataset, string $sql, ?array $param = null): mixed
     {
         $insertedId = parent::executeAndGetInsertedId($dbdataset, $sql, $param);
-        $iterator = $dbdataset->getIterator("select @@identity id");
-        if ($iterator->hasNext()) {
-            $singleRow = $iterator->moveNext();
-            $insertedId = $singleRow->get("id");
-        }
-
-        return $insertedId;
+        return $dbdataset->getScalar("select @@identity id");
     }
 
     /**

@@ -74,9 +74,10 @@ class PdoSqliteTest extends TestCase
         // While
         $iterator = $this->dbDriver->getIterator('select * from info');
         $i = 0;
-        while ($iterator->hasNext()) {
-            $row = $iterator->moveNext();
+        while ($iterator->valid()) {
+            $row = $iterator->current();
             $this->assertEquals($expected[$i++], $row->toArray());
+            $iterator->next();
         }
         $this->assertEquals(3, $i);
 
@@ -108,9 +109,10 @@ class PdoSqliteTest extends TestCase
         // While
         $iterator = $this->dbDriver->getIterator('select * from info where iduser = :id', ['id' => 1]);
         $i = 0;
-        while ($iterator->hasNext()) {
-            $row = $iterator->moveNext();
+        while ($iterator->valid()) {
+            $row = $iterator->current();
             $this->assertEquals($expected[$i++], $row->toArray());
+            $iterator->next();
         }
 
         // Foreach
@@ -133,7 +135,7 @@ class PdoSqliteTest extends TestCase
 
         // While
         $iterator = $this->dbDriver->getIterator('select * from info where iduser = :id', ['id' => 5]);
-        $this->assertFalse($iterator->hasNext());
+        $this->assertFalse($iterator->valid());
 
         // Foreach
         $iterator = $this->dbDriver->getIterator('select * from info where iduser = :id', ['id' => 5]);
@@ -223,7 +225,7 @@ class PdoSqliteTest extends TestCase
         $this->dbDriver->rollbackTransaction();
 
         $iterator = $this->dbDriver->getIterator('select * from users where name = :name', ['name' => 'Another']);
-        $this->assertFalse($iterator->hasNext());
+        $this->assertFalse($iterator->valid());
     }
 
 
@@ -244,7 +246,7 @@ class PdoSqliteTest extends TestCase
 
         // Check values
         $iterator = $this->dbDriver->getIterator('select * from users where name = :name', ['name' => 'Another']);
-        $this->assertFalse($iterator->hasNext());
+        $this->assertFalse($iterator->valid());
 
         $iterator = $this->dbDriver->getIterator('select * from users where name = :name', ['name' => 'Another2']);
         $this->assertEquals(
@@ -526,11 +528,12 @@ class PdoSqliteTest extends TestCase
         $iterator = $this->dbDriver->getIterator('select * from info', preFetch: $preFetch);
 
         $i = 0;
-        while ($iterator->hasNext()) {
-            $row = $iterator->moveNext();
+        while ($iterator->valid()) {
+            $row = $iterator->current();
             $this->assertEquals($rows[$i], $row->toArray(), "Row $i");
             $this->assertEquals($i + 1, $iterator->key(), "Key Row $i");
             $i++;
+            $iterator->next();
         }
     }
 
