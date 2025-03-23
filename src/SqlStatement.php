@@ -16,17 +16,20 @@ class SqlStatement
 
     protected ?string $cacheKey = null;
 
-    public function __construct(string $sql)
+    protected ?array $params = null;
+
+    public function __construct(string $sql, ?array $params = null)
     {
         $this->sql = $sql;
         $this->cache = null;
         $this->cacheTime = null;
         $this->cacheKey = null;
+        $this->params = $params;
     }
 
-    public static function from(string $sql): static
+    public static function from(string $sql, ?array $params = null): static
     {
-        return new static($sql);
+        return new static($sql, $params);
     }
 
     public function withCache(CacheInterface $cache, string $cacheKey, int $cacheTime = 60): static
@@ -42,6 +45,12 @@ class SqlStatement
         $this->cache = null;
         $this->cacheTime = null;
         $this->cacheKey = null;
+        return $this;
+    }
+
+    public function withParams(?array $params): static
+    {
+        $this->params = $params;
         return $this;
     }
 
@@ -65,11 +74,16 @@ class SqlStatement
         return $this->cacheKey;
     }
 
+    public function getParams(): ?array
+    {
+        return $this->params;
+    }
+
     /**
      * Get an iterator for this SQL statement with the specified parameters
      *
      * @param DbDriverInterface $dbDriver The database driver
-     * @param array|null $param Parameters for the SQL query
+     * @param array|null $param Parameters for the SQL query (overrides any stored parameters)
      * @param int $preFetch Number of rows to prefetch
      * @param string|null $entityClass Optional entity class name to return rows as objects
      * @param PropertyHandlerInterface|null $entityTransformer Optional transformation function for customizing entity mapping
@@ -77,35 +91,52 @@ class SqlStatement
      */
     public function getIterator(
         DbDriverInterface         $dbDriver,
-        ?array                    $param = [],
+        ?array $param = null,
         int                       $preFetch = 0,
         ?string                   $entityClass = null,
         ?PropertyHandlerInterface $entityTransformer = null
     ): GenericIterator
     {
-        return $dbDriver->getIterator($this, $param, $preFetch, $entityClass, $entityTransformer);
+        $useParams = $param ?? $this->params;
+        return $dbDriver->getIterator($this, $useParams, $preFetch, $entityClass, $entityTransformer);
     }
 
     /**
      * Get a scalar value from the database by executing this SQL statement
      *
      * @param DbDriverInterface $dbDriver
-     * @param array|null $array
+     * @param array|null $array Parameters for the SQL query (overrides any stored parameters)
      * @return mixed
      */
     public function getScalar(DbDriverInterface $dbDriver, ?array $array = null): mixed
     {
-        return $dbDriver->getScalar($this, $array);
+        $useParams = $array ?? $this->params;
+        return $dbDriver->getScalar($this, $useParams);
     }
 
     /**
      * Execute this SQL statement on the database
      *
      * @param DbDriverInterface $dbDriver
-     * @param array|null $array
+     * @param array|null $array Parameters for the SQL query (overrides any stored parameters)
      */
     public function execute(DbDriverInterface $dbDriver, ?array $array = null): void
     {
-        $dbDriver->execute($this, $array);
+        $useParams = $array ?? $this->params;
+        $dbDriver->execute($this, $useParams);
+    }
+
+    /**
+     * Prepares this SQL statement for execution via the driver and returns the prepared statement
+     *
+     * @param DbDriverInterface $dbDriver The database driver
+     * @param array|null $params Parameters for the SQL query (overrides any stored parameters)
+     * @param array|null $cacheInfo Optional cache info for statement reuse
+     * @return mixed The prepared statement (driver-specific type)
+     */
+    public function prepare(DbDriverInterface $dbDriver, ?array $params = null, ?array &$cacheInfo = []): mixed
+    {
+        $useParams = $params ?? $this->params;
+        return $dbDriver->prepareStatement($this->sql, $useParams, $cacheInfo);
     }
 }

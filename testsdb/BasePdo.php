@@ -182,6 +182,12 @@ abstract class BasePdo extends TestCase
             $this->dbDriver->getScalar('select count(*) from Dogs where Id = :id', ['id' => 2])
         );
 
+        $sqlStatement = new SqlStatement('select Id from Dogs where Id = :id', ['id' => 2]);
+        $this->assertEquals(
+            2,
+            $this->dbDriver->getScalar($sqlStatement)
+        );
+
         $this->assertEquals(
             2,
             $this->dbDriver->getScalar('select Id from Dogs where Id = :id', ['id' => 2])

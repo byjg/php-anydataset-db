@@ -42,7 +42,7 @@ trait DatabaseExecutorTrait
      */
     protected function executeStatement(
         string|SqlStatement $sql,
-        ?array                    $param = [],
+        ?array $param = null,
         int                       $preFetch = 0,
         ?string                   $entityClass = null,
         ?PropertyHandlerInterface $entityTransformer = null
@@ -50,22 +50,29 @@ trait DatabaseExecutorTrait
     {
         // Convert string to SqlStatement if needed
         if (is_string($sql)) {
-            $sql = new SqlStatement($sql);
+            $sql = new SqlStatement($sql, $param);
+        } else {
+            // If parameters were provided, they override any in the SqlStatement
+            if ($param !== null) {
+                $sql = clone $sql;
+                $sql->withParams($param);
+            }
         }
 
         $cache = $sql->getCache();
         $sqlText = $sql->getSql();
+        $params = $sql->getParams() ?? [];
 
         // If no cache is configured, directly execute the query
         if (empty($cache)) {
-            $statement = $this->prepareStatement($sqlText, $param);
+            $statement = $this->prepareStatement($sqlText, $params);
             $this->executeCursor($statement);
             return $this->getDriverIterator($statement, $preFetch, $entityClass, $entityTransformer);
         }
 
         // Cache is configured - try to get from cache first
-        ksort($param);
-        $cacheKey = $sql->getCacheKey() . ':' . md5(json_encode($param));
+        ksort($params);
+        $cacheKey = $sql->getCacheKey() . ':' . md5(json_encode($params));
 
         if ($cache->has($cacheKey)) {
             return $this->getIteratorFromCache($cache, $cacheKey, $entityClass);
@@ -86,7 +93,7 @@ trait DatabaseExecutorTrait
 
         try {
             // Execute the query
-            $statement = $this->prepareStatement($sqlText, $param);
+            $statement = $this->prepareStatement($sqlText, $params);
             $this->executeCursor($statement);
             $iterator = $this->getDriverIterator($statement, preFetch: $preFetch, entityClass: $entityClass, entityTransformer: $entityTransformer);
 
