@@ -4,9 +4,9 @@ namespace ByJG\AnyDataset\Db;
 
 use ByJG\AnyDataset\Core\AnyDataset;
 use ByJG\AnyDataset\Core\GenericIterator;
+use ByJG\Serializer\PropertyHandler\PropertyHandlerInterface;
 use ByJG\XmlUtil\Exception\FileException;
 use ByJG\XmlUtil\Exception\XmlUtilException;
-use Closure;
 use DateInterval;
 use Psr\SimpleCache\CacheInterface;
 use Psr\SimpleCache\InvalidArgumentException;
@@ -76,13 +76,13 @@ class SqlStatement
      * @param array|null $param Parameters for the SQL query
      * @param int $preFetch Number of rows to prefetch
      * @param string|null $entityClass Optional entity class name to return rows as objects
-     * @param Closure|null $entityTransformer Optional transformation function for customizing entity mapping
+     * @param PropertyHandlerInterface|null $entityTransformer Optional transformation function for customizing entity mapping
      * @return GenericIterator The iterator containing the results
      * @throws XmlUtilException
      * @throws FileException
      * @throws InvalidArgumentException
      */
-    public function getIterator(DbDriverInterface $dbDriver, ?array $param = [], int $preFetch = 0, ?string $entityClass = null, ?Closure $entityTransformer = null): GenericIterator
+    public function getIterator(DbDriverInterface $dbDriver, ?array $param = [], int $preFetch = 0, ?string $entityClass = null, ?PropertyHandlerInterface $entityTransformer = null): GenericIterator
     {
         // If no cache is configured, just execute the query
         if (empty($this->cache)) {
@@ -127,10 +127,10 @@ class SqlStatement
      * @param array|null $param
      * @param int $preFetch
      * @param string|null $entityClass
-     * @param Closure|null $entityTransformer
+     * @param PropertyHandlerInterface|null $entityTransformer
      * @return GenericIterator
      */
-    protected function executeQuery(DbDriverInterface $dbDriver, ?array $param, int $preFetch, ?string $entityClass = null, ?Closure $entityTransformer = null): GenericIterator
+    protected function executeQuery(DbDriverInterface $dbDriver, ?array $param, int $preFetch, ?string $entityClass = null, ?PropertyHandlerInterface $entityTransformer = null): GenericIterator
     {
         $statement = $dbDriver->prepareStatement($this->sql, $param);
         $dbDriver->executeCursor($statement);
@@ -175,10 +175,10 @@ class SqlStatement
      * @param int $preFetch
      * @param string $cacheKey
      * @param string|null $entityClass
-     * @param Closure|null $entityTransformer
+     * @param PropertyHandlerInterface|null $entityTransformer
      * @return GenericIterator
      */
-    protected function executeAndCacheQuery(DbDriverInterface $dbDriver, ?array $param, int $preFetch, string $cacheKey, ?string $entityClass = null, ?Closure $entityTransformer = null): GenericIterator
+    protected function executeAndCacheQuery(DbDriverInterface $dbDriver, ?array $param, int $preFetch, string $cacheKey, ?string $entityClass = null, ?PropertyHandlerInterface $entityTransformer = null): GenericIterator
     {
         // Execute the query
         $iterator = $this->executeQuery($dbDriver, $param, $preFetch, $entityClass, $entityTransformer);

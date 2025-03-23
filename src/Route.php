@@ -6,8 +6,8 @@ use ByJG\AnyDataset\Core\Exception\NotImplementedException;
 use ByJG\AnyDataset\Core\GenericIterator;
 use ByJG\AnyDataset\Db\Exception\RouteNotFoundException;
 use ByJG\AnyDataset\Db\Exception\RouteNotMatchedException;
+use ByJG\Serializer\PropertyHandler\PropertyHandlerInterface;
 use ByJG\Util\Uri;
-use Closure;
 use DateInterval;
 use InvalidArgumentException;
 use Override;
@@ -246,12 +246,12 @@ class Route implements DbDriverInterface
      * @param int|DateInterval $ttl
      * @param int $preFetch
      * @param string|null $entityClass
-     * @param Closure|null $entityTransformer
+     * @param PropertyHandlerInterface|null $entityTransformer
      * @return GenericIterator
      * @throws RouteNotMatchedException
      */
     #[Override]
-    public function getIterator(mixed $sql, ?array $params = null, ?CacheInterface $cache = null, DateInterval|int $ttl = 60, int $preFetch = 0, ?string $entityClass = null, ?Closure $entityTransformer = null): GenericIterator
+    public function getIterator(mixed $sql, ?array $params = null, ?CacheInterface $cache = null, DateInterval|int $ttl = 60, int $preFetch = 0, ?string $entityClass = null, ?PropertyHandlerInterface $entityTransformer = null): GenericIterator
     {
         $dbDriver = $this->matchRoute($sql);
         return $dbDriver->getIterator($sql, $params, $cache, $ttl, $preFetch, $entityClass, $entityTransformer);

@@ -4,7 +4,7 @@ namespace ByJG\AnyDataset\Db;
 
 use ByJG\AnyDataset\Core\GenericIterator;
 use ByJG\AnyDataset\Db\Traits\PreFetchTrait;
-use Closure;
+use ByJG\Serializer\PropertyHandler\PropertyHandlerInterface;
 use Override;
 
 class Oci8Iterator extends GenericIterator
@@ -22,18 +22,18 @@ class Oci8Iterator extends GenericIterator
     private ?string $entityClass;
 
     /**
-     * @var Closure|null
+     * @var PropertyHandlerInterface|null
      */
-    private ?Closure $entityTransformer;
+    private ?PropertyHandlerInterface $entityTransformer;
 
     /**
      *
      * @param resource $cursor
      * @param int $preFetch
      * @param string|null $entityClass
-     * @param Closure|null $entityTransformer
+     * @param PropertyHandlerInterface|null $entityTransformer
      */
-    public function __construct($cursor, int $preFetch = 0, ?string $entityClass = null, ?Closure $entityTransformer = null)
+    public function __construct($cursor, int $preFetch = 0, ?string $entityClass = null, ?PropertyHandlerInterface $entityTransformer = null)
     {
         $this->cursor = $cursor;
         $this->entityClass = $entityClass;

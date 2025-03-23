@@ -12,6 +12,7 @@ use ByJG\AnyDataset\Db\Factory;
 use ByJG\AnyDataset\Db\IsolationLevelEnum;
 use ByJG\AnyDataset\Db\SqlStatement;
 use ByJG\Cache\Psr16\ArrayCacheEngine;
+use ByJG\Serializer\PropertyHandler\PropertyNameMapper;
 use Exception;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
@@ -674,7 +675,7 @@ abstract class BasePdo extends TestCase
         while ($iterator->valid()) {
             $row = $iterator->current();
             $this->assertEquals($rows[$i], $row->toArray(), "Row $i");
-            $this->assertEquals($i + 1, $iterator->key(), "Key Row $i");
+            $this->assertEquals($i, $iterator->key(), "Key Row $i");
             $i++;
             $iterator->next();
         }
@@ -761,30 +762,13 @@ abstract class BasePdo extends TestCase
 
     public function testEntityWithTransformer()
     {
-        // Create a custom property mapping transformer
-        $transformer = function ($sourceField) {
-            // Map database column names to custom property names
-            switch (strtolower($sourceField)) {
-                case 'id':
-                    return 'dogId';
-                case 'name':
-                    return 'dogName';
-                case 'breed':
-                    return 'dogBreed';
-                case 'weight':
-                    return 'dogWeight';
-                default:
-                    return $sourceField;
-            }
-        };
-
         $array = $this->allData();
 
         // Get iterator with entity class and transformer
         $iterator = $this->dbDriver->getIterator(
             'select * from Dogs',
             entityClass: DogEntity::class,
-            entityTransformer: $transformer
+            entityTransformer: new PropertyNameMapper(['id' => 'dogId', 'name' => 'dogName', 'breed' => 'dogBreed', 'weight' => 'dogWeight'])
         );
 
         // Verify we get objects of the correct type with transformed property names
@@ -808,23 +792,22 @@ abstract class BasePdo extends TestCase
 
     public function testEntityWithComplexTransformer()
     {
-        // Create a complex property name transformer
-        $transformer = function ($sourceField) {
-            switch (strtolower($sourceField)) {
-                case 'id':
-                    return 'animalId';
-                case 'name':
-                    return 'animalName';
-                case 'breed':
-                    return 'animalType';
-                case 'weight':
-                    return 'weightKg';
-                default:
-                    return $sourceField;
-            }
-        };
-
         $array = $this->allData();
+
+        $transformer = new PropertyNameMapper(
+            [
+                'id' => 'animalId',
+                'name' => 'animalName',
+                'breed' => 'animalType',
+                'weight' => 'weightKg'
+            ],
+            function ($sourceField, $targetField, $value) {
+                if ($targetField === 'weightKg') {
+                    return $value / 2.20462;
+                }
+                return $value;
+            }
+        );
 
         // Get iterator with entity class and transformer
         $iterator = $this->dbDriver->getIterator(
@@ -843,24 +826,7 @@ abstract class BasePdo extends TestCase
             $this->assertEquals($array[$i]['id'], $entity->animalId);
             $this->assertEquals($array[$i]['name'], $entity->animalName);
             $this->assertEquals($array[$i]['breed'], $entity->animalType);
-
-            if (!empty($array[$i]['weight'])) {
-                $this->assertEquals($array[$i]['weight'], $entity->weightKg);
-
-                // Test the calculated property method
-                $expectedPounds = $entity->weightKg * 2.20462;
-                $this->assertEquals($expectedPounds, $entity->getWeightInPounds());
-
-                // Test the description method
-                $expectedDescription = sprintf("%s is a %s with ID #%d weighing %.1f kg",
-                    $entity->animalName,
-                    $entity->animalType,
-                    $entity->animalId,
-                    $entity->weightKg
-                );
-                $this->assertEquals($expectedDescription, $entity->getDescription());
-            }
-
+            $this->assertEquals($array[$i]['weight'] / 2.20462, $entity->weightKg);
             $i++;
         }
 

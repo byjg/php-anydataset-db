@@ -10,10 +10,10 @@ use ByJG\AnyDataset\Db\Helpers\SqlBind;
 use ByJG\AnyDataset\Db\Helpers\SqlHelper;
 use ByJG\AnyDataset\Db\Traits\DbCacheTrait;
 use ByJG\AnyDataset\Db\Traits\TransactionTrait;
+use ByJG\Serializer\PropertyHandler\PropertyHandlerInterface;
 use ByJG\Util\Uri;
 use ByJG\XmlUtil\Exception\FileException;
 use ByJG\XmlUtil\Exception\XmlUtilException;
-use Closure;
 use DateInterval;
 use Exception;
 use InvalidArgumentException;
@@ -152,7 +152,7 @@ class DbOci8Driver implements DbDriverInterface
      * @param int|DateInterval $ttl
      * @param int $preFetch
      * @param string|null $entityClass
-     * @param Closure|null $entityTransformer
+     * @param PropertyHandlerInterface|null $entityTransformer
      * @return GenericIterator
      * @throws FileException
      * @throws XmlUtilException
@@ -160,7 +160,7 @@ class DbOci8Driver implements DbDriverInterface
      * @throws \Psr\SimpleCache\InvalidArgumentException
      */
     #[Override]
-    public function getIterator(mixed $sql, ?array $params = null, ?CacheInterface $cache = null, DateInterval|int $ttl = 60, int $preFetch = 0, ?string $entityClass = null, ?Closure $entityTransformer = null): GenericIterator
+    public function getIterator(mixed $sql, ?array $params = null, ?CacheInterface $cache = null, DateInterval|int $ttl = 60, int $preFetch = 0, ?string $entityClass = null, ?PropertyHandlerInterface $entityTransformer = null): GenericIterator
     {
         if (is_resource($sql)) {
             return new Oci8Iterator($sql, $preFetch, $entityClass, $entityTransformer);
