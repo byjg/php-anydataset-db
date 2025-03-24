@@ -4,6 +4,7 @@ namespace ByJG\AnyDataset\Db\Helpers;
 
 use ByJG\AnyDataset\Db\DbDriverInterface;
 use ByJG\AnyDataset\Db\IsolationLevelEnum;
+use ByJG\AnyDataset\Db\SqlStatement;
 use Override;
 
 class DbOci8Functions extends DbBaseFunctions
@@ -117,13 +118,13 @@ class DbOci8Functions extends DbBaseFunctions
     }
 
     /**
-     * @param DbDriverInterface $dbdataset
-     * @param string $sql
+     * @param DbDriverInterface $dbDriver
+     * @param string|SqlStatement $sql
      * @param array|null $param
      * @return mixed
      */
     #[Override]
-    public function executeAndGetInsertedId(DbDriverInterface $dbdataset, string $sql, ?array $param = null): mixed
+    public function executeAndGetInsertedId(DbDriverInterface $dbDriver, string|SqlStatement $sql, ?array $param = null): mixed
     {
         preg_match('/INSERT INTO ([a-zA-Z0-9_]+)/i', $sql, $matches);
         $tableName = $matches[1] ?? null;
@@ -132,7 +133,7 @@ class DbOci8Functions extends DbBaseFunctions
             $tableName = strtoupper($tableName);
 
             // Get the primary key of the table
-            $primaryKeyResult = $dbdataset->getScalar("SELECT cols.column_name
+            $primaryKeyResult = $dbDriver->getScalar("SELECT cols.column_name
                 FROM all_constraints cons, all_cons_columns cols
                 WHERE cols.table_name = '{$tableName}'
                 AND cons.constraint_type = 'P'
@@ -141,23 +142,23 @@ class DbOci8Functions extends DbBaseFunctions
                 AND ROWNUM = 1");
 
             // Get the default value of the primary key
-            $defaultValueResult = $dbdataset->getScalar("SELECT DATA_DEFAULT
+            $defaultValueResult = $dbDriver->getScalar("SELECT DATA_DEFAULT
                 FROM USER_TAB_COLUMNS
                 WHERE TABLE_NAME = '{$tableName}'
                 AND COLUMN_NAME = '{$primaryKeyResult}'");
         }
 
-        $dbdataset->execute($sql, $param);
+        $dbDriver->execute($sql, $param);
 
         if (!empty($tableName) && !empty($defaultValueResult)) {
 
             // Check if the default value is a sequence's nextval
-            if (strpos($defaultValueResult, '.nextval') !== false) {
+            if (str_contains($defaultValueResult, '.nextval')) {
                 // Extract the sequence name
                 $sequenceName = str_replace('.nextval', '', $defaultValueResult);
 
                 // Return the CURRVAL of the sequence
-                return $dbdataset->getScalar("SELECT {$sequenceName}.currval FROM DUAL");
+                return $dbDriver->getScalar("SELECT {$sequenceName}.currval FROM DUAL");
             }
         }
 

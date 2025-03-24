@@ -5,6 +5,7 @@ namespace ByJG\AnyDataset\Db\Helpers;
 use ByJG\AnyDataset\Db\DbDriverInterface;
 use ByJG\AnyDataset\Db\DbFunctionsInterface;
 use ByJG\AnyDataset\Db\IsolationLevelEnum;
+use ByJG\AnyDataset\Db\SqlStatement;
 use DateTime;
 use Exception;
 use Override;
@@ -140,17 +141,16 @@ abstract class DbBaseFunctions implements DbFunctionsInterface
     }
 
     /**
-     * @param DbDriverInterface $dbdataset
-     * @param string $sql
+     * @param DbDriverInterface $dbDriver
+     * @param string|SqlStatement $sql
      * @param array|null $param
      * @return mixed
      */
     #[Override]
-    public function executeAndGetInsertedId(DbDriverInterface $dbdataset, string $sql, ?array $param = null): mixed
+    public function executeAndGetInsertedId(DbDriverInterface $dbDriver, string|SqlStatement $sql, ?array $param = null): mixed
     {
-        $dbdataset->execute($sql, $param);
-
-        return $dbdataset->getDbConnection()->lastInsertId();
+        $dbDriver->execute($sql, $param);
+        return $dbDriver->getDbConnection()->lastInsertId();
     }
 
     protected $deliFieldLeft = '';

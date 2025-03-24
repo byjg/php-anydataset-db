@@ -4,6 +4,7 @@ namespace ByJG\AnyDataset\Db\Helpers;
 
 use ByJG\AnyDataset\Db\DbDriverInterface;
 use ByJG\AnyDataset\Db\IsolationLevelEnum;
+use ByJG\AnyDataset\Db\SqlStatement;
 use Override;
 
 class DbPgsqlFunctions extends DbBaseFunctions
@@ -117,16 +118,16 @@ class DbPgsqlFunctions extends DbBaseFunctions
     }
 
     /**
-     * @param DbDriverInterface $dbdataset
-     * @param string $sql
+     * @param DbDriverInterface $dbDriver
+     * @param string|SqlStatement $sql
      * @param array|null $param
      * @return mixed
      */
     #[Override]
-    public function executeAndGetInsertedId(DbDriverInterface $dbdataset, string $sql, ?array $param = null): mixed
+    public function executeAndGetInsertedId(DbDriverInterface $dbDriver, string|SqlStatement $sql, ?array $param = null): mixed
     {
-        parent::executeAndGetInsertedId($dbdataset, $sql, $param);
-        return $dbdataset->getScalar('select lastval()');
+        parent::executeAndGetInsertedId($dbDriver, $sql, $param);
+        return $dbDriver->getScalar('select lastval()');
     }
 
     #[Override]

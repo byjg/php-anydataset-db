@@ -5,6 +5,7 @@ namespace ByJG\AnyDataset\Db\Helpers;
 use ByJG\AnyDataset\Core\Exception\NotAvailableException;
 use ByJG\AnyDataset\Db\DbDriverInterface;
 use ByJG\AnyDataset\Db\IsolationLevelEnum;
+use ByJG\AnyDataset\Db\SqlStatement;
 use Override;
 
 class DbDblibFunctions extends DbBaseFunctions
@@ -123,16 +124,16 @@ class DbDblibFunctions extends DbBaseFunctions
 
     /**
      *
-     * @param DbDriverInterface $dbdataset
-     * @param string $sql
+     * @param DbDriverInterface $dbDriver
+     * @param string|SqlStatement $sql
      * @param array|null $param
      * @return mixed
      */
     #[Override]
-    public function executeAndGetInsertedId(DbDriverInterface $dbdataset, string $sql, ?array $param = null): mixed
+    public function executeAndGetInsertedId(DbDriverInterface $dbDriver, string|SqlStatement $sql, ?array $param = null): mixed
     {
-        $insertedId = parent::executeAndGetInsertedId($dbdataset, $sql, $param);
-        return $dbdataset->getScalar("select @@identity id");
+        $returnedId = parent::executeAndGetInsertedId($dbDriver, $sql, $param);
+        return $dbDriver->getScalar("select @@identity id") ?? $returnedId;
     }
 
     /**

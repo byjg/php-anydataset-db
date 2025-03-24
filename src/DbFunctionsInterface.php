@@ -78,12 +78,12 @@ interface DbFunctionsInterface
 
     /**
      *
-     * @param DbDriverInterface $dbdataset
-     * @param string $sql
+     * @param DbDriverInterface $dbDriver
+     * @param string|SqlStatement $sql
      * @param array|null $param
      * @return mixed
      */
-    public function executeAndGetInsertedId(DbDriverInterface $dbdataset, string $sql, ?array $param = null): mixed;
+    public function executeAndGetInsertedId(DbDriverInterface $dbDriver, string|SqlStatement $sql, ?array $param = null): mixed;
 
     /**
      * @param string|array $field

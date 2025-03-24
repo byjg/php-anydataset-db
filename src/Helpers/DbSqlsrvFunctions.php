@@ -3,6 +3,7 @@
 namespace ByJG\AnyDataset\Db\Helpers;
 
 use ByJG\AnyDataset\Db\DbDriverInterface;
+use ByJG\AnyDataset\Db\SqlStatement;
 use Override;
 
 /**
@@ -21,17 +22,16 @@ class DbSqlsrvFunctions extends DbDblibFunctions
     /**
      * Execute SQL with optimized handling for SQLSRV
      *
-     * @param DbDriverInterface $dbdataset
-     * @param string $sql
+     * @param DbDriverInterface $dbDriver
+     * @param string|SqlStatement $sql
      * @param array|null $param
      * @return mixed
      */
     #[Override]
-    public function executeAndGetInsertedId(DbDriverInterface $dbdataset, string $sql, ?array $param = null): mixed
+    public function executeAndGetInsertedId(DbDriverInterface $dbDriver, string|SqlStatement $sql, ?array $param = null): mixed
     {
         // For SQLSRV, we use a more efficient method to get the inserted ID
-        $dbdataset->execute($sql, $param);
-
-        return $dbdataset->getScalar("select SCOPE_IDENTITY() as id");
+        $dbDriver->execute($sql, $param);
+        return $dbDriver->getScalar("select SCOPE_IDENTITY() as id");
     }
 }
