@@ -14,18 +14,18 @@ class SqlStatement
 
     protected ?string $cacheKey = null;
 
-    protected ?array $params = null;
+    protected array $params = [];
 
-    public function __construct(string $sql, ?array $params = null)
+    public function __construct(string $sql, ?array $params = [])
     {
         $this->sql = $sql;
         $this->cache = null;
         $this->cacheTime = null;
         $this->cacheKey = null;
-        $this->params = $params;
+        $this->params = $params ?? [];
     }
 
-    public static function from(string $sql, ?array $params = null): static
+    public static function from(string $sql, ?array $params = []): static
     {
         return new static($sql, $params);
     }
@@ -51,7 +51,7 @@ class SqlStatement
     public function withParams(?array $params): static
     {
         $statement = clone $this;
-        $statement->params = array_merge($this->params ?? [], $params ?? []);
+        $statement->params = array_merge($this->params, $params ?? []);
         return $statement;
     }
 
