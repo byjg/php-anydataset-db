@@ -62,6 +62,7 @@ $conn = \ByJG\AnyDataset\Db\Factory::getDbInstance("mysql://root:password@10.0.1
 - [Running Tests](docs/tests.md)
 - [Getting an Iterator from an existing PDO Statament](docs/pdostatement.md)
 - [Pre Fetch records](docs/prefetch.md)
+- [Logging](docs/logging.md)
 
 ## Database Specifics
 
