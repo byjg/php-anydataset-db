@@ -161,10 +161,9 @@ class DbDblibFunctions extends DbBaseFunctions
     }
 
     #[Override]
-    protected function parseColumnMetadata($metadata)
+    protected function parseColumnMetadata(array $metadata): array
     {
         $return = [];
-
 
         foreach ($metadata as $key => $value) {
             if (!empty($value['character_maximum_length'])) {

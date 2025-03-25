@@ -59,24 +59,6 @@ interface DbFunctionsInterface
     public function sqlDate(string $format, ?string $column = null): string;
 
     /**
-     * Format a string date to a string database readable format.
-     *
-     * @param string $date
-     * @param string $dateFormat
-     * @return string
-     */
-    public function toDate(string $date, string $dateFormat): string;
-
-    /**
-     * Format a string database readable format to a string date in a free format.
-     *
-     * @param string $date
-     * @param string $dateFormat
-     * @return string
-     */
-    public function fromDate(string $date, string $dateFormat): string;
-
-    /**
      *
      * @param DbDriverInterface $dbDriver
      * @param string|SqlStatement $sql

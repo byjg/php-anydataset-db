@@ -6,7 +6,6 @@ use ByJG\AnyDataset\Db\DbDriverInterface;
 use ByJG\AnyDataset\Db\DbFunctionsInterface;
 use ByJG\AnyDataset\Db\IsolationLevelEnum;
 use ByJG\AnyDataset\Db\SqlStatement;
-use DateTime;
 use Exception;
 use Override;
 
@@ -89,55 +88,17 @@ abstract class DbBaseFunctions implements DbFunctionsInterface
     abstract public function sqlDate(string $format, ?string $column = null): string;
 
 
-    protected function prepareSqlDate($input, $pattern, $delimitString = "'")
+    protected function prepareSqlDate(string $input, array $pattern, string $delimitString = "'"): array
     {
-        $prepareString = preg_split('/([YyMmQqDdhHisaA])/', $input, -1, PREG_SPLIT_DELIM_CAPTURE);
+        $prepareString = array_filter(
+            preg_split('/([YyMmQqDdhHisaA])/', $input, -1, PREG_SPLIT_DELIM_CAPTURE),
+            fn($value) => $value !== ''
+        );
 
-        foreach ($prepareString as $key => $value) {
-            if ('' === $value) {
-                unset($prepareString[$key]);
-                continue;
-            }
-
-            if (isset($pattern[$value])) {
-                $formatted = $pattern[$value];
-            } else {
-                $formatted = $delimitString . $value . $delimitString;
-            }
-            $prepareString[$key] = $formatted;
-        }
-
-        return $prepareString;
-    }
-
-    /**
-     * Format a string date to a string database readable format.
-     *
-     * @param string $date
-     * @param string $dateFormat
-     * @return string
-     */
-    #[Override]
-    public function toDate(string $date, string $dateFormat): string
-    {
-        $dateTime = DateTime::createFromFormat($dateFormat, $date);
-
-        return $dateTime->format(self::YMDH);
-    }
-
-    /**
-     * Format a string database readable format to a string date in a free format.
-     *
-     * @param string $date
-     * @param string $dateFormat
-     * @return string
-     */
-    #[Override]
-    public function fromDate(string $date, string $dateFormat): string
-    {
-        $dateTime = DateTime::createFromFormat(self::YMDH, $date);
-
-        return $dateTime->format($dateFormat);
+        return array_map(
+            fn($value) => $pattern[$value] ?? $delimitString . $value . $delimitString,
+            $prepareString
+        );
     }
 
     /**
@@ -153,10 +114,10 @@ abstract class DbBaseFunctions implements DbFunctionsInterface
         return $dbDriver->getDbConnection()->lastInsertId();
     }
 
-    protected $deliFieldLeft = '';
-    protected $deliFieldRight = '';
-    protected $deliTableLeft = '';
-    protected $deliTableRight = '';
+    protected string $deliFieldLeft = '';
+    protected string $deliFieldRight = '';
+    protected string $deliTableLeft = '';
+    protected string $deliTableRight = '';
 
     /**
      * @param string|array $field
@@ -165,39 +126,30 @@ abstract class DbBaseFunctions implements DbFunctionsInterface
     #[Override]
     public function delimiterField(string|array $field): string|array
     {
-        $result = [];
-        foreach ((array)$field as $fld) {
-            $fldAr = explode('.', $fld);
-            $result[] = $this->deliFieldLeft
-                . implode($this->deliFieldRight . '.' . $this->deliFieldLeft, $fldAr)
-                . $this->deliFieldRight;
-        }
+        $delimiter = fn($fld) => $this->deliFieldLeft .
+            implode($this->deliFieldRight . '.' . $this->deliFieldLeft, explode('.', $fld)) .
+            $this->deliFieldRight;
 
-        if (is_string($field)) {
-            return $result[0];
-        }
+        $result = array_map($delimiter, (array)$field);
 
-        return $result;
+        return is_string($field) ? $result[0] : $result;
     }
 
     #[Override]
     public function delimiterTable(string|array $table): string
     {
-        $tableAr = explode('.', $table);
-
-        return $this->deliTableLeft
-            . implode($this->deliTableRight . '.' . $this->deliTableLeft, $tableAr)
-            . $this->deliTableRight;
+        $parts = explode('.', $table);
+        return implode('.', array_map(
+            fn($part) => $this->deliTableLeft . $part . $this->deliTableRight,
+            $parts
+        ));
     }
 
     #[Override]
     public function forUpdate(string $sql): string
     {
-        if (!preg_match('#\bfor update\b#i', $sql)) {
-            $sql = $sql . " FOR UPDATE ";
-        }
-
-        return $sql;
+        $pattern = '#\bfor\s+update\b#i';
+        return preg_match($pattern, $sql) ? $sql : "$sql FOR UPDATE ";
     }
 
     #[Override]
@@ -209,50 +161,51 @@ abstract class DbBaseFunctions implements DbFunctionsInterface
         throw new Exception("Not implemented");
     }
 
-    protected function getTableMetadataFromSql(DbDriverInterface $dbdataset, $sql)
+    protected function getTableMetadataFromSql(DbDriverInterface $dbdataset, string $sql): array
     {
         $metadata = $dbdataset->getIterator($sql)->toArray();
         return $this->parseColumnMetadata($metadata);
     }
 
-    abstract protected function parseColumnMetadata($metadata);
+    /**
+     * Parse column metadata from database-specific format into standardized format
+     *
+     * @param array<array-key, array<string, mixed>> $metadata Raw metadata from database
+     * @return array<string, array{name: string, dbType: string, required: bool, default: mixed, phpType: string, length: int|null, precision: int|null}>
+     */
+    abstract protected function parseColumnMetadata(array $metadata): array;
 
-    protected function parseTypeMetadata($type)
+    protected function parseTypeMetadata(string $type): array
     {
-        $matches = [];
+        $defaultResult = ['phpType' => 'string', 'length' => null, 'precision' => null];
+        
         if (!preg_match('/(?<type>[a-z0-9\s]+)(\((?<len>\d+)(,(?<precision>\d+))?\))?/i', $type, $matches)) {
-            return [ 'phpType' => 'string', 'length' => null, 'precision' => null ];
+            return $defaultResult;
         }
 
-        if (isset($matches['len'])) {
-            $matches['len'] = intval($matches['len']);
-        } else {
-            $matches['len'] = null;
+        $type = strtolower($matches['type']);
+        $length = isset($matches['len']) ? (int)$matches['len'] : null;
+        $precision = isset($matches['precision']) ? (int)$matches['precision'] : null;
+
+        $typeMap = [
+            'int' => ['phpType' => 'integer', 'length' => null, 'precision' => null],
+            'char' => ['phpType' => 'string', 'length' => $length, 'precision' => null],
+            'text' => ['phpType' => 'string', 'length' => null, 'precision' => null],
+            'real' => ['phpType' => 'float', 'length' => $length, 'precision' => $precision],
+            'double' => ['phpType' => 'float', 'length' => $length, 'precision' => $precision],
+            'float' => ['phpType' => 'float', 'length' => $length, 'precision' => $precision],
+            'num' => ['phpType' => 'float', 'length' => $length, 'precision' => $precision],
+            'dec' => ['phpType' => 'float', 'length' => $length, 'precision' => $precision],
+            'bool' => ['phpType' => 'bool', 'length' => null, 'precision' => null],
+        ];
+
+        foreach ($typeMap as $key => $result) {
+            if (str_contains($type, $key)) {
+                return $result;
+            }
         }
 
-        if (isset($matches['precision'])) {
-            $matches['precision'] = intval($matches['precision']);
-        } else {
-            $matches['precision'] = null;
-        }
-
-        if (strpos($matches['type'], 'int') !== false) {
-            return [ 'phpType' => 'integer', 'length' => null, 'precision' => null ];
-        }
-
-        if (strpos($matches['type'], 'char') !== false || strpos($matches['type'], 'text') !== false) {
-            return [ 'phpType' => 'string', 'length' => $matches['len'], 'precision' => null ];
-        }
-
-        if (strpos($matches['type'], 'real') !== false || strpos($matches['type'], 'double') !== false || strpos($matches['type'], 'float') !== false || strpos($matches['type'], 'num') !== false || strpos($matches['type'], 'dec') !== false) {
-            return [ 'phpType' => 'float', 'length' => $matches['len'], 'precision' => $matches['precision'] ];
-        }
-
-        if (strpos($matches['type'], 'bool') !== false) {
-            return [ 'phpType' => 'bool', 'length' => null, 'precision' => null ];
-        }
-
-        return [ 'phpType' => 'string', 'length' => null, 'precision' => null ];
+        return $defaultResult;
     }
 
     #[Override]

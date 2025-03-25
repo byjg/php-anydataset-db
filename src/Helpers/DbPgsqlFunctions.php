@@ -145,7 +145,7 @@ class DbPgsqlFunctions extends DbBaseFunctions
     }
 
     #[Override]
-    protected function parseColumnMetadata($metadata)
+    protected function parseColumnMetadata(array $metadata): array
     {
         $return = [];
 
