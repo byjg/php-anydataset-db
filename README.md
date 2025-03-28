@@ -25,15 +25,15 @@ Database connections are defined using URL-based connection strings.
 
 Supported drivers are listed below:
 
-| Database            | Connection String                                 | Factory Method              |
-|---------------------|---------------------------------------------------|-----------------------------|
-| SQLite              | sqlite:///path/to/file                            | `getDbRelationalInstance()` |
-| MySQL/MariaDB       | mysql://username:password@hostname:port/database  | `getDbRelationalInstance()` |
-| PostgreSQL          | psql://username:password@hostname:port/database   | `getDbRelationalInstance()` |
-| SQL Server (DbLib)  | dblib://username:password@hostname:port/database  | `getDbRelationalInstance()` |
-| SQL Server (Sqlsrv) | sqlsrv://username:password@hostname:port/database | `getDbRelationalInstance()` |
-| Oracle (OCI8)       | oci8://username:password@hostname:port/database   | `getDbRelationalInstance()` |
-| Generic PDO         | pdo://username:password@pdo_driver?PDO_PARAMETERS | `getDbRelationalInstance()` |
+| Database            | Connection String                                 | Factory Method    |
+|---------------------|---------------------------------------------------|-------------------|
+| SQLite              | sqlite:///path/to/file                            | `getDbInstance()` |
+| MySQL/MariaDB       | mysql://username:password@hostname:port/database  | `getDbInstance()` |
+| PostgreSQL          | psql://username:password@hostname:port/database   | `getDbInstance()` |
+| SQL Server (DbLib)  | dblib://username:password@hostname:port/database  | `getDbInstance()` |
+| SQL Server (Sqlsrv) | sqlsrv://username:password@hostname:port/database | `getDbInstance()` |
+| Oracle (OCI8)       | oci8://username:password@hostname:port/database   | `getDbInstance()` |
+| Generic PDO         | pdo://username:password@pdo_driver?PDO_PARAMETERS | `getDbInstance()` |
 
 Example usage:
 
