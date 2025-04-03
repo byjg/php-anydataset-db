@@ -2,6 +2,7 @@
 
 namespace ByJG\AnyDataset\Db;
 
+use ByJG\AnyDataset\Core\Exception\NotAvailableException;
 use ByJG\AnyDataset\Db\Exception\DbDriverNotConnected;
 use ByJG\Util\Uri;
 use Override;
@@ -19,6 +20,7 @@ class PdoPgsql extends DbPdoDriver
      *
      * @param Uri $connUri
      * @throws DbDriverNotConnected
+     * @throws NotAvailableException
      */
     public function __construct(Uri $connUri)
     {

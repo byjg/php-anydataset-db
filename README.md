@@ -67,6 +67,7 @@ $conn = \ByJG\AnyDataset\Db\Factory::getDbInstance("mysql://root:password@10.0.1
 ## Database Specifics
 
 - [MySQL](docs/mysql.md)
+- [PostgreSQL](docs/postgresql.md)
 - [Oracle](docs/oracle.md)
 - [SQLServer](docs/sqlserver.md)
 - [Literal PDO Connection String](docs/literal-pdo-driver.md)
