@@ -118,4 +118,30 @@ class SqlBindTest extends TestCase
             )
         );
     }
+
+    public function testPostgresTypecast()
+    {
+        $paramIn = [
+            'name' => 'John',
+            'surname' => 'Doe',
+            'age' => 43
+        ];
+
+        // Test with Postgres type casting (::)
+        $uri = new Uri('pgsql://host');
+        $sql = 'SELECT column::text, :name, :surname FROM table WHERE age = :age';
+        $expected = 'SELECT column::text, :name, :surname FROM table WHERE age = :age';
+
+        $this->assertEquals(
+            [
+                $expected,
+                $paramIn
+            ],
+            SqlBind::parseSQL(
+                $uri,
+                $sql,
+                $paramIn
+            )
+        );
+    }
 }

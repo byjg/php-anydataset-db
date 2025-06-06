@@ -42,7 +42,7 @@ class SqlBind
 
         $sqlAlter = preg_replace("~'.*?((\\\\'|'').*?)*'~", "", $sql);
         preg_match_all(
-            "/:(?<param>[_\\w\\d]+)\b/",
+            "/(?<!:):(?<param>[_\\w\\d]+)\b/",
             $sqlAlter,
             $matches
         );
@@ -58,7 +58,7 @@ class SqlBind
                 // Remove NON DEFINED parameters
                 $sql = preg_replace(
                     [
-                        "/:$paramName\b/"
+                        "/(?<!:):$paramName\b/"
                     ],
                     [
                         "null"
@@ -74,7 +74,7 @@ class SqlBind
             $count = 0;
             $sql = preg_replace(
                 [
-                    "/:$paramName\b/",
+                    "/(?<!:):$paramName\b/",
                 ],
                 [
                     $dbArg,
