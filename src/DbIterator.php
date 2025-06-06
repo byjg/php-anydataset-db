@@ -2,13 +2,13 @@
 
 namespace ByJG\AnyDataset\Db;
 
-use ByJG\AnyDataset\Core\GenericIterator;
 use ByJG\AnyDataset\Db\Traits\PreFetchTrait;
+use ByJG\Serializer\PropertyHandler\PropertyHandlerInterface;
+use Override;
 use PDO;
 use PDOStatement;
-use ReturnTypeWillChange;
 
-class DbIterator extends GenericIterator
+class DbIterator extends GenericDbIterator
 {
     use PreFetchTrait;
 
@@ -18,29 +18,36 @@ class DbIterator extends GenericIterator
     private ?PDOStatement $statement;
 
     /**
+     * @var string|null
+     */
+    private ?string $entityClass;
+
+    /**
+     * @var PropertyHandlerInterface|null
+     */
+    private ?PropertyHandlerInterface $entityTransformer;
+
+    /**
      * @param PDOStatement $recordset
      * @param int $preFetch
+     * @param string|null $entityClass
+     * @param PropertyHandlerInterface|null $entityTransformer
      */
-    public function __construct(PDOStatement $recordset, int $preFetch = 0)
+    public function __construct(PDOStatement $recordset, int $preFetch = 0, ?string $entityClass = null, ?PropertyHandlerInterface $entityTransformer = null)
     {
         $this->statement = $recordset;
+        $this->entityClass = $entityClass;
+        $this->entityTransformer = $entityTransformer;
         $this->initPreFetch($preFetch);
     }
 
-    /**
-     * @return int
-     */
-    #[ReturnTypeWillChange]
-    public function count(): int
-    {
-        return $this->statement->rowCount();
-    }
-
+    #[Override]
     public function isCursorOpen(): bool
     {
         return !is_null($this->statement);
     }
 
+    #[Override]
     public function releaseCursor(): void
     {
         if ($this->isCursorOpen()) {
@@ -49,6 +56,7 @@ class DbIterator extends GenericIterator
         }
     }
 
+    #[Override]
     protected function fetchRow(): array|bool
     {
         return $this->statement->fetch(PDO::FETCH_ASSOC);

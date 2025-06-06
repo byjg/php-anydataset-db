@@ -59,31 +59,13 @@ interface DbFunctionsInterface
     public function sqlDate(string $format, ?string $column = null): string;
 
     /**
-     * Format a string date to a string database readable format.
      *
-     * @param string $date
-     * @param string $dateFormat
-     * @return string
-     */
-    public function toDate(string $date, string $dateFormat): string;
-
-    /**
-     * Format a string database readable format to a string date in a free format.
-     *
-     * @param string $date
-     * @param string $dateFormat
-     * @return string
-     */
-    public function fromDate(string $date, string $dateFormat): string;
-
-    /**
-     *
-     * @param DbDriverInterface $dbdataset
-     * @param string $sql
+     * @param DbDriverInterface $dbDriver
+     * @param string|SqlStatement $sql
      * @param array|null $param
      * @return mixed
      */
-    public function executeAndGetInsertedId(DbDriverInterface $dbdataset, string $sql, ?array $param = null): mixed;
+    public function executeAndGetInsertedId(DbDriverInterface $dbDriver, string|SqlStatement $sql, ?array $param = null): mixed;
 
     /**
      * @param string|array $field

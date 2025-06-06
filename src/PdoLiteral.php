@@ -4,10 +4,12 @@ namespace ByJG\AnyDataset\Db;
 
 use ByJG\AnyDataset\Db\Exception\DbDriverNotConnected;
 use ByJG\Util\Uri;
+use Override;
 
 class PdoLiteral extends DbPdoDriver
 {
 
+    #[Override]
     public static function schema()
     {
         return null;

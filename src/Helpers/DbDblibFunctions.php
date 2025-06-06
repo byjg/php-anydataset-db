@@ -5,6 +5,8 @@ namespace ByJG\AnyDataset\Db\Helpers;
 use ByJG\AnyDataset\Core\Exception\NotAvailableException;
 use ByJG\AnyDataset\Db\DbDriverInterface;
 use ByJG\AnyDataset\Db\IsolationLevelEnum;
+use ByJG\AnyDataset\Db\SqlStatement;
+use Override;
 
 class DbDblibFunctions extends DbBaseFunctions
 {
@@ -17,6 +19,7 @@ class DbDblibFunctions extends DbBaseFunctions
         $this->deliTableRight = '"';
     }
 
+    #[Override]
     public function concat(string $str1, ?string $str2 = null): string
     {
         return implode(' + ', func_get_args());
@@ -30,6 +33,7 @@ class DbDblibFunctions extends DbBaseFunctions
      * @return string
      * @throws NotAvailableException
      */
+    #[Override]
     public function limit(string $sql, int $start, int $qty = 50): string
     {
         throw new NotAvailableException("DBLib does not support LIMIT feature.");
@@ -41,23 +45,27 @@ class DbDblibFunctions extends DbBaseFunctions
      * @param int $qty
      * @return string
      */
+    #[Override]
     public function top(string $sql, int $qty): string
     {
         if (stripos($sql, ' TOP ') === false) {
-            return  preg_replace("/^\\s*(select) /i", "\\1 top $qty ", $sql);
+            $result = preg_replace("/^\\s*(select) /i", "\\1 top $qty ", $sql);
+            return $result !== null ? $result : $sql;
         }
 
-        return preg_replace(
+        $result = preg_replace(
             '~(\s[Tt][Oo][Pp])\s.*?\d+\s~',
             '$1 ' . $qty . ' ',
             $sql
         );
+        return $result !== null ? $result : $sql;
     }
 
     /**
      * Return if the database provider have a top or similar function
      * @return bool
      */
+    #[Override]
     public function hasTop(): bool
     {
         return true;
@@ -67,6 +75,7 @@ class DbDblibFunctions extends DbBaseFunctions
      * Return if the database provider have a limit function
      * @return bool
      */
+    #[Override]
     public function hasLimit(): bool
     {
         return false;
@@ -80,6 +89,7 @@ class DbDblibFunctions extends DbBaseFunctions
      * @return string
      * @example $db->getDbFunctions()->SQLDate("d/m/Y H:i", "dtcriacao")
      */
+    #[Override]
     public function sqlDate(string $format, ?string $column = null): string
     {
         if (is_null($column)) {
@@ -114,48 +124,46 @@ class DbDblibFunctions extends DbBaseFunctions
 
     /**
      *
-     * @param DbDriverInterface $dbdataset
-     * @param string $sql
+     * @param DbDriverInterface $dbDriver
+     * @param string|SqlStatement $sql
      * @param array|null $param
      * @return mixed
      */
-    public function executeAndGetInsertedId(DbDriverInterface $dbdataset, string $sql, ?array $param = null): mixed
+    #[Override]
+    public function executeAndGetInsertedId(DbDriverInterface $dbDriver, string|SqlStatement $sql, ?array $param = null): mixed
     {
-        $insertedId = parent::executeAndGetInsertedId($dbdataset, $sql, $param);
-        $iterator = $dbdataset->getIterator("select @@identity id");
-        if ($iterator->hasNext()) {
-            $singleRow = $iterator->moveNext();
-            $insertedId = $singleRow->get("id");
-        }
-
-        return $insertedId;
+        $returnedId = parent::executeAndGetInsertedId($dbDriver, $sql, $param);
+        return $dbDriver->getScalar("select @@identity id") ?? $returnedId;
     }
 
     /**
      * @param string $sql
      * @return string
-     * @throws \ByJG\AnyDataset\Core\Exception\NotAvailableException
+     * @throws NotAvailableException
      */
+    #[Override]
     public function forUpdate(string $sql): string
     {
         throw new NotAvailableException('FOR UPDATE not available for Mssql/Dblib');
     }
 
+    #[Override]
     public function hasForUpdate(): bool
     {
         return false;
     }
 
+    #[Override]
     public function getTableMetadata(DbDriverInterface $dbdataset, string $tableName): array
     {
         $sql = "select * from INFORMATION_SCHEMA.COLUMNS where TABLE_NAME = '$tableName'";
         return $this->getTableMetadataFromSql($dbdataset, $sql);
     }
 
-    protected function parseColumnMetadata($metadata)
+    #[Override]
+    protected function parseColumnMetadata(array $metadata): array
     {
         $return = [];
-
 
         foreach ($metadata as $key => $value) {
             if (!empty($value['character_maximum_length'])) {
@@ -175,6 +183,7 @@ class DbDblibFunctions extends DbBaseFunctions
         return $return;
     }
 
+    #[Override]
     public function getIsolationLevelCommand(?IsolationLevelEnum $isolationLevel = null): string
     {
         return match ($isolationLevel) {
