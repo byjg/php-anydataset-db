@@ -4,6 +4,7 @@ namespace ByJG\AnyDataset\Db\Helpers;
 
 use ByJG\AnyDataset\Db\DbDriverInterface;
 use ByJG\AnyDataset\Db\IsolationLevelEnum;
+use ByJG\AnyDataset\Db\SqlStatement;
 
 class DbMysqlFunctions extends DbBaseFunctions
 {
@@ -171,7 +172,13 @@ class DbMysqlFunctions extends DbBaseFunctions
     {
         $joinTables = [];
         foreach ($tables as $table) {
-            $joinTables[] = " INNER JOIN " . $this->deliTableLeft . $table['table'] . $this->deliTableRight . " ON " . $table['condition'];
+            if ($table["table"] instanceof SqlStatement) {
+                $table["table"] = "({$table["table"]->getSql()})";
+            } else {
+                $table["table"] = $this->deliTableLeft . $table['table'] . $this->deliTableRight;
+            }
+            $table["table"] = $table["table"] . (isset($table["alias"]) ? " AS " . $table["alias"] : "");
+            $joinTables[] = " INNER JOIN " . $table["table"] . " ON " . $table['condition'];
         }
 
         return [

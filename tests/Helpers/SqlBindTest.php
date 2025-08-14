@@ -32,7 +32,7 @@ class SqlBindTest extends TestCase
                 $paramIn
             ],
             [
-            new Uri('mysql://host'),
+                new Uri('mysql://host'),
                 'insert into value (:name, :surname, :age, :nonexistant)',
                 'insert into value (:name, :surname, :age, null)',
                 $paramIn,
@@ -119,22 +119,35 @@ class SqlBindTest extends TestCase
         );
     }
 
-    public function testPostgresTypecast()
+    protected function dataTestPostgres()
     {
-        $paramIn = [
-            'name' => 'John',
-            'surname' => 'Doe',
-            'age' => 43
+        return [
+            [
+                'SELECT column::text, :name, :surname FROM table WHERE age = :age',
+                [
+                    'name' => 'John',
+                    'surname' => 'Doe',
+                    'age' => 43
+                ],
+            ],
+            [
+                'SELECT sum(age::numeric) as total FROM table',
+                []
+            ]
         ];
+    }
 
+    /**
+     * @dataProvider dataTestPostgres
+     */
+    public function testPostgresTypecast($sql, $paramIn)
+    {
         // Test with Postgres type casting (::)
         $uri = new Uri('pgsql://host');
-        $sql = 'SELECT column::text, :name, :surname FROM table WHERE age = :age';
-        $expected = 'SELECT column::text, :name, :surname FROM table WHERE age = :age';
 
         $this->assertEquals(
             [
-                $expected,
+                $sql,
                 $paramIn
             ],
             SqlBind::parseSQL(
