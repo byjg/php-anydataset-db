@@ -3,6 +3,7 @@
 namespace Test\Helpers;
 
 use ByJG\AnyDataset\Db\Helpers\DbMysqlFunctions;
+use ByJG\AnyDataset\Db\SqlStatement;
 use PHPUnit\Framework\TestCase;
 
 class DbMysqlFunctionsTest extends TestCase
@@ -122,6 +123,88 @@ class DbMysqlFunctionsTest extends TestCase
         $this->assertEquals(
             'select * from table for update ',
             $this->object->forUpdate($sql3)
+        );
+    }
+
+    public function testGetJoinTable()
+    {
+        $tables = [
+            [
+                "table" => "table1",
+                "condition" => "table1.id = table2.id",
+            ]
+        ];
+
+        $this->assertEquals(
+            [
+                'position' => 'before_set',
+                "sql" => " INNER JOIN `table1` ON table1.id = table2.id"
+            ],
+            $this->object->getJoinTablesUpdate($tables)
+        );
+
+    }
+
+    public function testGetJoinTable2()
+    {
+        $tables = [
+            [
+                "table" => "table1",
+                "condition" => "t1.id = table2.id",
+                "alias" => "t1"
+            ]
+        ];
+
+        $this->assertEquals(
+            [
+                'position' => 'before_set',
+                "sql" => " INNER JOIN `table1` AS t1 ON t1.id = table2.id"
+            ],
+            $this->object->getJoinTablesUpdate($tables)
+        );
+    }
+
+    public function testGetJoinTable3()
+    {
+        $sqlStatement = new SqlStatement("select * from table1");
+        $tables = [
+            [
+                "table" => $sqlStatement,
+                "condition" => "t1.id = table2.id",
+                "alias" => "t1"
+            ]
+        ];
+
+        $this->assertEquals(
+            [
+                'position' => 'before_set',
+                "sql" => " INNER JOIN ({$sqlStatement->getSql()}) AS t1 ON t1.id = table2.id"
+            ],
+            $this->object->getJoinTablesUpdate($tables)
+        );
+    }
+
+    public function testGetJoinTable4()
+    {
+        $tables = [
+            [
+                "table" => "table1",
+                "condition" => "t1.id = table2.id",
+                "alias" => "t1"
+            ],
+            [
+                "table" => "table2",
+                "condition" => "t2.id = table3.id",
+                "alias" => "t2"
+            ],
+        ];
+
+        $this->assertEquals(
+            [
+                'position' => 'before_set',
+                "sql" => " INNER JOIN `table1` AS t1 ON t1.id = table2.id  INNER JOIN `table2` AS t2 ON t2.id = table3.id"
+            ],
+            $this->object->getJoinTablesUpdate($tables)
         );
     }
 }
