@@ -121,7 +121,7 @@ class SqlBindTest extends TestCase
         );
     }
 
-    protected function dataTestPostgres()
+    public static function dataTestPostgres()
     {
         return [
             [
@@ -139,9 +139,7 @@ class SqlBindTest extends TestCase
         ];
     }
 
-    /**
-     * @dataProvider dataTestPostgres
-     */
+    #[DataProvider('dataTestPostgres')]
     public function testPostgresTypecast($sql, $paramIn)
     {
         // Test with Postgres type casting (::)

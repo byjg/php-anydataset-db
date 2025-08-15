@@ -10,12 +10,8 @@ use PHPUnit\Framework\TestCase;
 
 class DbPdoUriTest extends TestCase
 {
-
-    /**
-     * @dataProvider providerPdoConnectionString
-     */
     #[DataProvider('providerPdoConnectionString')]
-    public function testPdoConnectionString(Uri $uri, string $expected)
+    public function testPdoConnectionString(Uri $uri, string $expected, string $user = "", string $pass = "")
     {
         $dbPdoUri = new PdoObj($uri);
         $this->assertEquals($expected, $dbPdoUri->getConnStr());
