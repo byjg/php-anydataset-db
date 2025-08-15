@@ -4,11 +4,12 @@ namespace Test\Helpers;
 
 use ByJG\AnyDataset\Db\Helpers\SqlBind;
 use ByJG\Util\Uri;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
 class SqlBindTest extends TestCase
 {
-    public function getDataTest()
+    public static function getDataTest()
     {
         $paramIn = [
             'name' => 'John',
@@ -102,8 +103,9 @@ class SqlBindTest extends TestCase
     }
 
     /**
-     * @dataProvider getDataTest()
+     * @dataProvider getDataTest
      */
+    #[DataProvider('getDataTest')]
     public function testSqlBind($uri, $subject, $expected, $paramsIn, $paramsExpected)
     {
         $this->assertEquals(
@@ -119,7 +121,7 @@ class SqlBindTest extends TestCase
         );
     }
 
-    protected function dataTestPostgres()
+    public static function dataTestPostgres()
     {
         return [
             [
@@ -137,9 +139,7 @@ class SqlBindTest extends TestCase
         ];
     }
 
-    /**
-     * @dataProvider dataTestPostgres
-     */
+    #[DataProvider('dataTestPostgres')]
     public function testPostgresTypecast($sql, $paramIn)
     {
         // Test with Postgres type casting (::)

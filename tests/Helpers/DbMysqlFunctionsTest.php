@@ -4,6 +4,7 @@ namespace Test\Helpers;
 
 use ByJG\AnyDataset\Db\Helpers\DbMysqlFunctions;
 use ByJG\AnyDataset\Db\SqlStatement;
+use Override;
 use PHPUnit\Framework\TestCase;
 
 class DbMysqlFunctionsTest extends TestCase
@@ -13,11 +14,13 @@ class DbMysqlFunctionsTest extends TestCase
      */
     protected ?DbMysqlFunctions $object;
 
+    #[Override]
     protected function setUp(): void
     {
         $this->object = new DbMysqlFunctions();
     }
 
+    #[Override]
     protected function tearDown(): void
     {
         $this->object = null;
