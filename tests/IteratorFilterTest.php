@@ -5,6 +5,7 @@ namespace Test;
 use ByJG\AnyDataset\Core\Enum\Relation;
 use ByJG\AnyDataset\Core\IteratorFilter;
 use ByJG\AnyDataset\Db\IteratorFilterSqlFormatter;
+use Override;
 use PHPUnit\Framework\TestCase;
 
 class IteratorFilterTest extends TestCase
@@ -19,6 +20,7 @@ class IteratorFilterTest extends TestCase
      * Sets up the fixture, for example, opens a network connection.
      * This method is called before a test is executed.
      */
+    #[Override]
     protected function setUp(): void
     {
         $this->object = new IteratorFilter();
@@ -187,8 +189,7 @@ class IteratorFilterTest extends TestCase
 
     public function testGroup()
     {
-        $this->object->startGroup();
-        $this->object->and('field', Relation::EQUAL, 'test');
+        $this->object->startGroup('field', Relation::EQUAL, 'test');
         $this->object->and('field2', Relation::EQUAL, 'test2');
         $this->object->endGroup();
         $this->object->or('field3', Relation::EQUAL, 'test3');
@@ -203,7 +204,7 @@ class IteratorFilterTest extends TestCase
         );
         $this->assertEquals(['field' => 'test', 'field2' => 'test2', 'field3' => 'test3'], $params);
         $this->assertEquals(
-            'select * from tablename  where  (  field = :field  and  field2 = :field2 ) or  field3 = :field3  ',
+            'select * from tablename  where ( field = :field  and  field2 = :field2 ) or  field3 = :field3  ',
             $sql
         );
     }

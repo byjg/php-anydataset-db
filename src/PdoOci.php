@@ -3,10 +3,12 @@
 namespace ByJG\AnyDataset\Db;
 
 use ByJG\Util\Uri;
+use Override;
 
 class PdoOci extends PdoLiteral
 {
 
+    #[Override]
     public static function schema(): array
     {
         return ['oracle'];

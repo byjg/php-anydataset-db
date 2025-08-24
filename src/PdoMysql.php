@@ -4,11 +4,13 @@ namespace ByJG\AnyDataset\Db;
 
 use ByJG\AnyDataset\Db\Exception\DbDriverNotConnected;
 use ByJG\Util\Uri;
+use Override;
 use PDO;
 
 class PdoMysql extends DbPdoDriver
 {
 
+    #[Override]
     public static function schema(): array
     {
         return ['mysql', 'mariadb'];

@@ -9,21 +9,22 @@ database-specific SQL operations based on the current database connection.
 
 ## Available Methods
 
-| Method                                                                | Description                                                                                |
-|-----------------------------------------------------------------------|--------------------------------------------------------------------------------------------|
-| `concat($str1, $str2 = null)`                                         | Returns the proper concatenation operation for the current connection.                     |
-| `limit($sql, $start, $qty)`                                           | Returns the SQL query with the correct `LIMIT` clause for the current connection.          |
-| `top($sql, $qty)`                                                     | Returns the SQL query with the correct `TOP` clause for the current connection.            |
-| `hasTop()`                                                            | Returns `true` if the current connection supports `TOP`.                                   |
-| `hasLimit()`                                                          | Returns `true` if the current connection supports `LIMIT`.                                 |
-| `sqlDate($format, $column = null)`                                    | Returns the proper function to format a date field based on the current connection.        |
-| `toDate($date, $dateFormat)`                                          | Returns the proper function to convert a date to a string based on the current connection. |
-| `fromDate($date, $dateFormat)`                                        | Returns the proper function to convert a string to a date based on the current connection. |
-| `executeAndGetInsertedId(DbDriverInterface $dbdataset, $sql, $param)` | Executes a SQL query and returns the inserted ID.                                          |
-| `delimiterField($field)`                                              | Returns the field name with the correct field delimiter for the current connection.        |
-| `delimiterTable($table)`                                              | Returns the table name with the correct table delimiter for the current connection.        |
-| `forUpdate($sql)`                                                     | Returns the SQL query with the `FOR UPDATE` clause for the current connection.             |
-| `hasForUpdate()`                                                      | Returns `true` if the current connection supports `FOR UPDATE`.                            |
+| Method                                                                                     | Description                                                                         | Return Type   |
+|--------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------|---------------|
+| `concat($str1, $str2 = null)`                                                              | Returns the proper concatenation operation for the current connection.              | string        |
+| `limit($sql, $start, $qty)`                                                                | Returns the SQL query with the correct `LIMIT` clause for the current connection.   | string        |
+| `top($sql, $qty)`                                                                          | Returns the SQL query with the correct `TOP` clause for the current connection.     | string        |
+| `hasTop()`                                                                                 | Returns `true` if the current connection supports `TOP`.                            | bool          |
+| `hasLimit()`                                                                               | Returns `true` if the current connection supports `LIMIT`.                          | bool          |
+| `sqlDate($format, $column = null)`                                                         | Returns the proper function to format a date field based on the current connection. | string        |
+| `executeAndGetInsertedId(DbDriverInterface $dbdataset, string\|SqlStatement $sql, $param)` | Executes a SQL query and returns the inserted ID .                                  | mixed         |
+| `delimiterField(string\|array $field)`                                                     | Returns the field name with the correct field delimiter for the current connection. | string\|array |
+| `delimiterTable($table)`                                                                   | Returns the table name with the correct table delimiter for the current connection. | string        |
+| `forUpdate($sql)`                                                                          | Returns the SQL query with the `FOR UPDATE` clause for the current connection.      | string        |
+| `hasForUpdate()`                                                                           | Returns `true` if the current connection supports `FOR UPDATE`.                     | bool          |
+| `getTableMetadata($dbdataset, $tableName)`                                                 | Returns metadata about the specified table.                                         | array         |
+| `getIsolationLevelCommand($isolationLevel = null)`                                         | Returns the SQL command to set the transaction isolation level.                     | string        |
+| `getJoinTablesUpdate($tables)`                                                             | Returns the tables to be updated in a JOIN statement.                               | array         |
 
 ## Use Case
 

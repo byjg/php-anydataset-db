@@ -8,25 +8,30 @@ use ByJG\AnyDataset\Core\GenericIterator;
 use ByJG\AnyDataset\Db\Exception\DbDriverNotConnected;
 use ByJG\AnyDataset\Db\Helpers\SqlBind;
 use ByJG\AnyDataset\Db\Helpers\SqlHelper;
+use ByJG\AnyDataset\Db\Traits\DatabaseExecutorTrait;
 use ByJG\AnyDataset\Db\Traits\DbCacheTrait;
 use ByJG\AnyDataset\Db\Traits\TransactionTrait;
+use ByJG\Serializer\PropertyHandler\PropertyHandlerInterface;
 use ByJG\Util\Uri;
-use DateInterval;
+use ByJG\XmlUtil\Exception\FileException;
+use ByJG\XmlUtil\Exception\XmlUtilException;
 use Exception;
 use InvalidArgumentException;
+use Override;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
-use Psr\SimpleCache\CacheInterface;
 
 class DbOci8Driver implements DbDriverInterface
 {
     use DbCacheTrait;
     use TransactionTrait;
+    use DatabaseExecutorTrait;
 
     private LoggerInterface $logger;
 
     private ?DbFunctionsInterface $dbHelper = null;
 
+    #[Override]
     public static function schema(): array
     {
         return ['oci8'];
@@ -99,6 +104,7 @@ class DbOci8Driver implements DbDriverInterface
      * @throws DatabaseException
      * @throws DbDriverNotConnected
      */
+    #[Override]
     public function prepareStatement(string $sql, array $params = null, ?array &$cacheInfo = []): mixed
     {
         if (is_null($this->conn)) {
@@ -126,8 +132,16 @@ class DbOci8Driver implements DbDriverInterface
         return $stid;
     }
 
+    /**
+     * @throws DatabaseException
+     */
+    #[Override]
     public function executeCursor(mixed $statement): void
     {
+        if (!is_resource($statement)) {
+            throw new InvalidArgumentException('Invalid statement type');
+        }
+
         // Perform the logic of the query
         $result = oci_execute($statement, $this->ociAutoCommit);
 
@@ -139,59 +153,73 @@ class DbOci8Driver implements DbDriverInterface
     }
 
     /**
-     * @param mixed $sql
-     * @param array|null $params
-     * @param CacheInterface|null $cache
-     * @param int|DateInterval $ttl
-     * @param int $preFetch
-     * @return GenericIterator
+     * @param mixed $statement The statement to check and handle
+     * @param int $preFetch Number of rows to prefetch
+     * @param string|null $entityClass Optional entity class name to return rows as objects
+     * @param PropertyHandlerInterface|null $entityTransformer Optional transformation function for customizing entity mapping
+     * @return GenericDbIterator|GenericIterator Returns GenericIterator for the statement
      */
-    public function getIterator(mixed $sql, ?array $params = null, ?CacheInterface $cache = null, DateInterval|int $ttl = 60, int $preFetch = 0): GenericIterator
+    #[Override]
+    public function getDriverIterator(mixed $statement, int $preFetch = 0, ?string $entityClass = null, ?PropertyHandlerInterface $entityTransformer = null): GenericDbIterator|GenericIterator
     {
-        if (is_resource($sql)) {
-            return new Oci8Iterator($sql, $preFetch);
+        if (is_resource($statement)) {
+            return new Oci8Iterator($statement, $preFetch, $entityClass, $entityTransformer);
         }
 
-        if (is_string($sql)) {
-            $sql = new SqlStatement($sql);
-            if (!empty($cache)) {
-                $sql->withCache($cache, $this->getQueryKey($cache, $sql->getSql(), $params), $ttl);
-            }
-        } elseif (!($sql instanceof SqlStatement)) {
-            throw new InvalidArgumentException("The SQL must be a cursor, string or a SqlStatement object");
-        }
-
-        return $sql->getIterator($this, $params, $preFetch);
+        throw new InvalidArgumentException('Invalid statement type');
     }
 
     /**
-     * @param mixed $sql
+     * @param string|SqlStatement $sql
+     * @param array|null $params
+     * @param int $preFetch
+     * @return GenericDbIterator|GenericIterator
+     * @throws DatabaseException
+     * @throws DbDriverNotConnected
+     * @throws FileException
+     * @throws XmlUtilException
+     * @throws \Psr\SimpleCache\InvalidArgumentException
+     */
+    #[Override]
+    public function getIterator(string|SqlStatement $sql, ?array $params = null, int $preFetch = 0): GenericDbIterator|GenericIterator
+    {
+        // Use the DatabaseExecutorTrait to handle all types of statements
+        return $this->executeStatement($sql, $params, $preFetch);
+    }
+
+    /**
+     * @param string|SqlStatement $sql
      * @param array|null $array
      * @return mixed
+     * @throws DatabaseException
+     * @throws DbDriverNotConnected
      */
-    public function getScalar(mixed $sql, ?array $array = null): mixed
+    #[Override]
+    public function getScalar(string|SqlStatement $sql, ?array $array = null): mixed
     {
-        if (is_resource($sql)) {
+        if (is_string($sql)) {
+            $sql = new SqlStatement($sql, $array);
+        } else {
+            $sql = $sql->withParams($array);
+        }
+
+        // Execute the scalar query
+        $statement = $this->prepareStatement($sql->getSql(), $sql->getParams());
+        $this->executeCursor($statement);
+
+        if (is_resource($statement)) {
             /** @psalm-suppress UndefinedConstant */
-            $row = oci_fetch_array($sql, OCI_RETURN_NULLS);
+            $row = oci_fetch_array($statement, OCI_RETURN_NULLS);
             if ($row) {
                 $scalar = $row[0];
             } else {
                 $scalar = false;
             }
-
-            oci_free_cursor($sql);
-
+            oci_free_statement($statement);
             return $scalar;
         }
 
-        if (is_string($sql)) {
-            $sql = new SqlStatement($sql);
-        } elseif (!($sql instanceof SqlStatement)) {
-            throw new InvalidArgumentException("The SQL must be a cursor, string or a SqlStatement object");
-        }
-
-        return $sql->getScalar($this, $array);
+        return false;
     }
 
     /**
@@ -200,6 +228,7 @@ class DbOci8Driver implements DbDriverInterface
      * @throws DatabaseException
      * @throws DbDriverNotConnected
      */
+    #[Override]
     public function getAllFields(string $tablename): array
     {
         $cur = $this->prepareStatement(SqlHelper::createSafeSQL("select * from :table", array(':table' => $tablename)));
@@ -257,33 +286,33 @@ class DbOci8Driver implements DbDriverInterface
     }
     
     /**
-     * @param mixed $sql
+     * @param string|SqlStatement $sql
      * @param array|null $array
      * @return bool
      * @throws DatabaseException
+     * @throws DbDriverNotConnected
      */
-    public function execute(mixed $sql, ?array $array = null): bool
+    #[Override]
+    public function execute(string|SqlStatement $sql, ?array $array = null): bool
     {
-        if (is_resource($sql)) {
-            oci_free_cursor($sql);
-            return true;
-        }
-
         if (is_string($sql)) {
-            $sql = new SqlStatement($sql);
-        } elseif (!($sql instanceof SqlStatement)) {
-            throw new InvalidArgumentException("The SQL must be a cursor, string or a SqlStatement object");
+            $sql = new SqlStatement($sql, $array);
+        } else {
+            $sql = $sql->withParams($array);
         }
 
-        $sql->execute($this, $array);
+        // Execute the statement directly
+        $statement = $this->prepareStatement($sql->getSql(), $sql->getParams());
+        $this->executeCursor($statement);
+        oci_free_statement($statement);
         return true;
-
     }
 
     /**
      *
      * @return resource|false
      */
+    #[Override]
     public function getDbConnection(): mixed
     {
         return $this->conn;
@@ -309,18 +338,25 @@ class DbOci8Driver implements DbDriverInterface
     }
 
     /**
-     * @param string $sql
+     * @param string|SqlStatement $sql
      * @param array|null $array
      * @throws NotImplementedException
      */
-    public function executeAndGetId(string $sql, ?array $array = null): mixed
+    #[Override]
+    public function executeAndGetId(string|SqlStatement $sql, ?array $array = null): mixed
     {
+        if ($sql instanceof SqlStatement) {
+            $sql = $sql->withParams($array);
+            return $this->getDbHelper()->executeAndGetInsertedId($this, $sql->getSql(), $sql->getParams());
+        }
+        
         return $this->getDbHelper()->executeAndGetInsertedId($this, $sql, $array);
     }
 
     /**
      * @return DbFunctionsInterface
      */
+    #[Override]
     public function getDbHelper(): DbFunctionsInterface
     {
         if (empty($this->dbHelper)) {
@@ -332,14 +368,16 @@ class DbOci8Driver implements DbDriverInterface
     /**
      * @return Uri
      */
+    #[Override]
     public function getUri(): Uri
     {
         return $this->connectionUri;
     }
 
     /**
-     * @throws NotImplementedException
+     * @return bool
      */
+    #[Override]
     public function isSupportMultiRowset(): bool
     {
         return false;
@@ -349,11 +387,13 @@ class DbOci8Driver implements DbDriverInterface
      * @param bool $multipleRowSet
      * @throws NotImplementedException
      */
+    #[Override]
     public function setSupportMultiRowset(bool $multipleRowSet): void
     {
         throw new NotImplementedException('Method not implemented for OCI Driver');
     }
 
+    #[Override]
     public function reconnect(bool $force = false): bool
     {
         if ($this->isConnected() && !$force) {
@@ -392,11 +432,13 @@ class DbOci8Driver implements DbDriverInterface
         return true;
     }
 
+    #[Override]
     public function disconnect(): void
     {
         $this->conn = null;
     }
 
+    #[Override]
     public function isConnected(bool $softCheck = false, bool $throwError = false): bool
     {
         if (empty($this->conn)) {
@@ -422,11 +464,13 @@ class DbOci8Driver implements DbDriverInterface
         return true;
     }
 
+    #[Override]
     public function enableLogger(LoggerInterface $logger): void
     {
         $this->logger = $logger;
     }
 
+    #[Override]
     public function log(string $message, array $context = []): void
     {
         $this->logger->debug($message, $context);

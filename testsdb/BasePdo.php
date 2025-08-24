@@ -12,8 +12,13 @@ use ByJG\AnyDataset\Db\Factory;
 use ByJG\AnyDataset\Db\IsolationLevelEnum;
 use ByJG\AnyDataset\Db\SqlStatement;
 use ByJG\Cache\Psr16\ArrayCacheEngine;
+use ByJG\Serializer\PropertyHandler\PropertyNameMapper;
 use Exception;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
+use Test\Models\DogEntity;
+use Test\Models\DogEntityComplex;
+use Test\Models\Dogs;
 
 abstract class BasePdo extends TestCase
 {
@@ -110,12 +115,124 @@ abstract class BasePdo extends TestCase
         // Step 3
         $iterator = $this->dbDriver->getIterator('select * from Dogs');
         $i = 0;
-        while ($iterator->hasNext()) {
-            $singleRow = $iterator->moveNext();
+        while ($iterator->valid()) {
+            $singleRow = $iterator->current();
             $this->assertEquals($array[$i++], $singleRow->toArray());
+            $iterator->next();
         }
 
         $this->assertFalse($iterator->isCursorOpen());
+    }
+
+    public function testGetIteratorSqlStatement()
+    {
+        $array = $this->allData();
+
+        // Step 1
+        $sqlStatement = new SqlStatement('select * from Dogs');
+        $iterator = $this->dbDriver->getIterator($sqlStatement);
+        $this->assertEquals($array, $iterator->toArray());
+
+        // Step 2
+        $sqlStatement = new SqlStatement('select * from Dogs where id = :id', ['id' => 1]);
+        $iterator = $this->dbDriver->getIterator($sqlStatement);
+        $this->assertEquals([$array[0]], $iterator->toArray());
+
+        // Step 2
+        $iterator = $this->dbDriver->getIterator($sqlStatement, ['id' => 2]);
+        $this->assertEquals([$array[1]], $iterator->toArray());
+    }
+
+    public function testGetIteratorSqlStatementAndPartialParams()
+    {
+        $array = $this->allData();
+
+        $sqlStatement = new SqlStatement('select * from Dogs where age <= :age and name = :name', ['age' => 5]);
+
+        $iterator = $this->dbDriver->getIterator($sqlStatement, ['name' => 'Spyke']);
+        $this->assertCount(0, $iterator->toArray());
+
+        $iterator = $this->dbDriver->getIterator($sqlStatement, ['name' => 'Sandy']);
+        $this->assertCount(1, $iterator->toArray());
+    }
+
+
+    public function testGetIteratorWithEntityClass()
+    {
+        $array = $this->allData();
+
+        // Get iterator with entity class
+        $sqlStatement = (new SqlStatement('select * from Dogs'))->withEntityClass(Dogs::class);
+        $iterator = $this->dbDriver->getIterator($sqlStatement);
+
+        // Verify we get objects of the correct type
+        $i = 0;
+        foreach ($iterator as $singleRow) {
+            $entity = $singleRow->entity();
+            $this->assertInstanceOf(Dogs::class, $entity);
+
+            // Verify properties were populated correctly
+            $this->assertEquals($array[$i]['id'], $entity->id);
+            $this->assertEquals($array[$i]['name'], $entity->name);
+            $this->assertEquals($array[$i]['breed'], $entity->breed);
+            $this->assertEquals($array[$i]['weight'], $entity->weight);
+
+            $i++;
+        }
+
+        // Verify we got all the expected rows
+        $this->assertEquals(count($array), $i);
+    }
+
+    public function testGetIteratorWithEntityClassAndSqlStatement()
+    {
+        $array = $this->allData();
+
+        $sqlStatement = (new SqlStatement('select * from Dogs'))->withEntityClass(Dogs::class);
+
+        // Get iterator with entity class
+        $iterator = $this->dbDriver->getIterator($sqlStatement);
+
+        // Verify we get objects of the correct type
+        $i = 0;
+        foreach ($iterator as $singleRow) {
+            $entity = $singleRow->entity();
+            $this->assertInstanceOf(Dogs::class, $entity);
+
+            // Verify properties were populated correctly
+            $this->assertEquals($array[$i]['id'], $entity->id);
+            $this->assertEquals($array[$i]['name'], $entity->name);
+            $this->assertEquals($array[$i]['breed'], $entity->breed);
+            $this->assertEquals($array[$i]['weight'], $entity->weight);
+
+            $i++;
+        }
+
+        // Verify we got all the expected rows
+        $this->assertEquals(count($array), $i);
+    }
+
+    public function testExecute()
+    {
+        $this->dbDriver->execute(
+            "INSERT INTO Dogs (Breed, Name, Age) VALUES ('Cat', 'Doris', 7);"
+        );
+
+        $sqlStatement = new SqlStatement("INSERT INTO Dogs (Breed, Name, Age) VALUES (:breed, :name, :age);");
+        $this->dbDriver->execute(
+            $sqlStatement,
+            [
+                "breed" => "Cat2",
+                "name" => "Doris2",
+                "age" => 8
+            ]
+        );
+
+        $idInserted = $this->dbDriver->getScalar("select id from Dogs where name = 'Doris'");
+        $this->assertEquals(4, $idInserted);
+
+        $idInserted = $this->dbDriver->getScalar("select id from Dogs where name = 'Doris2'");
+        $this->assertEquals(5, $idInserted);
     }
 
     public function testExecuteAndGetId()
@@ -125,6 +242,17 @@ abstract class BasePdo extends TestCase
         );
 
         $this->assertEquals(4, $idInserted);
+
+        $sqlStatement = new SqlStatement("INSERT INTO Dogs (Breed, Name, Age) VALUES (:breed, :name, :age);");
+        $idInserted = $this->dbDriver->executeAndGetId(
+            $sqlStatement,
+            [
+                "breed" => "Cat2",
+                "name" => "Doris2",
+                "age" => 8
+            ]
+        );
+        $this->assertEquals(5, $idInserted);
     }
 
     public function testGetAllFields()
@@ -165,10 +293,28 @@ abstract class BasePdo extends TestCase
         );
     }
 
+    public function testGetScalarWithSqlStatement()
+    {
+        $sqlStatement = new SqlStatement('select Id from Dogs where Id = :id', ['id' => 2]);
+        $this->assertEquals(
+            2,
+            $this->dbDriver->getScalar($sqlStatement)
+        );
+
+        $this->assertEquals(
+            1,
+            $this->dbDriver->getScalar($sqlStatement, ['id' => 1])
+        );
+
+        $this->assertFalse(
+            $this->dbDriver->getScalar($sqlStatement, ['id' => 9999])
+        );
+    }
+
     public function testMultipleRowset()
     {
         if (!$this->dbDriver->isSupportMultiRowset()) {
-            $this->markTestSkipped('Skipped: This DbDriver does not support multiple row set');
+            $this->markTestSkipped('This database driver does not support multiple result sets');
         }
 
         $sql = "INSERT INTO Dogs (Breed, Name, Age, Weight) VALUES ('Cat', 'Doris', 7, 4.2); " .
@@ -331,10 +477,12 @@ abstract class BasePdo extends TestCase
 
         $cacheEngine = new ArrayCacheEngine();
         // Get the first from Db and then cache it;
-        $iterator = $this->dbDriver->getIterator('select * from Dogs where id = :id', ['id' => 1], $cacheEngine, 60);
+        $sqlStatement = new SqlStatement('select * from Dogs where id = :id');
+        $sqlStatement = $sqlStatement->withCache($cacheEngine, 'dogs', 60);
+        $iterator = $this->dbDriver->getIterator($sqlStatement, ['id' => 1]);
         $this->assertEquals(
             [
-                [ 'id'=> 1, 'breed' => "Mutt", 'name' => 'Spyke', "age" => 8, "weight" => 8.5, "__id" => 0, "__key" => 0],
+                ['id' => 1, 'breed' => "Mutt", 'name' => 'Spyke', "age" => 8, "weight" => 8.5],
             ],
             $iterator->toArray()
         );
@@ -343,10 +491,10 @@ abstract class BasePdo extends TestCase
         $this->dbDriver->execute("delete from Dogs where id = :id", ['id' => 1]);
 
         // Try get from cache
-        $iterator = $this->dbDriver->getIterator('select * from Dogs where id = :id', ['id' => 1], $cacheEngine, 60);
+        $iterator = $this->dbDriver->getIterator($sqlStatement, ['id' => 1]);
         $this->assertEquals(
             [
-                [ 'id'=> 1, 'breed' => "Mutt", 'name' => 'Spyke', "age" => 8, "weight" => 8.5, "__id" => 0, "__key" => 0],
+                ['id' => 1, 'breed' => "Mutt", 'name' => 'Spyke', "age" => 8, "weight" => 8.5],
             ],
             $iterator->toArray()
         );
@@ -357,33 +505,60 @@ abstract class BasePdo extends TestCase
         $cacheEngine = new ArrayCacheEngine();
 
         // Get the first from Db and then cache it;
-        $iterator = $this->dbDriver->getIterator('select * from Dogs where id = :id', ['id' => 4], $cacheEngine, 60);
+        $sqlStatement = SqlStatement::from('select * from Dogs where id = :id')
+            ->withCache($cacheEngine, 'dogs_id_test', 60);
+        $iterator = $this->dbDriver->getIterator($sqlStatement, ['id' => 4]);
         $this->assertEquals(
             [],
             $iterator->toArray()
         );
-        $iterator = $this->dbDriver->getIterator('select * from Dogs where id = :id', ['id' => 1], $cacheEngine, 60);
+
+        // Get the second from Db and then cache it, since is the same statement
+        // However, the cache key is different because of the different param;
+        $iterator = $this->dbDriver->getIterator($sqlStatement, ['id' => 1]);
         $this->assertEquals(
             [
-                [ 'id'=> 1, 'breed' => "Mutt", 'name' => 'Spyke', "age" => 8, "weight" => 8.5, "__id" => 0, "__key" => 0],
+                ['id' => 1, 'breed' => "Mutt", 'name' => 'Spyke', "age" => 8, "weight" => 8.5],
             ],
             $iterator->toArray()
         );
+
 
         // Update Record
-        $this->dbDriver->execute("INSERT INTO Dogs (Breed, Name, Age) VALUES (:breed, :name, :age);", ["breed" => "Cat", "name" => "Doris", "age" => 6]);
+        $id = $this->dbDriver->executeAndGetId("INSERT INTO Dogs (Breed, Name, Age) VALUES (:breed, :name, :age);", ["breed" => "Cat", "name" => "Doris", "age" => 6]);
+        $this->assertEquals(4, $id);
+        $this->dbDriver->execute("update Dogs set age = 15 where id = 1");
 
         // Try get from cache (should have the same result from before)
-        $iterator = $this->dbDriver->getIterator('select * from Dogs where id = :id', ['id' => 1], $cacheEngine, 60);
+        $iterator = $this->dbDriver->getIterator($sqlStatement, ['id' => 1]);
         $this->assertEquals(
             [
-                [ 'id'=> 1, 'breed' => "Mutt", 'name' => 'Spyke', "age" => 8, "weight" => 8.5, "__id" => 0, "__key" => 0],
+                ['id' => 1, 'breed' => "Mutt", 'name' => 'Spyke', "age" => 8, "weight" => 8.5],
             ],
             $iterator->toArray()
         );
-        $iterator = $this->dbDriver->getIterator('select * from Dogs where id = :id', ['id' => 4], $cacheEngine, 60);
+
+        // Try get from cache (should have the same result from before)
+        $iterator = $this->dbDriver->getIterator($sqlStatement, ['id' => 4]);
         $this->assertEquals(
             [],
+            $iterator->toArray()
+        );
+
+        // Create a new Statement with no cache
+        $sqlStatement = new SqlStatement('select * from Dogs where id = :id');
+        $iterator = $this->dbDriver->getIterator($sqlStatement, ['id' => 4]);
+        $this->assertEquals(
+            [
+                ['id' => 4, 'breed' => "Cat", 'name' => 'Doris', "age" => 6, "weight" => null],
+            ],
+            $iterator->toArray()
+        );
+        $iterator = $this->dbDriver->getIterator($sqlStatement, ['id' => 1]);
+        $this->assertEquals(
+            [
+                ['id' => 1, 'breed' => "Mutt", 'name' => 'Spyke', "age" => 15, "weight" => 8.5],
+            ],
             $iterator->toArray()
         );
     }
@@ -631,45 +806,68 @@ abstract class BasePdo extends TestCase
     }
 
     /**
-     * @dataProvider dataProviderPreFetch
      * @return void
      * @psalm-suppress UndefinedMethod
      */
+    #[DataProvider('dataProviderPreFetch')]
     public function testPreFetchWhile(int $preFetch, array $rows, array $expected, array $expectedCursor)
     {
         $iterator = $this->dbDriver->getIterator('select * from Dogs', preFetch: $preFetch);
 
         $i = 0;
-        while ($iterator->hasNext()) {
-            $row = $iterator->moveNext();
+        while ($iterator->valid()) {
+            $row = $iterator->current();
             $this->assertEquals($rows[$i], $row->toArray(), "Row $i");
             $this->assertEquals($i, $iterator->key(), "Key Row $i");
-            $this->assertEquals($expected[$i], $iterator->getPreFetchBufferSize(), "PreFetchBufferSize Row " . $iterator->key());
-            $this->assertEquals($expectedCursor[$i], $iterator->isCursorOpen(), "CursorOpen Row " . $iterator->key());
             $i++;
+            $iterator->next();
         }
+        $this->assertFalse($iterator->isCursorOpen());
     }
 
     /**
-     * @dataProvider dataProviderPreFetch
      * @psalm-suppress UndefinedMethod
      * @return void
      */
+    #[DataProvider('dataProviderPreFetch')]
     public function testPreFetchForEach(int $preFetch, array $rows, array $expected, array $expectedCursor)
     {
         $iterator = $this->dbDriver->getIterator('select * from Dogs', preFetch: $preFetch);
 
         $i = 0;
         foreach ($iterator as $row) {
-            $this->assertEquals($rows[$i], $row->toArray(), "Row $i");
-            $this->assertEquals($i, $iterator->key(), "Key Row $i");
-            $this->assertEquals($expected[$i], $iterator->getPreFetchBufferSize(), "PreFetchBufferSize Row $i");
-            $this->assertEquals($expectedCursor[$i], $iterator->isCursorOpen(), "CursorOpen Row $i");
+            $this->assertEquals($rows[$i], $row->toArray(), "Row[$preFetch] $i");
+            $this->assertEquals($i, $iterator->key(), "Key Row[$preFetch] $i");
+            $this->assertEquals($expected[$i], $iterator->getPreFetchBufferSize(), "PreFetchBufferSize Row[$preFetch] $i");
+            $this->assertEquals($expectedCursor[$i], $iterator->isCursorOpen(), "CursorOpen Row[$preFetch] $i");
             $i++;
         }
+        $this->assertFalse($iterator->isCursorOpen());
     }
 
-    protected function dataProviderPreFetch()
+    /**
+     * @psalm-suppress UndefinedMethod
+     * @return void
+     */
+    #[DataProvider('dataProviderPreFetch')]
+    public function testPreFetchPhpIterator(int $preFetch, array $rows, array $expected, array $expectedCursor)
+    {
+        $iterator = $this->dbDriver->getIterator('select * from Dogs', preFetch: $preFetch);
+
+        $i = 0;
+        while ($iterator->valid()) {
+            $row = $iterator->current();
+            $this->assertEquals($rows[$i], $row->toArray(), "Row[$preFetch] $i");
+            $this->assertEquals($i, $iterator->key(), "Key Row[$preFetch] $i");
+            $this->assertEquals($expected[$i], $iterator->getPreFetchBufferSize(), "PreFetchBufferSize Row[$preFetch] $i");
+            $this->assertEquals($expectedCursor[$i], $iterator->isCursorOpen(), "CursorOpen Row[$preFetch] $i");
+            $i++;
+            $iterator->next();
+        }
+        $this->assertFalse($iterator->isCursorOpen());
+    }
+
+    public static function dataProviderPreFetch()
     {
         $rows = [
             [
@@ -697,12 +895,84 @@ abstract class BasePdo extends TestCase
 
 
         return [
-            [0, $rows, [1, 1, 0], [true, true, false]],
-            [1, $rows, [1, 1, 0], [true, true, false]],
-            [2, $rows, [2, 1, 0], [true, false, false]],
-            [3, $rows, [2, 1, 0], [false, false, false]],
-            [50, $rows, [2, 1, 0], [false, false, false]],
+            [0, $rows, [1, 1, 1], [true, true, true]],
+            [1, $rows, [1, 1, 1], [true, true, true]],
+            [2, $rows, [2, 2, 1], [true, true, false]],
+            [3, $rows, [3, 2, 1], [true, false, false]],
+            [50, $rows, [3, 2, 1], [false, false, false]],
         ];
+    }
+
+    public function testEntityWithTransformer()
+    {
+        $array = $this->allData();
+
+        // Get iterator with entity class and transformer
+        $sqlStatement = (new SqlStatement('select * from Dogs'))
+            ->withEntityClass(DogEntity::class)
+            ->withEntityTransformer(new PropertyNameMapper(['id' => 'dogId', 'name' => 'dogName', 'breed' => 'dogBreed', 'weight' => 'dogWeight']));
+        $iterator = $this->dbDriver->getIterator($sqlStatement);
+
+        // Verify we get objects of the correct type with transformed property names
+        $i = 0;
+        foreach ($iterator as $singleRow) {
+            $entity = $singleRow->entity();
+            $this->assertInstanceOf(DogEntity::class, $entity);
+
+            // Verify properties were transformed and populated correctly
+            $this->assertEquals($array[$i]['id'], $entity->dogId);
+            $this->assertEquals($array[$i]['name'], $entity->dogName);
+            $this->assertEquals($array[$i]['breed'], $entity->dogBreed);
+            $this->assertEquals($array[$i]['weight'], $entity->dogWeight);
+
+            $i++;
+        }
+
+        // Verify we got all the expected rows
+        $this->assertEquals(count($array), $i);
+    }
+
+    public function testEntityWithComplexTransformer()
+    {
+        $array = $this->allData();
+
+        $transformer = new PropertyNameMapper(
+            [
+                'id' => 'animalId',
+                'name' => 'animalName',
+                'breed' => 'animalType',
+                'weight' => 'weightKg'
+            ],
+            function ($sourceField, $targetField, $value) {
+                if ($targetField === 'weightKg') {
+                    return $value / 2.20462;
+                }
+                return $value;
+            }
+        );
+
+        // Get iterator with entity class and transformer
+        $sqlStatement = (new SqlStatement('select * from Dogs'))
+            ->withEntityClass(DogEntityComplex::class)
+            ->withEntityTransformer($transformer);
+        $iterator = $this->dbDriver->getIterator($sqlStatement);
+
+        // Verify we get objects of the correct type with transformed property names
+        $i = 0;
+        foreach ($iterator as $singleRow) {
+            $entity = $singleRow->entity();
+            $this->assertInstanceOf(DogEntityComplex::class, $entity);
+
+            // Verify properties were transformed and populated correctly
+            $this->assertEquals($array[$i]['id'], $entity->animalId);
+            $this->assertEquals($array[$i]['name'], $entity->animalName);
+            $this->assertEquals($array[$i]['breed'], $entity->animalType);
+            $this->assertEquals($array[$i]['weight'] / 2.20462, $entity->weightKg);
+            $i++;
+        }
+
+        // Verify we got all the expected rows
+        $this->assertEquals(count($array), $i);
     }
 }
 
