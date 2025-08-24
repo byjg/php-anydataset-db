@@ -21,11 +21,9 @@ interface DbDriverInterface extends DbTransactionInterface
      * @param string|SqlStatement $sql
      * @param array|null $params
      * @param int $preFetch
-     * @param string|null $entityClass
-     * @param PropertyHandlerInterface|null $entityTransformer
      * @return GenericDbIterator|GenericIterator
      */
-    public function getIterator(string|SqlStatement $sql, ?array $params = null, int $preFetch = 0, ?string $entityClass = null, ?PropertyHandlerInterface $entityTransformer = null): GenericDbIterator|GenericIterator;
+    public function getIterator(string|SqlStatement $sql, ?array $params = null, int $preFetch = 0): GenericDbIterator|GenericIterator;
 
     public function getScalar(string|SqlStatement $sql, ?array $array = null): mixed;
 

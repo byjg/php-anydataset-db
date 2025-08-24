@@ -168,8 +168,6 @@ abstract class DbPdoDriver implements DbDriverInterface
      * @param string|SqlStatement $sql PDOStatement, string SQL, or SqlStatement object
      * @param array|null $params Parameters if $sql is a string
      * @param int $preFetch Number of rows to prefetch
-     * @param string|null $entityClass Optional entity class name to return rows as objects
-     * @param PropertyHandlerInterface|null $entityTransformer Optional transformation handler for customizing entity mapping
      * @return GenericDbIterator|GenericIterator The iterator for the query results
      * @throws DbDriverNotConnected
      * @throws FileException
@@ -178,10 +176,10 @@ abstract class DbPdoDriver implements DbDriverInterface
      * @throws \Psr\SimpleCache\InvalidArgumentException
      */
     #[Override]
-    public function getIterator(string|SqlStatement $sql, ?array $params = null, int $preFetch = 0, ?string $entityClass = null, ?PropertyHandlerInterface $entityTransformer = null): GenericDbIterator|GenericIterator
+    public function getIterator(string|SqlStatement $sql, ?array $params = null, int $preFetch = 0): GenericDbIterator|GenericIterator
     {
         // Use the DatabaseExecutorTrait to handle all types of statements
-        return $this->executeStatement($sql, $params, $preFetch, $entityClass, $entityTransformer);
+        return $this->executeStatement($sql, $params, $preFetch);
     }
 
     #[Override]

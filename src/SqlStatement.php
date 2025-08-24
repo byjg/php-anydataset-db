@@ -2,6 +2,7 @@
 
 namespace ByJG\AnyDataset\Db;
 
+use ByJG\Serializer\PropertyHandler\PropertyHandlerInterface;
 use Psr\SimpleCache\CacheInterface;
 
 class SqlStatement
@@ -15,6 +16,10 @@ class SqlStatement
     protected ?string $cacheKey = null;
 
     protected array $params = [];
+
+    protected ?string $entityClass = null;
+
+    protected ?PropertyHandlerInterface $entityTransformer = null;
 
     public function __construct(string $sql, ?array $params = [])
     {
@@ -55,6 +60,20 @@ class SqlStatement
         return $statement;
     }
 
+    public function withEntityClass(string $entityClass): static
+    {
+        $statement = clone $this;
+        $statement->entityClass = $entityClass;
+        return $statement;
+    }
+
+    public function withEntityTransformer(PropertyHandlerInterface $entityTransformer): static
+    {
+        $statement = clone $this;
+        $statement->entityTransformer = $entityTransformer;
+        return $statement;
+    }
+
     public function withoutParams(): static
     {
         $statement = clone $this;
@@ -87,4 +106,13 @@ class SqlStatement
         return $this->params;
     }
 
+    public function getEntityClass(): ?string
+    {
+        return $this->entityClass;
+    }
+
+    public function getEntityTransformer(): ?PropertyHandlerInterface
+    {
+        return $this->entityTransformer;
+    }
 }

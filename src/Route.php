@@ -241,16 +241,14 @@ class Route implements DbDriverInterface
      * @param string|SqlStatement $sql
      * @param array|null $params
      * @param int $preFetch
-     * @param string|null $entityClass
-     * @param PropertyHandlerInterface|null $entityTransformer
      * @return GenericDbIterator|GenericIterator
      * @throws RouteNotMatchedException
      */
     #[Override]
-    public function getIterator(string|SqlStatement $sql, ?array $params = null, int $preFetch = 0, ?string $entityClass = null, ?PropertyHandlerInterface $entityTransformer = null): GenericDbIterator|GenericIterator
+    public function getIterator(string|SqlStatement $sql, ?array $params = null, int $preFetch = 0): GenericDbIterator|GenericIterator
     {
         $dbDriver = $this->matchRoute($sql);
-        return $dbDriver->getIterator($sql, $params, $preFetch, $entityClass, $entityTransformer);
+        return $dbDriver->getIterator($sql, $params, $preFetch);
     }
 
     /**

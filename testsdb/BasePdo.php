@@ -162,7 +162,8 @@ abstract class BasePdo extends TestCase
         $array = $this->allData();
 
         // Get iterator with entity class
-        $iterator = $this->dbDriver->getIterator('select * from Dogs', entityClass: Dogs::class);
+        $sqlStatement = (new SqlStatement('select * from Dogs'))->withEntityClass(Dogs::class);
+        $iterator = $this->dbDriver->getIterator($sqlStatement);
 
         // Verify we get objects of the correct type
         $i = 0;
@@ -187,10 +188,10 @@ abstract class BasePdo extends TestCase
     {
         $array = $this->allData();
 
-        $sqlStatement = new SqlStatement('select * from Dogs');
+        $sqlStatement = (new SqlStatement('select * from Dogs'))->withEntityClass(Dogs::class);
 
         // Get iterator with entity class
-        $iterator = $this->dbDriver->getIterator($sqlStatement, entityClass: Dogs::class);
+        $iterator = $this->dbDriver->getIterator($sqlStatement);
 
         // Verify we get objects of the correct type
         $i = 0;
@@ -907,11 +908,10 @@ abstract class BasePdo extends TestCase
         $array = $this->allData();
 
         // Get iterator with entity class and transformer
-        $iterator = $this->dbDriver->getIterator(
-            'select * from Dogs',
-            entityClass: DogEntity::class,
-            entityTransformer: new PropertyNameMapper(['id' => 'dogId', 'name' => 'dogName', 'breed' => 'dogBreed', 'weight' => 'dogWeight'])
-        );
+        $sqlStatement = (new SqlStatement('select * from Dogs'))
+            ->withEntityClass(DogEntity::class)
+            ->withEntityTransformer(new PropertyNameMapper(['id' => 'dogId', 'name' => 'dogName', 'breed' => 'dogBreed', 'weight' => 'dogWeight']));
+        $iterator = $this->dbDriver->getIterator($sqlStatement);
 
         // Verify we get objects of the correct type with transformed property names
         $i = 0;
@@ -952,11 +952,10 @@ abstract class BasePdo extends TestCase
         );
 
         // Get iterator with entity class and transformer
-        $iterator = $this->dbDriver->getIterator(
-            'select * from Dogs',
-            entityClass: DogEntityComplex::class,
-            entityTransformer: $transformer
-        );
+        $sqlStatement = (new SqlStatement('select * from Dogs'))
+            ->withEntityClass(DogEntityComplex::class)
+            ->withEntityTransformer($transformer);
+        $iterator = $this->dbDriver->getIterator($sqlStatement);
 
         // Verify we get objects of the correct type with transformed property names
         $i = 0;

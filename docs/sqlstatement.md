@@ -138,6 +138,74 @@ $dbDriver->execute($sql, ['param' => 'value']);
 $newId = $dbDriver->executeAndGetId($sql, ['param' => 'value']);
 ```
 
+## Entity Mapping Support (EntityClass and EntityTransformer)
+
+Starting from this version, SqlStatement can carry entity mapping information so you don't need to pass it every time
+you execute the query. This is useful when you reuse the same SqlStatement across your codebase.
+
+- withEntityClass(string $entityClass): Define the target PHP class to map rows into (immutably returns a new
+  SqlStatement).
+- withEntityTransformer(PropertyHandlerInterface $transformer): Provide a PropertyHandler/mapper to customize
+  field-to-property mapping and value transformations (also immutable).
+- getEntityClass(): ?string and getEntityTransformer(): ?PropertyHandlerInterface are the corresponding accessors.
+
+Example (basic entity mapping):
+
+```php
+<?php
+use ByJG\AnyDataset\Db\Factory;
+use ByJG\AnyDataset\Db\SqlStatement;
+
+class User 
+{ 
+    public int $id; 
+    public string $name; 
+}
+
+$db = Factory::getDbInstance("mysql://user:password@server/schema");
+
+$sql = (new SqlStatement("SELECT id, name FROM users WHERE active = :active", [':active' => true]))
+    ->withEntityClass(User::class);
+
+$it = $db->getIterator($sql);
+foreach ($it as $row) {
+    $user = $row->entity(); // instance of User populated from the row
+}
+```
+
+Example (with a transformer):
+
+```php
+<?php
+use ByJG\Serializer\PropertyHandler\PropertyNameMapper;
+
+class DogEntity {
+    public int $dogId;
+    public string $dogName;
+    public string $dogBreed;
+    public float $dogWeight;
+}
+
+$statement = (new SqlStatement('SELECT id, name, breed, weight FROM Dogs'))
+    ->withEntityClass(DogEntity::class)
+    ->withEntityTransformer(new PropertyNameMapper([
+        'id' => 'dogId',
+        'name' => 'dogName',
+        'breed' => 'dogBreed',
+        'weight' => 'dogWeight',
+    ]));
+
+$iterator = $db->getIterator($statement);
+foreach ($iterator as $row) {
+    $dog = $row->entity(); // DogEntity with transformed property names
+}
+```
+
+Notes:
+
+- SqlStatement remains immutable; each with* method returns a new instance.
+- See docs/entity.md for a full explanation of entity mapping and transformers.
+
 ## Advantages of Using SqlStatement
 
 - **Parameter Storage**: SQL and its parameters can be stored together in a single object

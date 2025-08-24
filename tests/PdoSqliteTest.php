@@ -720,7 +720,9 @@ class PdoSqliteTest extends TestCase
     public function testGetIteratorWithEntityClass()
     {
         // Get iterator with entity class
-        $iterator = $this->dbDriver->getIterator('select * from info', entityClass: Info::class);
+        $sqlStatement = (new SqlStatement('select * from info'))
+            ->withEntityClass(Info::class);
+        $iterator = $this->dbDriver->getIterator($sqlStatement);
 
         // Verify we get objects of the correct type
         $i = 0;
@@ -746,10 +748,11 @@ class PdoSqliteTest extends TestCase
 
     public function testGetIteratorWithEntityClassAndSqlStatement()
     {
-        $sqlStatement = new SqlStatement('select * from info');
+        $sqlStatement = (new SqlStatement('select * from info'))
+            ->withEntityClass(Info::class);
 
         // Get iterator with entity class
-        $iterator = $this->dbDriver->getIterator($sqlStatement, entityClass: Info::class);
+        $iterator = $this->dbDriver->getIterator($sqlStatement);
 
         // Verify we get objects of the correct type
         $i = 0;
@@ -775,12 +778,11 @@ class PdoSqliteTest extends TestCase
 
     public function testEntityWithTransformer()
     {
+        $sqlStatement = (new SqlStatement('select * from users'))
+            ->withEntityClass(UserEntity::class)
+            ->withEntityTransformer(new PropertyNameMapper(['id' => 'userId', 'name' => 'userName', 'createdate' => 'userCreatedDate']));
         // Get iterator with entity class and transformer
-        $iterator = $this->dbDriver->getIterator(
-            'select * from users',
-            entityClass: UserEntity::class,
-            entityTransformer: new PropertyNameMapper(['id' => 'userId', 'name' => 'userName', 'createdate' => 'userCreatedDate'])
-        );
+        $iterator = $this->dbDriver->getIterator($sqlStatement);
 
         // Verify we get objects of the correct type with transformed property names
         $entities = [];
@@ -815,12 +817,12 @@ class PdoSqliteTest extends TestCase
             }
         );
 
+        $sqlStatement = (new SqlStatement('select * from info'))
+            ->withEntityClass(InfoEntity::class)
+            ->withEntityTransformer($transformer);
+
         // Get iterator with entity class and transformer
-        $iterator = $this->dbDriver->getIterator(
-            'select * from info',
-            entityClass: InfoEntity::class,
-            entityTransformer: $transformer
-        );
+        $iterator = $this->dbDriver->getIterator($sqlStatement);
 
         // Verify we get objects of the correct type with transformed property names
         $entities = [];

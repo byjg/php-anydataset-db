@@ -35,8 +35,6 @@ trait DatabaseExecutorTrait
      * @param string|SqlStatement $sql The SQL statement to execute
      * @param array|null $param Parameters for the SQL query
      * @param int $preFetch Number of rows to prefetch
-     * @param string|null $entityClass Optional entity class name to return rows as objects
-     * @param PropertyHandlerInterface|null $entityTransformer Optional transformation function for customizing entity mapping
      * @return GenericDbIterator|GenericIterator The iterator containing the results
      * @throws DatabaseException
      * @throws DbDriverNotConnected
@@ -47,9 +45,7 @@ trait DatabaseExecutorTrait
     protected function executeStatement(
         string|SqlStatement $sql,
         ?array $param = null,
-        int                       $preFetch = 0,
-        ?string                   $entityClass = null,
-        ?PropertyHandlerInterface $entityTransformer = null
+        int $preFetch = 0
     ): GenericDbIterator|GenericIterator
     {
         // Convert string to SqlStatement if needed
@@ -70,7 +66,7 @@ trait DatabaseExecutorTrait
         if (empty($cache)) {
             $statement = $this->prepareStatement($sqlText, $params);
             $this->executeCursor($statement);
-            return $this->getDriverIterator($statement, $preFetch, $entityClass, $entityTransformer);
+            return $this->getDriverIterator($statement, $preFetch, $sql->getEntityClass(), $sql->getEntityTransformer());
         }
 
         // Cache is configured - try to get from cache first

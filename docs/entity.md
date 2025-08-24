@@ -263,9 +263,11 @@ $userQuery = new SqlStatement(
     "SELECT * FROM users WHERE status = :status",
     ['status' => 'active']
 );
+$userQuery = $userQuery->withEntityClass(User::class);
 
-// Execute with entity mapping
-$iterator = $dbDriver->getIterator($userQuery, [], 0, User::class);
+
+// store the entity class (and optional transformer) in the SqlStatement itself
+$iterator = $dbDriver->getIterator($userQuery);
 ```
 
 ### With Pre-Fetch

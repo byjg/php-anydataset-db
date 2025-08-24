@@ -173,8 +173,6 @@ class DbOci8Driver implements DbDriverInterface
      * @param string|SqlStatement $sql
      * @param array|null $params
      * @param int $preFetch
-     * @param string|null $entityClass
-     * @param PropertyHandlerInterface|null $entityTransformer
      * @return GenericDbIterator|GenericIterator
      * @throws DatabaseException
      * @throws DbDriverNotConnected
@@ -183,10 +181,10 @@ class DbOci8Driver implements DbDriverInterface
      * @throws \Psr\SimpleCache\InvalidArgumentException
      */
     #[Override]
-    public function getIterator(string|SqlStatement $sql, ?array $params = null, int $preFetch = 0, ?string $entityClass = null, ?PropertyHandlerInterface $entityTransformer = null): GenericDbIterator|GenericIterator
+    public function getIterator(string|SqlStatement $sql, ?array $params = null, int $preFetch = 0): GenericDbIterator|GenericIterator
     {
         // Use the DatabaseExecutorTrait to handle all types of statements
-        return $this->executeStatement($sql, $params, $preFetch, $entityClass, $entityTransformer);
+        return $this->executeStatement($sql, $params, $preFetch);
     }
 
     /**
