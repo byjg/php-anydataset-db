@@ -74,7 +74,7 @@ trait DatabaseExecutorTrait
         $cacheKey = $sql->getCacheKey() . ':' . md5(json_encode($params));
 
         if ($cache->has($cacheKey)) {
-            return $this->getIteratorFromCache($cache, $cacheKey, $entityClass);
+            return $this->getIteratorFromCache($cache, $cacheKey);
         }
 
         // Wait until no other process is generating this cache
@@ -84,7 +84,7 @@ trait DatabaseExecutorTrait
 
         // Double-check if cache is available after waiting
         if ($cache->has($cacheKey)) {
-            return $this->getIteratorFromCache($cache, $cacheKey, $entityClass);
+            return $this->getIteratorFromCache($cache, $cacheKey);
         }
 
         // Create a mutex lock while we generate the cache
@@ -94,7 +94,7 @@ trait DatabaseExecutorTrait
             // Execute the query
             $statement = $this->prepareStatement($sqlText, $params);
             $this->executeCursor($statement);
-            $iterator = $this->getDriverIterator($statement, preFetch: $preFetch, entityClass: $entityClass, entityTransformer: $entityTransformer);
+            $iterator = $this->getDriverIterator($statement, preFetch: $preFetch, entityClass: $sql->getEntityClass(), entityTransformer: $sql->getEntityTransformer());
 
             // Cache the results
             $arrayData = [];
@@ -104,7 +104,7 @@ trait DatabaseExecutorTrait
             $cache->set($cacheKey, $arrayData, $sql->getCacheTime() ?? 60);
 
             // Now we can create a new iterator from the cached data
-            return $this->getIteratorFromCache($cache, $cacheKey, $entityClass);
+            return $this->getIteratorFromCache($cache, $cacheKey);
         } finally {
             // Always release the mutex lock
             $this->mutexRelease($cache, $cacheKey);
@@ -116,7 +116,6 @@ trait DatabaseExecutorTrait
      *
      * @param CacheInterface $cache
      * @param string $cacheKey
-     * @param string|null $entityClass
      * @return GenericDbIterator|GenericIterator
      * @throws FileException
      * @throws PsrInvalidArgumentException
@@ -124,8 +123,7 @@ trait DatabaseExecutorTrait
      */
     protected function getIteratorFromCache(
         CacheInterface $cache,
-        string         $cacheKey,
-        ?string        $entityClass = null
+        string $cacheKey
     ): GenericDbIterator|GenericIterator
     {
         // Get data from cache
