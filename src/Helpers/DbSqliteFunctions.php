@@ -118,7 +118,7 @@ class DbSqliteFunctions extends DbBaseFunctions
 
     public function getSqlLastInsertId(): string
     {
-        return "select last_insert_rowid()";
+        return "select last_insert_rowid() id";
     }
 
     /**
