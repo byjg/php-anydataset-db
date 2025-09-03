@@ -110,8 +110,14 @@ abstract class DbBaseFunctions implements DbFunctionsInterface
     #[Override]
     public function executeAndGetInsertedId(DbDriverInterface $dbDriver, string|SqlStatement $sql, ?array $param = null): mixed
     {
-        $dbDriver->execute($sql, $param);
-        return $dbDriver->getDbConnection()->lastInsertId();
+        $dbdataset->execute($sql, $param);
+
+        return $dbdataset->getScalar($this->getSqlLastInsertId());
+    }
+
+    public function getSqlLastInsertId(): string
+    {
+        return "select null id";
     }
 
     protected string $deliFieldLeft = '';
@@ -178,7 +184,7 @@ abstract class DbBaseFunctions implements DbFunctionsInterface
     protected function parseTypeMetadata(string $type): array
     {
         $defaultResult = ['phpType' => 'string', 'length' => null, 'precision' => null];
-        
+
         if (!preg_match('/(?<type>[a-z0-9\s]+)(\((?<len>\d+)(,(?<precision>\d+))?\))?/i', $type, $matches)) {
             return $defaultResult;
         }

@@ -67,6 +67,8 @@ interface DbFunctionsInterface
      */
     public function executeAndGetInsertedId(DbDriverInterface $dbDriver, string|SqlStatement $sql, ?array $param = null): mixed;
 
+    public function getSqlLastInsertId(): string;
+
     /**
      * @param string|array $field
      * @return string|array

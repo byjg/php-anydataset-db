@@ -117,17 +117,9 @@ class DbPgsqlFunctions extends DbBaseFunctions
         );
     }
 
-    /**
-     * @param DbDriverInterface $dbDriver
-     * @param string|SqlStatement $sql
-     * @param array|null $param
-     * @return mixed
-     */
-    #[Override]
-    public function executeAndGetInsertedId(DbDriverInterface $dbDriver, string|SqlStatement $sql, ?array $param = null): mixed
+    public function getSqlLastInsertId(): string
     {
-        parent::executeAndGetInsertedId($dbDriver, $sql, $param);
-        return $dbDriver->getScalar('select lastval()');
+        return "select lastval() id";
     }
 
     #[Override]
@@ -194,5 +186,4 @@ class DbPgsqlFunctions extends DbBaseFunctions
             "sql" => implode(' ', $joinTables)
         ];
     }
-
 }

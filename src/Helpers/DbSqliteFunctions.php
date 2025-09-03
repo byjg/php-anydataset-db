@@ -125,18 +125,9 @@ class DbSqliteFunctions extends DbBaseFunctions
         );
     }
 
-    /**
-     *
-     * @param DbDriverInterface $dbDriver
-     * @param string|SqlStatement $sql
-     * @param array|null $param
-     * @return mixed
-     */
-    #[Override]
-    public function executeAndGetInsertedId(DbDriverInterface $dbDriver, string|SqlStatement $sql, ?array $param = null): mixed
+    public function getSqlLastInsertId(): string
     {
-        $returnedId = parent::executeAndGetInsertedId($dbDriver, $sql, $param);
-        return $dbDriver->getScalar("SELECT last_insert_rowid()") ?? $returnedId;
+        return "select last_insert_rowid() id";
     }
 
     /**
