@@ -112,29 +112,15 @@ class DbDblibFunctions extends DbBaseFunctions
         );
     }
 
-    /**
-     *
-     * @param DbDriverInterface $dbdataset
-     * @param string $sql
-     * @param array|null $param
-     * @return mixed
-     */
-    public function executeAndGetInsertedId(DbDriverInterface $dbdataset, string $sql, ?array $param = null): mixed
+    public function getSqlLastInsertId(): string
     {
-        $insertedId = parent::executeAndGetInsertedId($dbdataset, $sql, $param);
-        $iterator = $dbdataset->getIterator("select @@identity id");
-        if ($iterator->hasNext()) {
-            $singleRow = $iterator->moveNext();
-            $insertedId = $singleRow->get("id");
-        }
-
-        return $insertedId;
+        return "select @@identity id";
     }
 
     /**
      * @param string $sql
      * @return string
-     * @throws \ByJG\AnyDataset\Core\Exception\NotAvailableException
+     * @throws NotAvailableException
      */
     public function forUpdate(string $sql): string
     {

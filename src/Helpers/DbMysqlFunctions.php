@@ -111,23 +111,9 @@ class DbMysqlFunctions extends DbBaseFunctions
         );
     }
 
-    /**
-     *
-     * @param DbDriverInterface $dbdataset
-     * @param string $sql
-     * @param array|null $param
-     * @return mixed
-     */
-    public function executeAndGetInsertedId(DbDriverInterface $dbdataset, string $sql, ?array $param = null): mixed
+    public function getSqlLastInsertId(): string
     {
-        $returnedId = parent::executeAndGetInsertedId($dbdataset, $sql, $param);
-        $iterator = $dbdataset->getIterator("select LAST_INSERT_ID() id");
-        if ($iterator->hasNext()) {
-            $singleRow = $iterator->moveNext();
-            $returnedId = $singleRow->get("id");
-        }
-
-        return $returnedId;
+        return "select LAST_INSERT_ID() id";
     }
 
     public function hasForUpdate(): bool

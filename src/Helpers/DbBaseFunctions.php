@@ -140,7 +140,12 @@ abstract class DbBaseFunctions implements DbFunctionsInterface
     {
         $dbdataset->execute($sql, $param);
 
-        return $dbdataset->getDbConnection()->lastInsertId();
+        return $dbdataset->getScalar($this->getSqlLastInsertId());
+    }
+
+    public function getSqlLastInsertId(): string
+    {
+        return "select null id";
     }
 
     protected $deliFieldLeft = '';
