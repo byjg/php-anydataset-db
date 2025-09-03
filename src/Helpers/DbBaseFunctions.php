@@ -110,9 +110,9 @@ abstract class DbBaseFunctions implements DbFunctionsInterface
     #[Override]
     public function executeAndGetInsertedId(DbDriverInterface $dbDriver, string|SqlStatement $sql, ?array $param = null): mixed
     {
-        $dbdataset->execute($sql, $param);
+        $dbDriver->execute($sql, $param);
 
-        return $dbdataset->getScalar($this->getSqlLastInsertId());
+        return $dbDriver->getScalar($this->getSqlLastInsertId());
     }
 
     public function getSqlLastInsertId(): string
