@@ -116,23 +116,15 @@ class DbSqliteFunctions extends DbBaseFunctions
         );
     }
 
-    /**
-     *
-     * @param DbDriverInterface $dbdataset
-     * @param string $sql
-     * @param array|null $param
-     * @return mixed
-     */
-    public function executeAndGetInsertedId(DbDriverInterface $dbdataset, string $sql, ?array $param = null): mixed
+    public function getSqlLastInsertId(): string
     {
-        parent::executeAndGetInsertedId($dbdataset, $sql, $param);
-        return $dbdataset->getScalar("SELECT last_insert_rowid()");
+        return "select last_insert_rowid() id";
     }
 
     /**
      * @param string $sql
      * @return string
-     * @throws \ByJG\AnyDataset\Core\Exception\NotAvailableException
+     * @throws NotAvailableException
      */
     public function forUpdate(string $sql): string
     {

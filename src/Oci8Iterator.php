@@ -45,7 +45,9 @@ class Oci8Iterator extends GenericIterator
 
     public function releaseCursor(): void
     {
-        oci_free_statement($this->cursor);
+        if (!is_null($this->cursor)) {
+            oci_free_statement($this->cursor);
+        }
         $this->cursor = null;
     }
 
