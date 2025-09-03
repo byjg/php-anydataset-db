@@ -119,6 +119,7 @@ class DbMysqlFunctions extends DbBaseFunctions
         );
     }
 
+    #[Override]
     public function getSqlLastInsertId(): string
     {
         return "select LAST_INSERT_ID() id";

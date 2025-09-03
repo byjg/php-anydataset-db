@@ -5,7 +5,6 @@ namespace ByJG\AnyDataset\Db\Helpers;
 use ByJG\AnyDataset\Core\Exception\NotAvailableException;
 use ByJG\AnyDataset\Db\DbDriverInterface;
 use ByJG\AnyDataset\Db\IsolationLevelEnum;
-use ByJG\AnyDataset\Db\SqlStatement;
 use Override;
 
 class DbDblibFunctions extends DbBaseFunctions
@@ -122,6 +121,7 @@ class DbDblibFunctions extends DbBaseFunctions
         );
     }
 
+    #[Override]
     public function getSqlLastInsertId(): string
     {
         return "select @@identity id";

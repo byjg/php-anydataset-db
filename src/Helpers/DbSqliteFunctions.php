@@ -5,7 +5,6 @@ namespace ByJG\AnyDataset\Db\Helpers;
 use ByJG\AnyDataset\Core\Exception\NotAvailableException;
 use ByJG\AnyDataset\Db\DbDriverInterface;
 use ByJG\AnyDataset\Db\IsolationLevelEnum;
-use ByJG\AnyDataset\Db\SqlStatement;
 use Override;
 
 class DbSqliteFunctions extends DbBaseFunctions
@@ -125,6 +124,7 @@ class DbSqliteFunctions extends DbBaseFunctions
         );
     }
 
+    #[Override]
     public function getSqlLastInsertId(): string
     {
         return "select last_insert_rowid() id";

@@ -115,6 +115,7 @@ abstract class DbBaseFunctions implements DbFunctionsInterface
         return $dbDriver->getScalar($this->getSqlLastInsertId());
     }
 
+    #[Override]
     public function getSqlLastInsertId(): string
     {
         return "select null id";

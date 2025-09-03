@@ -117,6 +117,7 @@ class DbPgsqlFunctions extends DbBaseFunctions
         );
     }
 
+    #[Override]
     public function getSqlLastInsertId(): string
     {
         return "select lastval() id";
