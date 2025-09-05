@@ -4,7 +4,9 @@ namespace ByJG\AnyDataset\Db\Traits;
 
 use ByJG\AnyDataset\Core\Row;
 use ByJG\AnyDataset\Core\RowInterface;
+use ByJG\MicroOrm\PropertyHandler\MapFromDbToInstanceHandler;
 use ByJG\Serializer\ObjectCopy;
+use ByJG\Serializer\Serialize;
 use Override;
 use ReturnTypeWillChange;
 use SplDoublyLinkedList;
@@ -41,7 +43,11 @@ trait PreFetchTrait
             // Create row based on entityClass if provided
             if (!empty($this->entityClass)) {
                 $entityObj = new $this->entityClass();
-                ObjectCopy::copy($rowFetched, $entityObj, $this->entityTransformer);
+                // The command below is to get all properties of the class.
+                // This will allow to process all properties, even if they are not in the $fieldValues array.
+                // Particularly useful for processing the selectFunction.
+                $fieldValues = array_merge(Serialize::from($entityObj)->toArray(), $rowFetched);
+                ObjectCopy::copy($fieldValues, $entityObj, $this->entityTransformer);
                 $rowFetched = $entityObj;
             }
             $singleRow = new Row($rowFetched);
