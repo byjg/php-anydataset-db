@@ -70,6 +70,6 @@ class PdoDblibTest extends BasePdo
 
     public function testTwoDifferentTransactions()
     {
-        $this->markTestSkipped('SQLServer locks the table make the test inviable');
+        $this->markTestSkipped('SQL Server table locking prevents concurrent transaction testing');
     }
 }

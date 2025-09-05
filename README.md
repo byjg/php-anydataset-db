@@ -25,15 +25,15 @@ Database connections are defined using URL-based connection strings.
 
 Supported drivers are listed below:
 
-| Database            | Connection String                                 | Factory Method              |
-|---------------------|---------------------------------------------------|-----------------------------|
-| SQLite              | sqlite:///path/to/file                            | `getDbRelationalInstance()` |
-| MySQL/MariaDB       | mysql://username:password@hostname:port/database  | `getDbRelationalInstance()` |
-| PostgreSQL          | psql://username:password@hostname:port/database   | `getDbRelationalInstance()` |
-| SQL Server (DbLib)  | dblib://username:password@hostname:port/database  | `getDbRelationalInstance()` |
-| SQL Server (Sqlsrv) | sqlsrv://username:password@hostname:port/database | `getDbRelationalInstance()` |
-| Oracle (OCI8)       | oci8://username:password@hostname:port/database   | `getDbRelationalInstance()` |
-| Generic PDO         | pdo://username:password@pdo_driver?PDO_PARAMETERS | `getDbRelationalInstance()` |
+| Database            | Connection String                                 | Factory Method    |
+|---------------------|---------------------------------------------------|-------------------|
+| SQLite              | sqlite:///path/to/file                            | `getDbInstance()` |
+| MySQL/MariaDB       | mysql://username:password@hostname:port/database  | `getDbInstance()` |
+| PostgreSQL          | psql://username:password@hostname:port/database   | `getDbInstance()` |
+| SQL Server (DbLib)  | dblib://username:password@hostname:port/database  | `getDbInstance()` |
+| SQL Server (Sqlsrv) | sqlsrv://username:password@hostname:port/database | `getDbInstance()` |
+| Oracle (OCI8)       | oci8://username:password@hostname:port/database   | `getDbInstance()` |
+| Generic PDO         | pdo://username:password@pdo_driver?PDO_PARAMETERS | `getDbInstance()` |
 
 Example usage:
 
@@ -52,18 +52,22 @@ $conn = \ByJG\AnyDataset\Db\Factory::getDbInstance("mysql://root:password@10.0.1
 - [Load Balance and Connection Pooling](docs/load-balance.md)
 - [Database Helper](docs/helper.md)
 - [Filtering the Query](docs/iteratorfilter.md)
+- [Entity Mapping](docs/entity.md)
 
 ## Advanced Topics
 
+- [Database Driver Interface](docs/db-driver-interface.md)
 - [Passing Parameters to PDODriver](docs/parameters.md)
 - [Generic PDO Driver](docs/generic-pdo-driver.md)
 - [Running Tests](docs/tests.md)
 - [Getting an Iterator from an existing PDO Statament](docs/pdostatement.md)
 - [Pre Fetch records](docs/prefetch.md)
+- [Logging](docs/logging.md)
 
 ## Database Specifics
 
 - [MySQL](docs/mysql.md)
+- [PostgreSQL](docs/postgresql.md)
 - [Oracle](docs/oracle.md)
 - [SQLServer](docs/sqlserver.md)
 - [Literal PDO Connection String](docs/literal-pdo-driver.md)
