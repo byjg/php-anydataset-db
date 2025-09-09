@@ -127,7 +127,8 @@ abstract class DbPdoDriver implements DbDriverInterface
     public function executeCursor(mixed $statement): void
     {
         if (!($statement instanceof PDOStatement)) {
-            throw new InvalidArgumentException("The SQL must be a PDOStatement object");
+            throw new InvalidArgumentException("The statement parameter must be a PDOStatement object");
+throw new InvalidArgumentException("The SQL must be a PDOStatement object");
         }
 
         $statement->execute();
