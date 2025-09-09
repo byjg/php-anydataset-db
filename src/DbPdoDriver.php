@@ -126,7 +126,22 @@ abstract class DbPdoDriver implements DbDriverInterface
 
     public function executeCursor(mixed $statement): void
     {
+        if (!($statement instanceof PDOStatement)) {
+            throw new InvalidArgumentException("The SQL must be a PDOStatement object");
+        }
+
         $statement->execute();
+    }
+
+    public function processMultiRowset(mixed $statement): void
+    {
+        if ($this->isSupportMultiRowset()) {
+            // Advance through rowsets to surface any errors from subsequent statements
+            do {
+                // This loop is only to throw an error (if exists)
+                // in case of execute multiple queries
+            } while ($statement->nextRowset());
+        }
     }
 
     public function getIterator(mixed $sql, ?array $params = null, ?CacheInterface $cache = null, DateInterval|int $ttl = 60, int $preFetch = 0): GenericIterator
@@ -186,18 +201,6 @@ abstract class DbPdoDriver implements DbDriverInterface
 
     public function execute(mixed $sql, ?array $array = null): bool
     {
-        if ($sql instanceof PDOStatement) {
-            if ($this->isSupportMultiRowset()) {
-                // Check error
-                do {
-                    // This loop is only to throw an error (if exists)
-                    // in case of execute multiple queries
-                } while ($sql->nextRowset());
-            }
-
-            return true;
-        }
-
         if (is_string($sql)) {
             $sql = new SqlStatement($sql);
         } elseif (!($sql instanceof SqlStatement)) {

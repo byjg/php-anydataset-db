@@ -235,7 +235,7 @@ class Route implements DbDriverInterface
     }
 
     /**
-     * @param string $sql
+     * @param mixed $sql
      * @param array|null $params
      * @param CacheInterface|null $cache
      * @param int|DateInterval $ttl
@@ -440,5 +440,10 @@ class Route implements DbDriverInterface
     public function remainingCommits(): int
     {
         throw new NotImplementedException('Feature not available');
+    }
+
+    public function processMultiRowset(mixed $statement): void
+    {
+        // TODO: Implement processMultiRowset() method.
     }
 }
