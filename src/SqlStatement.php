@@ -114,18 +114,12 @@ class SqlStatement
     {
         $stmt = $dbDriver->prepareStatement($this->sql, $array, $this->cachedStatement);
         $dbDriver->executeCursor($stmt);
+        $dbDriver->processMultiRowset($stmt);
     }
 
-
-    protected function cacheResult($key, GenericIterator $iterator, ?CacheInterface $cache, $ttl): GenericIterator
+    public function executeAndGetId(DbDriverInterface $dbDriver, ?array $array = null): mixed
     {
-        if (!empty($cache)) {
-            $cachedItem = $iterator->toArray();
-            $cache->set($key, $cachedItem, $ttl);
-            return (new ArrayDataset($cachedItem))->getIterator();
-        }
-
-        return $iterator;
+        return $dbDriver->getDbHelper()->executeAndGetInsertedId($dbDriver, $this->sql, $array);
     }
 
     /**
