@@ -247,7 +247,8 @@ class Route implements DbDriverInterface
     #[Override]
     public function getIterator(string|SqlStatement $sql, ?array $params = null, int $preFetch = 0): GenericDbIterator|GenericIterator
     {
-        $dbDriver = $this->matchRoute($sql);
+        $sqlString = $sql instanceof SqlStatement ? $sql->getSql() : $sql;
+        $dbDriver = $this->matchRoute($sqlString);
         return $dbDriver->getIterator($sql, $params, $preFetch);
     }
 
@@ -484,4 +485,9 @@ class Route implements DbDriverInterface
         throw new NotImplementedException('getDriverIterator cannot be called directly on Route');
     }
 
+    #[Override]
+    public function processMultiRowset(mixed $statement): void
+    {
+        // TODO: Implement processMultiRowset() method.
+    }
 }

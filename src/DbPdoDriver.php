@@ -135,12 +135,23 @@ abstract class DbPdoDriver implements DbDriverInterface
     #[Override]
     public function executeCursor(mixed $statement): void
     {
-        if ($statement instanceof PDOStatement) {
-            $statement->execute();
-            return;
+        if (!($statement instanceof PDOStatement)) {
+            throw new InvalidArgumentException("The statement parameter must be a PDOStatement object");
         }
 
-        throw new InvalidArgumentException('The argument needs to be a PDOStatement object');
+        $statement->execute();
+    }
+
+    #[Override]
+    public function processMultiRowset(mixed $statement): void
+    {
+        if ($this->isSupportMultiRowset()) {
+            // Advance through rowsets to surface any errors from subsequent statements
+            do {
+                // This loop is only to throw an error (if exists)
+                // in case of execute multiple queries
+            } while ($statement->nextRowset());
+        }
     }
 
     /**
@@ -237,14 +248,7 @@ abstract class DbPdoDriver implements DbDriverInterface
         // Execute the statement directly
         $statement = $this->prepareStatement($sql->getSql(), $params);
         $this->executeCursor($statement);
-
-        if ($this->isSupportMultiRowset()) {
-            // Check error
-            do {
-                // This loop is only to throw an error (if exists)
-                // in case of execute multiple queries
-            } while ($statement->nextRowset());
-        }
+        $this->processMultiRowset($statement);
 
         return true;
     }

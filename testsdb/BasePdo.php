@@ -14,6 +14,7 @@ use ByJG\AnyDataset\Db\SqlStatement;
 use ByJG\Cache\Psr16\ArrayCacheEngine;
 use ByJG\Serializer\PropertyHandler\PropertyNameMapper;
 use Exception;
+use PDOException;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Test\Models\DogEntity;
@@ -214,45 +215,39 @@ abstract class BasePdo extends TestCase
 
     public function testExecute()
     {
-        $this->dbDriver->execute(
-            "INSERT INTO Dogs (Breed, Name, Age) VALUES ('Cat', 'Doris', 7);"
-        );
-
-        $sqlStatement = new SqlStatement("INSERT INTO Dogs (Breed, Name, Age) VALUES (:breed, :name, :age);");
-        $this->dbDriver->execute(
-            $sqlStatement,
-            [
-                "breed" => "Cat2",
-                "name" => "Doris2",
-                "age" => 8
-            ]
-        );
-
-        $idInserted = $this->dbDriver->getScalar("select id from Dogs where name = 'Doris'");
-        $this->assertEquals(4, $idInserted);
-
-        $idInserted = $this->dbDriver->getScalar("select id from Dogs where name = 'Doris2'");
-        $this->assertEquals(5, $idInserted);
+        $this->testExecuteAndGetId(false);
     }
 
-    public function testExecuteAndGetId()
+    public function testExecuteAndGetId(bool $getId = false)
     {
-        $idInserted = $this->dbDriver->executeAndGetId(
-            "INSERT INTO Dogs (Breed, Name, Age) VALUES ('Cat', 'Doris', 7);"
-        );
+        $check = $this->dbDriver->getIterator("select * from Dogs where Id = 4");
+        $this->assertEmpty($check->toArray());
 
-        $this->assertEquals(4, $idInserted);
+        $params = [
+            "breed" => 'Cat',
+            "name" => 'Doris',
+            "age" => 7
+        ];
 
-        $sqlStatement = new SqlStatement("INSERT INTO Dogs (Breed, Name, Age) VALUES (:breed, :name, :age);");
-        $idInserted = $this->dbDriver->executeAndGetId(
-            $sqlStatement,
-            [
-                "breed" => "Cat2",
-                "name" => "Doris2",
-                "age" => 8
-            ]
-        );
-        $this->assertEquals(5, $idInserted);
+        if ($getId) {
+            $idInserted = $this->dbDriver->executeAndGetId(
+                "INSERT INTO Dogs (Breed, Name, Age) VALUES (:breed, :name, :age);",
+                $params
+            );
+            $this->assertEquals(4, $idInserted);
+        } else {
+            $this->dbDriver->execute(
+                "INSERT INTO Dogs (Breed, Name, Age) VALUES (:breed, :name, :age);",
+                $params
+            );
+        }
+
+        $check = $this->dbDriver->getIterator("select * from Dogs where Id = 4")->toArray();
+        $this->assertEquals(4, $check[0]["id"]);
+        $this->assertEquals('Cat', $check[0]["breed"]);
+        $this->assertEquals('Doris', $check[0]["name"]);
+        $this->assertEquals(7, $check[0]["age"]);
+        $this->assertEquals(null, $check[0]["weight"]);
     }
 
     public function testGetAllFields()
@@ -311,27 +306,252 @@ abstract class BasePdo extends TestCase
         );
     }
 
-    public function testMultipleRowset()
+    public function testMultipleRowsetGetId()
+    {
+        $this->testMultipleRowset(true);
+    }
+
+    public function testMultipleRowset(bool $getId = false)
     {
         if (!$this->dbDriver->isSupportMultiRowset()) {
             $this->markTestSkipped('This database driver does not support multiple result sets');
         }
 
+        $check = $this->dbDriver->getIterator("select * from Dogs where Id > 3");
+        $this->assertEmpty($check->toArray());
+
         $sql = "INSERT INTO Dogs (Breed, Name, Age, Weight) VALUES ('Cat', 'Doris', 7, 4.2); " .
             "INSERT INTO Dogs (Breed, Name, Age, Weight) VALUES ('Dog', 'Lolla', 1, 1.4); ";
 
-        $idInserted = $this->dbDriver->executeAndGetId($sql);
+        if ($getId) {
+            $idInserted = $this->dbDriver->executeAndGetId($sql);
+            $this->assertSame(5, intval($idInserted));
+        } else {
+            $this->dbDriver->execute($sql);
+        }
 
-        $this->assertEquals(5, $idInserted);
+        $item1 = $this->dbDriver->getIterator('select Id, Breed, Name, Age, Weight from Dogs where Id = 4')->toArray();
+        $this->assertEquals(4, $item1[0]["id"]);
+        $this->assertEquals('Cat', $item1[0]["breed"]);
+        $this->assertEquals('Doris', $item1[0]["name"]);
+        $this->assertEquals(7, $item1[0]["age"]);
+        $this->assertEquals(4.2, $item1[0]["weight"]);
 
+        $item2 = $this->dbDriver->getIterator('select Id, Breed, Name, Age, Weight from Dogs where Id = 5')->toArray();
+        $this->assertEquals(5, $item2[0]["id"]);
+        $this->assertEquals('Dog', $item2[0]["breed"]);
+        $this->assertEquals('Lolla', $item2[0]["name"]);
+        $this->assertEquals(1, $item2[0]["age"]);
+        $this->assertEquals(1.4, $item2[0]["weight"]);
+
+    }
+
+    public function testMultipleRowsetError1GetId()
+    {
+        $this->testMultipleRowsetError1(true);
+    }
+
+    public function testMultipleRowsetError1(bool $getId = false)
+    {
+        if (!$this->dbDriver->isSupportMultiRowset()) {
+            $this->markTestSkipped('This database driver does not support multiple result sets');
+        }
+
+        $check = $this->dbDriver->getIterator("select * from Dogs where Id > 3");
+        $this->assertEmpty($check->toArray());
+
+        $this->expectException(PDOException::class);
+
+        $sql = "INSERT INTO NonExistent (Breed, Name, Age, Weight) VALUES ('Cat', 'Doris', 7, 4.2); " .
+            "INSERT INTO Dogs (Breed, Name, Age, Weight) VALUES ('Dog', 'Lolla', 1, 1.4); ";
+
+        try {
+            if ($getId) {
+                $this->dbDriver->executeAndGetId($sql);
+            } else {
+                $this->dbDriver->execute($sql);
+            }
+        } catch (PDOException $e) {
+            $check = $this->dbDriver->getIterator("select * from Dogs where Id > 3");
+            $this->assertEmpty($check->toArray());
+            throw $e;
+        }
+
+    }
+
+    public function testMultipleRowsetError2GetId()
+    {
+        $this->testMultipleRowsetError2(true);
+    }
+
+    public function testMultipleRowsetError2(bool $getId = false)
+    {
+        if (!$this->dbDriver->isSupportMultiRowset()) {
+            $this->markTestSkipped('This database driver does not support multiple result sets');
+        }
+
+        $check = $this->dbDriver->getIterator("select * from Dogs where Id > 3");
+        $this->assertEmpty($check->toArray());
+
+        $this->expectException(PDOException::class);
+
+        $sql = "INSERT INTO Dogs (Breed, Name, Age, Weight) VALUES ('Cat', 'Doris', 7, 4.2); " .
+            "INSERT INTO NonExistent (Breed, Name, Age, Weight) VALUES ('Dog', 'Lolla', 1, 1.4); ";
+
+        $this->dbDriver->beginTransaction();
+        try {
+            if ($getId) {
+                $this->dbDriver->executeAndGetId($sql);
+            } else {
+                $this->dbDriver->execute($sql);
+            }
+        } catch (PDOException $e) {
+            $this->dbDriver->rollbackTransaction();
+            $check = $this->dbDriver->getIterator("select * from Dogs where Id > 3");
+            $this->assertEmpty($check->toArray());
+            throw $e;
+        }
+    }
+
+    public function testMultipleRowsetError3GetId()
+    {
+        $this->testMultipleRowsetError3(true);
+    }
+
+    public function testMultipleRowsetError3(bool $getId = false)
+    {
+        $this->expectException(PDOException::class);
+
+        if (!$this->dbDriver->isSupportMultiRowset()) {
+            $this->markTestSkipped('This database driver does not support multiple result sets');
+        }
+
+        $sql = "INSERT INTO Dogs (Breed, Name, Age, Weight) VALUES ('Cat', 'Doris', 7, 4.2); " .
+            "INSERT INTO NonExistent (Breed, Name, Age, Weight) VALUES ('Dog', 'Lolla', 1, 1.4); " .
+            "INSERT INTO Dogs (Breed, Name, Age, Weight) VALUES ('Cat', 'Doris', 7, 4.2);";
+
+        if ($getId) {
+            $this->dbDriver->executeAndGetId($sql);
+        } else {
+            $this->dbDriver->execute($sql);
+        }
+    }
+
+    public function testMultipleQueriesSingleCommand()
+    {
+        if (!$this->dbDriver->isSupportMultiRowset()) {
+            $this->markTestSkipped('Skipped: This DbDriver does not support multiple row set');
+        }
+
+        // Sanity check: Assert that the data was not inserted before
+        $inserted = $this->dbDriver->getIterator('select * from Dogs where Id = :id', ['id' => 4])->toArray();
+        $this->assertEquals([], $inserted);
+
+        // Sanity check: Assert that the data was not updated before
+        $updated = $this->dbDriver->getIterator('select * from Dogs where Id = :id', ['id' => 2])->toArray()[0];
         $this->assertEquals(
-            'Doris',
-            $this->dbDriver->getScalar('select name from Dogs where Id = :id', ['id' => 4])
+            [
+                "id" => 2,
+                "breed" => "Brazilian Terrier",
+                "name" => "Sandy",
+                "age" => 3,
+                "weight" => 3.8,
+            ],
+            $updated
         );
 
+        // Execute multiple different statements (INSERT + UPDATE) in a single command
+        $sql = "INSERT INTO Dogs (Breed, Name, Age, Weight) VALUES ('Bird', 'Blue', 7, 4.2); " .
+            "UPDATE Dogs SET Age = 11, Weight = 5.0 WHERE Id = 2;";
+
+        $this->dbDriver->execute($sql);
+
+        // Assert that the data was inserted correctly
+        $inserted = $this->dbDriver->getIterator('select * from Dogs where Id = :id', ['id' => 4])->toArray()[0];
         $this->assertEquals(
-            'Lolla',
-            $this->dbDriver->getScalar('select name from Dogs where Id = :id', ['id' => 5])
+            [
+                "id" => 4,
+                "breed" => "Bird",
+                "name" => "Blue",
+                "age" => 7,
+                "weight" => 4.2,
+            ],
+            $inserted
+        );
+
+        // Assert that the data was updated correctly
+        $updated = $this->dbDriver->getIterator('select * from Dogs where Id = :id', ['id' => 2])->toArray()[0];
+        $this->assertEquals(
+            [
+                "id" => 2,
+                "breed" => "Brazilian Terrier",
+                "name" => "Sandy",
+                "age" => 11,
+                "weight" => 5.0,
+            ],
+            $updated
+        );
+    }
+
+    public function testMultipleQueriesSingleCommandAndParams()
+    {
+        if (!$this->dbDriver->isSupportMultiRowset()) {
+            $this->markTestSkipped('Skipped: This DbDriver does not support multiple row set');
+        }
+
+        // Sanity check: Assert that the data was not inserted before
+        $inserted = $this->dbDriver->getIterator('select * from Dogs where Id = :id', ['id' => 4])->toArray();
+        $this->assertEquals([], $inserted);
+
+        // Sanity check: Assert that the data was not updated before
+        $updated = $this->dbDriver->getIterator('select * from Dogs where Id = :id', ['id' => 2])->toArray()[0];
+        $this->assertEquals(
+            [
+                "id" => 2,
+                "breed" => "Brazilian Terrier",
+                "name" => "Sandy",
+                "age" => 3,
+                "weight" => 3.8,
+            ],
+            $updated
+        );
+
+        // Execute multiple different statements (INSERT + UPDATE) in a single command
+        $sql = "INSERT INTO Dogs (Breed, Name, Age, Weight) VALUES (:breed1, :name1, :age1, :weight1); " .
+            "UPDATE Dogs SET Age = :age2, Weight = :weight2 WHERE Id = :id2;";
+
+        $this->dbDriver->execute($sql, [
+            "breed1" => "Bird",
+            "name1" => "Blue",
+            "age1" => 7,
+            "weight1" => 4.2,
+            "age2" => 13,
+            "weight2" => 5.0,
+            "id2" => 2,
+        ]);
+
+        $inserted = $this->dbDriver->getIterator('select * from Dogs where Id = :id', ['id' => 4])->toArray()[0];
+        $this->assertEquals(
+            [
+                "id" => 4,
+                "breed" => "Bird",
+                "name" => "Blue",
+                "age" => 7,
+                "weight" => 4.2,
+            ],
+            $inserted
+        );
+
+        $updated = $this->dbDriver->getIterator('select * from Dogs where Id = :id', ['id' => 2])->toArray()[0];
+        $this->assertEquals(
+            [
+                "id" => 2,
+                "breed" => "Brazilian Terrier",
+                "name" => "Sandy",
+                "age" => 13,
+                "weight" => 5.0,
+            ],
+            $updated
         );
     }
 

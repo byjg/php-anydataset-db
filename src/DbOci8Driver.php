@@ -152,6 +152,11 @@ class DbOci8Driver implements DbDriverInterface
         }
     }
 
+    public function processMultiRowset(mixed $statement): void
+    {
+        // TODO: Implement processMultiRowset() method.
+    }
+
     /**
      * @param mixed $statement The statement to check and handle
      * @param int $preFetch Number of rows to prefetch

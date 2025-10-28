@@ -17,6 +17,8 @@ interface DbDriverInterface extends DbTransactionInterface
 
     public function executeCursor(mixed $statement): void;
 
+    public function processMultiRowset(mixed $statement): void;
+
     /**
      * @param string|SqlStatement $sql
      * @param array|null $params
