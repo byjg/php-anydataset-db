@@ -36,7 +36,7 @@ class SqlBind
      * @param array|null $params
      * @return array An array with the adjusted SQL and PARAMs
      */
-    public static function parseSQL(Uri $connData, string $sql, array $params = null): array
+    public static function parseSQL(Uri $connData, string $sql, ?array $params = null): array
     {
         $paramSubstName = SqlBind::getParamModel($connData);
 

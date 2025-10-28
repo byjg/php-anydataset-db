@@ -10,7 +10,7 @@ use Override;
 class IteratorFilterSqlFormatter extends IteratorFilterFormatter
 {
     #[Override]
-    public function format(array $filters, string $tableName = null, array &$params = [], string $returnFields = "*"): string
+    public function format(array $filters, ?string $tableName = null, array &$params = [], string $returnFields = "*"): string
     {
         $params = array();
 

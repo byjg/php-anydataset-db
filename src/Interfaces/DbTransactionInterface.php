@@ -6,7 +6,7 @@ use ByJG\AnyDataset\Db\IsolationLevelEnum;
 
 interface DbTransactionInterface
 {
-    public function beginTransaction(IsolationLevelEnum $isolationLevel = null, bool $allowJoin = false);
+    public function beginTransaction(?IsolationLevelEnum $isolationLevel = null, bool $allowJoin = false);
 
     public function commitTransaction(): void;
 

@@ -18,7 +18,7 @@ trait TransactionTrait
 
     protected int $transactionCount = 0;
 
-    public function beginTransaction(IsolationLevelEnum $isolationLevel = null, bool $allowJoin = false): void
+    public function beginTransaction(?IsolationLevelEnum $isolationLevel = null, bool $allowJoin = false): void
     {
         if ($this->hasActiveTransaction()) {
             if (!$allowJoin) {

@@ -293,7 +293,7 @@ class Route implements DbDriverInterface
      * @throws NotImplementedException
      */
     #[Override]
-    public function beginTransaction(IsolationLevelEnum $isolationLevel = null, bool $allowJoin = false)
+    public function beginTransaction(?IsolationLevelEnum $isolationLevel = null, bool $allowJoin = false)
     {
         throw new NotImplementedException('Feature not available');
     }

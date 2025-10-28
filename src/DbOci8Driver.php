@@ -105,7 +105,7 @@ class DbOci8Driver implements DbDriverInterface
      * @throws DbDriverNotConnected
      */
     #[Override]
-    public function prepareStatement(string $sql, array $params = null, ?array &$cacheInfo = []): mixed
+    public function prepareStatement(string $sql, ?array $params = null, ?array &$cacheInfo = []): mixed
     {
         if (is_null($this->conn)) {
             throw new DbDriverNotConnected('Instance not connected');

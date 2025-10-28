@@ -34,7 +34,7 @@ class Factory
         }
     }
 
-    public static function getRegisteredDrivers(string $checkDriver = null): array|string
+    public static function getRegisteredDrivers(?string $checkDriver = null): array|string
     {
         if (empty(self::$config)) {
             self::registerAllDrivers();
