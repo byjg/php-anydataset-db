@@ -7,8 +7,6 @@ use ByJG\AnyDataset\Core\Exception\NotAvailableException;
 use ByJG\AnyDataset\Core\GenericIterator;
 use ByJG\AnyDataset\Db\Exception\DbDriverNotConnected;
 use ByJG\AnyDataset\Db\Helpers\SqlBind;
-use ByJG\AnyDataset\Db\Helpers\SqlHelper;
-use ByJG\AnyDataset\Db\Traits\DatabaseExecutorTrait;
 use ByJG\AnyDataset\Db\Traits\DbCacheTrait;
 use ByJG\AnyDataset\Db\Traits\TransactionTrait;
 use ByJG\Serializer\PropertyHandler\PropertyHandlerInterface;
@@ -27,7 +25,6 @@ abstract class DbPdoDriver implements DbDriverInterface
 {
     use DbCacheTrait;
     use TransactionTrait;
-    use DatabaseExecutorTrait;
 
     protected ?PDO $instance = null;
 
@@ -189,83 +186,48 @@ abstract class DbPdoDriver implements DbDriverInterface
      * @throws DatabaseException
      * @throws XmlUtilException
      * @throws \Psr\SimpleCache\InvalidArgumentException
+     *@deprecated Use DatabaseExecutor::using($driver)->getIterator() instead. This method will be removed in version 7.0.
      */
     #[Override]
     public function getIterator(string|SqlStatement $sql, ?array $params = null, int $preFetch = 0): GenericDbIterator|GenericIterator
     {
-        // Use the DatabaseExecutorTrait to handle all types of statements
-        return $this->executeStatement($sql, $params, $preFetch);
+        return DatabaseExecutor::using($this)->getIterator($sql, $params, $preFetch);
     }
 
+    /**
+     * @deprecated Use DatabaseExecutor::using($driver)->getScalar() instead. This method will be removed in version 7.0.
+     */
     #[Override]
     public function getScalar(string|SqlStatement $sql, ?array $array = null): mixed
     {
-        if (is_string($sql)) {
-            $sql = new SqlStatement($sql, $array);
-        }
-
-        // Use parameters from SqlStatement if no parameters are provided
-        $params = $array ?? $sql->getParams();
-
-        // Execute the scalar query
-        $statement = $this->prepareStatement($sql->getSql(), $params);
-        $this->executeCursor($statement);
-
-        $scalar = $statement->fetchColumn();
-        $statement->closeCursor();
-        return $scalar;
+        return DatabaseExecutor::using($this)->getScalar($sql, $array);
     }
 
+    /**
+     * @deprecated Use DatabaseExecutor::using($driver)->getAllFields() instead. This method will be removed in version 7.0.
+     */
     #[Override]
     public function getAllFields(string $tablename): array
     {
-        $fields = array();
-        $statement = $this->getInstance()->query(
-            SqlHelper::createSafeSQL(
-                "select * from @@table where 0=1",
-                [
-                    "@@table" => $tablename
-                ]
-            )
-        );
-        $fieldLength = $statement->columnCount();
-        for ($i = 0; $i < $fieldLength; $i++) {
-            $fld = $statement->getColumnMeta($i);
-            $fields[] = strtolower($fld ["name"]);
-        }
-        return $fields;
+        return DatabaseExecutor::using($this)->getAllFields($tablename);
     }
 
-
+    /**
+     * @deprecated Use DatabaseExecutor::using($driver)->execute() instead. This method will be removed in version 7.0.
+     */
     #[Override]
     public function execute(string|SqlStatement $sql, ?array $array = null): bool
     {
-        if (is_string($sql)) {
-            $sql = new SqlStatement($sql, $array);
-        } elseif (!($sql instanceof SqlStatement)) {
-            throw new InvalidArgumentException("The SQL must be a cursor, string or a SqlStatement object");
-        }
-
-        // Use parameters from SqlStatement if no parameters are provided
-        $params = $array ?? $sql->getParams();
-
-        // Execute the statement directly
-        $statement = $this->prepareStatement($sql->getSql(), $params);
-        $this->executeCursor($statement);
-        $this->processMultiRowset($statement);
-
-        return true;
+        return DatabaseExecutor::using($this)->execute($sql, $array);
     }
 
+    /**
+     * @deprecated Use DatabaseExecutor::using($driver)->executeAndGetId() instead. This method will be removed in version 7.0.
+     */
     #[Override]
     public function executeAndGetId(string|SqlStatement $sql, ?array $array = null): mixed
     {
-        if ($sql instanceof SqlStatement) {
-            $sql = $sql->withParams($array);
-            return $this->getDbHelper()->executeAndGetInsertedId($this, $sql->getSql(), $sql->getParams());
-        }
-        
-        return $this->getDbHelper()->executeAndGetInsertedId($this, $sql, $array);
+        return DatabaseExecutor::using($this)->executeAndGetId($sql, $array);
     }
 
     /**

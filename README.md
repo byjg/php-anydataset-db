@@ -57,12 +57,14 @@ $conn = \ByJG\AnyDataset\Db\Factory::getDbInstance("mysql://root:password@10.0.1
 ## Advanced Topics
 
 - [Database Driver Interface](docs/db-driver-interface.md)
+- [DatabaseExecutor - Recommended API](docs/database-executor.md)
 - [Passing Parameters to PDODriver](docs/parameters.md)
 - [Generic PDO Driver](docs/generic-pdo-driver.md)
 - [Running Tests](docs/tests.md)
-- [Getting an Iterator from an existing PDO Statament](docs/pdostatement.md)
+- [Getting an Iterator from an existing PDO Statement](docs/pdostatement.md)
 - [Pre Fetch records](docs/prefetch.md)
 - [Logging](docs/logging.md)
+- [Deprecated Features](docs/deprecated-features.md)
 
 ## Database Specifics
 
@@ -78,7 +80,7 @@ $conn = \ByJG\AnyDataset\Db\Factory::getDbInstance("mysql://root:password@10.0.1
 Just type:
 
 ```bash
-composer require "byjg/anydataset"
+composer require "byjg/anydataset-db"
 ```
 
 ## Dependencies

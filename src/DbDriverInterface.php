@@ -20,23 +20,52 @@ interface DbDriverInterface extends DbTransactionInterface
     public function processMultiRowset(mixed $statement): void;
 
     /**
+     * Execute a SQL statement and return an iterator over the results
+     *
      * @param string|SqlStatement $sql
      * @param array|null $params
      * @param int $preFetch
      * @return GenericDbIterator|GenericIterator
+     *@deprecated Use DatabaseExecutor::using($driver)->getIterator() instead. This method will be removed in version 7.0.
      */
     public function getIterator(string|SqlStatement $sql, ?array $params = null, int $preFetch = 0): GenericDbIterator|GenericIterator;
 
-    public function getScalar(string|SqlStatement $sql, ?array $array = null): mixed;
-
-    public function getAllFields(string $tablename): array;
-
-    public function execute(string|SqlStatement $sql, ?array $array = null): bool;
-
     /**
+     * Execute a SQL statement and return a single scalar value
+     *
      * @param string|SqlStatement $sql
      * @param array|null $array
      * @return mixed
+     * @deprecated Use DatabaseExecutor::using($driver)->getScalar() instead. This method will be removed in version 7.0.
+     */
+    public function getScalar(string|SqlStatement $sql, ?array $array = null): mixed;
+
+    /**
+     * Get all field names from a table
+     *
+     * @param string $tablename
+     * @return array
+     * @deprecated Use DatabaseExecutor::using($driver)->getAllFields() instead. This method will be removed in version 7.0.
+     */
+    public function getAllFields(string $tablename): array;
+
+    /**
+     * Execute a SQL statement without returning results
+     *
+     * @param string|SqlStatement $sql
+     * @param array|null $array
+     * @return bool
+     * @deprecated Use DatabaseExecutor::using($driver)->execute() instead. This method will be removed in version 7.0.
+     */
+    public function execute(string|SqlStatement $sql, ?array $array = null): bool;
+
+    /**
+     * Execute a SQL INSERT statement and return the generated ID
+     *
+     * @param string|SqlStatement $sql
+     * @param array|null $array
+     * @return mixed
+     * @deprecated Use DatabaseExecutor::using($driver)->executeAndGetId() instead. This method will be removed in version 7.0.
      */
     public function executeAndGetId(string|SqlStatement $sql, ?array $array = null): mixed;
 

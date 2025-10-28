@@ -7,8 +7,6 @@ use ByJG\AnyDataset\Core\Exception\NotImplementedException;
 use ByJG\AnyDataset\Core\GenericIterator;
 use ByJG\AnyDataset\Db\Exception\DbDriverNotConnected;
 use ByJG\AnyDataset\Db\Helpers\SqlBind;
-use ByJG\AnyDataset\Db\Helpers\SqlHelper;
-use ByJG\AnyDataset\Db\Traits\DatabaseExecutorTrait;
 use ByJG\AnyDataset\Db\Traits\DbCacheTrait;
 use ByJG\AnyDataset\Db\Traits\TransactionTrait;
 use ByJG\Serializer\PropertyHandler\PropertyHandlerInterface;
@@ -25,7 +23,6 @@ class DbOci8Driver implements DbDriverInterface
 {
     use DbCacheTrait;
     use TransactionTrait;
-    use DatabaseExecutorTrait;
 
     private LoggerInterface $logger;
 
@@ -184,12 +181,12 @@ class DbOci8Driver implements DbDriverInterface
      * @throws FileException
      * @throws XmlUtilException
      * @throws \Psr\SimpleCache\InvalidArgumentException
+     *@deprecated Use DatabaseExecutor::using($driver)->getIterator() instead. This method will be removed in version 7.0.
      */
     #[Override]
     public function getIterator(string|SqlStatement $sql, ?array $params = null, int $preFetch = 0): GenericDbIterator|GenericIterator
     {
-        // Use the DatabaseExecutorTrait to handle all types of statements
-        return $this->executeStatement($sql, $params, $preFetch);
+        return DatabaseExecutor::using($this)->getIterator($sql, $params, $preFetch);
     }
 
     /**
@@ -198,33 +195,12 @@ class DbOci8Driver implements DbDriverInterface
      * @return mixed
      * @throws DatabaseException
      * @throws DbDriverNotConnected
+     *@deprecated Use DatabaseExecutor::using($driver)->getScalar() instead. This method will be removed in version 7.0.
      */
     #[Override]
     public function getScalar(string|SqlStatement $sql, ?array $array = null): mixed
     {
-        if (is_string($sql)) {
-            $sql = new SqlStatement($sql, $array);
-        } else {
-            $sql = $sql->withParams($array);
-        }
-
-        // Execute the scalar query
-        $statement = $this->prepareStatement($sql->getSql(), $sql->getParams());
-        $this->executeCursor($statement);
-
-        if (is_resource($statement)) {
-            /** @psalm-suppress UndefinedConstant */
-            $row = oci_fetch_array($statement, OCI_RETURN_NULLS);
-            if ($row) {
-                $scalar = $row[0];
-            } else {
-                $scalar = false;
-            }
-            oci_free_statement($statement);
-            return $scalar;
-        }
-
-        return false;
+        return DatabaseExecutor::using($this)->getScalar($sql, $array);
     }
 
     /**
@@ -232,23 +208,12 @@ class DbOci8Driver implements DbDriverInterface
      * @return array
      * @throws DatabaseException
      * @throws DbDriverNotConnected
+     *@deprecated Use DatabaseExecutor::using($driver)->getAllFields() instead. This method will be removed in version 7.0.
      */
     #[Override]
     public function getAllFields(string $tablename): array
     {
-        $cur = $this->prepareStatement(SqlHelper::createSafeSQL("select * from :table", array(':table' => $tablename)));
-        $this->executeCursor($cur);
-
-        $ncols = oci_num_fields($cur);
-
-        $fields = array();
-        for ($i = 1; $i <= $ncols; $i++) {
-            $fields[] = strtolower(oci_field_name($cur, $i));
-        }
-
-        oci_free_statement($cur);
-
-        return $fields;
+        return DatabaseExecutor::using($this)->getAllFields($tablename);
     }
 
     protected function transactionHandler(TransactionStageEnum $action, string $isoLevelCommand = ""): void
@@ -296,21 +261,12 @@ class DbOci8Driver implements DbDriverInterface
      * @return bool
      * @throws DatabaseException
      * @throws DbDriverNotConnected
+     *@deprecated Use DatabaseExecutor::using($driver)->execute() instead. This method will be removed in version 7.0.
      */
     #[Override]
     public function execute(string|SqlStatement $sql, ?array $array = null): bool
     {
-        if (is_string($sql)) {
-            $sql = new SqlStatement($sql, $array);
-        } else {
-            $sql = $sql->withParams($array);
-        }
-
-        // Execute the statement directly
-        $statement = $this->prepareStatement($sql->getSql(), $sql->getParams());
-        $this->executeCursor($statement);
-        oci_free_statement($statement);
-        return true;
+        return DatabaseExecutor::using($this)->execute($sql, $array);
     }
 
     /**
@@ -346,16 +302,12 @@ class DbOci8Driver implements DbDriverInterface
      * @param string|SqlStatement $sql
      * @param array|null $array
      * @throws NotImplementedException
+     * @deprecated Use DatabaseExecutor::using($driver)->executeAndGetId() instead. This method will be removed in version 7.0.
      */
     #[Override]
     public function executeAndGetId(string|SqlStatement $sql, ?array $array = null): mixed
     {
-        if ($sql instanceof SqlStatement) {
-            $sql = $sql->withParams($array);
-            return $this->getDbHelper()->executeAndGetInsertedId($this, $sql->getSql(), $sql->getParams());
-        }
-        
-        return $this->getDbHelper()->executeAndGetInsertedId($this, $sql, $array);
+        return DatabaseExecutor::using($this)->executeAndGetId($sql, $array);
     }
 
     /**

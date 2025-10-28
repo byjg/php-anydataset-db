@@ -243,13 +243,14 @@ class Route implements DbDriverInterface
      * @param int $preFetch
      * @return GenericDbIterator|GenericIterator
      * @throws RouteNotMatchedException
+     *@deprecated Use DatabaseExecutor::using($driver)->getIterator() instead. This method will be removed in version 7.0.
      */
     #[Override]
     public function getIterator(string|SqlStatement $sql, ?array $params = null, int $preFetch = 0): GenericDbIterator|GenericIterator
     {
         $sqlString = $sql instanceof SqlStatement ? $sql->getSql() : $sql;
         $dbDriver = $this->matchRoute($sqlString);
-        return $dbDriver->getIterator($sql, $params, $preFetch);
+        return DatabaseExecutor::using($dbDriver)->getIterator($sql, $params, $preFetch);
     }
 
     /**
@@ -257,17 +258,20 @@ class Route implements DbDriverInterface
      * @param array|null $array
      * @return mixed
      * @throws RouteNotMatchedException
+     *@deprecated Use DatabaseExecutor::using($driver)->getScalar() instead. This method will be removed in version 7.0.
      */
     #[Override]
     public function getScalar(string|SqlStatement $sql, ?array $array = null): mixed
     {
-        $dbDriver = $this->matchRoute($sql);
-        return $dbDriver->getScalar($sql, $array);
+        $sqlString = $sql instanceof SqlStatement ? $sql->getSql() : $sql;
+        $dbDriver = $this->matchRoute($sqlString);
+        return DatabaseExecutor::using($dbDriver)->getScalar($sql, $array);
     }
 
     /**
      * @param string $tablename
      * @throws NotImplementedException
+     * @deprecated Use DatabaseExecutor::using($driver)->getAllFields() instead. This method will be removed in version 7.0.
      */
     #[Override]
     public function getAllFields(string $tablename): array
@@ -280,12 +284,14 @@ class Route implements DbDriverInterface
      * @param array|null $array
      * @return bool
      * @throws RouteNotMatchedException
+     *@deprecated Use DatabaseExecutor::using($driver)->execute() instead. This method will be removed in version 7.0.
      */
     #[Override]
     public function execute(string|SqlStatement $sql, ?array $array = null): bool
     {
-        $dbDriver = $this->matchRoute($sql);
-        return $dbDriver->execute($sql, $array);
+        $sqlString = $sql instanceof SqlStatement ? $sql->getSql() : $sql;
+        $dbDriver = $this->matchRoute($sqlString);
+        return DatabaseExecutor::using($dbDriver)->execute($sql, $array);
     }
 
     /**
@@ -350,13 +356,14 @@ class Route implements DbDriverInterface
      * @param array|null $array
      * @return mixed
      * @throws RouteNotMatchedException
+     *@deprecated Use DatabaseExecutor::using($driver)->executeAndGetId() instead. This method will be removed in version 7.0.
      */
     #[Override]
     public function executeAndGetId(string|SqlStatement $sql, ?array $array = null): mixed
     {
         $sqlString = $sql instanceof SqlStatement ? $sql->getSql() : $sql;
         $dbDriver = $this->matchRoute($sqlString);
-        return $dbDriver->executeAndGetId($sql, $array);
+        return DatabaseExecutor::using($dbDriver)->executeAndGetId($sql, $array);
     }
 
     /**
