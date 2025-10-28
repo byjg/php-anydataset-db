@@ -52,6 +52,14 @@ class DatabaseExecutor implements Interfaces\DbTransactionInterface
     }
 
     /**
+     * @return DbFunctionsInterface
+     */
+    public function getHelper(): DbFunctionsInterface
+    {
+        return $this->driver->getDbHelper();
+    }
+
+    /**
      * Execute a SQL statement and return an iterator over the results
      *
      * @param string|SqlStatement $sql The SQL statement to execute
@@ -166,9 +174,6 @@ class DatabaseExecutor implements Interfaces\DbTransactionInterface
      * @return array Array of field names
      * @throws DatabaseException
      * @throws DbDriverNotConnected
-     * @throws FileException
-     * @throws XmlUtilException
-     * @throws PsrInvalidArgumentException
      */
     public function getAllFields(string $tablename): array
     {

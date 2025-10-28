@@ -2,6 +2,7 @@
 
 namespace Test;
 
+use ByJG\AnyDataset\Db\DatabaseExecutor;
 use ByJG\AnyDataset\Db\DbDriverInterface;
 use ByJG\AnyDataset\Db\Factory;
 use ByJG\AnyDataset\Db\Helpers\DbSqliteFunctions;
@@ -24,32 +25,38 @@ class PdoSqliteTest extends TestCase
      */
     protected $dbDriver;
 
+    /**
+     * @var DatabaseExecutor
+     */
+    protected $executor;
+
     #[Override]
     public function setUp(): void
     {
-        $this->dbDriver = Factory::getDbInstance('sqlite:///tmp/test.db');
+        $this->executor = Factory::getDbInstance('sqlite:///tmp/test.db');
+        $this->executor = DatabaseExecutor::using($this->executor);
 
-        $this->dbDriver->execute(
+        $this->executor->execute(
             'create table users (
-            id integer primary key  autoincrement, 
-            name varchar(45), 
+            id integer primary key  autoincrement,
+            name varchar(45),
             createdate datetime);'
         );
-        $this->dbDriver->execute("insert into users (name, createdate) values ('John Doe', '2017-01-02')");
-        $this->dbDriver->execute("insert into users (name, createdate) values ('Jane Doe', '2017-01-04')");
-        $this->dbDriver->execute("insert into users (name, createdate) values ('JG', '1974-01-26')");
+        $this->executor->execute("insert into users (name, createdate) values ('John Doe', '2017-01-02')");
+        $this->executor->execute("insert into users (name, createdate) values ('Jane Doe', '2017-01-04')");
+        $this->executor->execute("insert into users (name, createdate) values ('JG', '1974-01-26')");
 
 
-        $this->dbDriver->execute(
+        $this->executor->execute(
             'create table info (
             id integer primary key  autoincrement,
             iduser INTEGER,
             number numeric(10,2),
             property varchar(45));'
         );
-        $this->dbDriver->execute("insert into info (iduser, number, property) values (1, 10.45, 'xxx')");
-        $this->dbDriver->execute("insert into info (iduser, number, property) values (1, 3, 'ggg')");
-        $this->dbDriver->execute("insert into info (iduser, number, property) values (3, 20.02, 'bbb')");
+        $this->executor->execute("insert into info (iduser, number, property) values (1, 10.45, 'xxx')");
+        $this->executor->execute("insert into info (iduser, number, property) values (1, 3, 'ggg')");
+        $this->executor->execute("insert into info (iduser, number, property) values (3, 20.02, 'bbb')");
     }
 
     #[Override]
@@ -61,7 +68,7 @@ class PdoSqliteTest extends TestCase
     /** @psalm-suppress InvalidArrayOffset */
     public function testGetIterator()
     {
-        $iterator = $this->dbDriver->getIterator('select * from info');
+        $iterator = $this->executor->getIterator('select * from info');
         $expected =
             [
                 [ 'id'=> 1, 'iduser' => 1, 'number' => 10.45, 'property' => 'xxx'],
@@ -76,7 +83,7 @@ class PdoSqliteTest extends TestCase
 //        );
 
         // While
-        $iterator = $this->dbDriver->getIterator('select * from info');
+        $iterator = $this->executor->getIterator('select * from info');
         $i = 0;
         while ($iterator->valid()) {
             $row = $iterator->current();
@@ -86,7 +93,7 @@ class PdoSqliteTest extends TestCase
         $this->assertEquals(3, $i);
 
         // Foreach
-        $iterator = $this->dbDriver->getIterator('select * from info');
+        $iterator = $this->executor->getIterator('select * from info');
         $i = 0;
         foreach ($iterator as $row) {
             $this->assertEquals($expected[$i++], $row->toArray());
@@ -105,24 +112,24 @@ class PdoSqliteTest extends TestCase
 
         // Step 1: Basic SqlStatement
         $sqlStatement = new SqlStatement('select * from info');
-        $iterator = $this->dbDriver->getIterator($sqlStatement);
+        $iterator = $this->executor->getIterator($sqlStatement);
         $this->assertEquals($expected, $iterator->toArray());
 
         // Step 2: SqlStatement with params in constructor
         $sqlStatement = new SqlStatement('select * from info where id = :id', ['id' => 1]);
-        $iterator = $this->dbDriver->getIterator($sqlStatement);
+        $iterator = $this->executor->getIterator($sqlStatement);
         $this->assertEquals([$expected[0]], $iterator->toArray());
 
         // Step 3: SqlStatement with params passed separately
         $sqlStatement = new SqlStatement('select * from info where id = :id');
-        $iterator = $this->dbDriver->getIterator($sqlStatement, ['id' => 2]);
+        $iterator = $this->executor->getIterator($sqlStatement, ['id' => 2]);
         $this->assertEquals([$expected[1]], $iterator->toArray());
     }
 
     /** @psalm-suppress InvalidArrayOffset */
     public function testGetIteratorFilter()
     {
-        $iterator = $this->dbDriver->getIterator('select * from info where iduser = :id', ['id' => 1]);
+        $iterator = $this->executor->getIterator('select * from info where iduser = :id', ['id' => 1]);
         $expected =
             [
                 [ 'id'=> 1, 'iduser' => 1, 'number' => 10.45, 'property' => 'xxx'],
@@ -136,7 +143,7 @@ class PdoSqliteTest extends TestCase
         );
 
         // While
-        $iterator = $this->dbDriver->getIterator('select * from info where iduser = :id', ['id' => 1]);
+        $iterator = $this->executor->getIterator('select * from info where iduser = :id', ['id' => 1]);
         $i = 0;
         while ($iterator->valid()) {
             $row = $iterator->current();
@@ -145,7 +152,7 @@ class PdoSqliteTest extends TestCase
         }
 
         // Foreach
-        $iterator = $this->dbDriver->getIterator('select * from info where iduser = :id', ['id' => 1]);
+        $iterator = $this->executor->getIterator('select * from info where iduser = :id', ['id' => 1]);
         $i = 0;
         foreach ($iterator as $row) {
             $this->assertEquals($expected[$i++], $row->toArray());
@@ -154,7 +161,7 @@ class PdoSqliteTest extends TestCase
 
     public function testGetIteratorNotFound()
     {
-        $iterator = $this->dbDriver->getIterator('select * from info where iduser = :id', ['id' => 5]);
+        $iterator = $this->executor->getIterator('select * from info where iduser = :id', ['id' => 5]);
 
         // To Array
         $this->assertEquals(
@@ -163,11 +170,11 @@ class PdoSqliteTest extends TestCase
         );
 
         // While
-        $iterator = $this->dbDriver->getIterator('select * from info where iduser = :id', ['id' => 5]);
+        $iterator = $this->executor->getIterator('select * from info where iduser = :id', ['id' => 5]);
         $this->assertFalse($iterator->valid());
 
         // Foreach
-        $iterator = $this->dbDriver->getIterator('select * from info where iduser = :id', ['id' => 5]);
+        $iterator = $this->executor->getIterator('select * from info where iduser = :id', ['id' => 5]);
         $i = 0;
         foreach ($iterator as $row) {
             $i++;
@@ -177,13 +184,13 @@ class PdoSqliteTest extends TestCase
 
     public function testGetScalar()
     {
-        $count1 = $this->dbDriver->getScalar('select count(*) from info');
+        $count1 = $this->executor->getScalar('select count(*) from info');
         $this->assertEquals(3, $count1);
 
-        $count2 = $this->dbDriver->getScalar('select count(*) from info where iduser = :id', ['id' => 1]);
+        $count2 = $this->executor->getScalar('select count(*) from info where iduser = :id', ['id' => 1]);
         $this->assertEquals(2, $count2);
 
-        $count3 = $this->dbDriver->getScalar('select count(*) from info where iduser = :id', ['id' => 5]);
+        $count3 = $this->executor->getScalar('select count(*) from info where iduser = :id', ['id' => 5]);
         $this->assertEquals(0, $count3);
     }
 
@@ -191,14 +198,14 @@ class PdoSqliteTest extends TestCase
     {
         $this->assertEquals(
             ['id', 'iduser', 'number', 'property'],
-            $this->dbDriver->getAllFields('info')
+            $this->executor->getAllFields('info')
         );
     }
 
     public function testExecute()
     {
-        $this->dbDriver->execute("insert into users (name, createdate) values ('Another', '2017-05-11')");
-        $iterator = $this->dbDriver->getIterator('select * from users where name = :name', ['name' => 'Another']);
+        $this->executor->execute("insert into users (name, createdate) values ('Another', '2017-05-11')");
+        $iterator = $this->executor->getIterator('select * from users where name = :name', ['name' => 'Another']);
 
         $this->assertEquals(
             [
@@ -212,7 +219,7 @@ class PdoSqliteTest extends TestCase
     {
         // Using SqlStatement
         $sqlStatement = new SqlStatement("insert into users (name, createdate) values (:name, :date)");
-        $this->dbDriver->execute(
+        $this->executor->execute(
             $sqlStatement,
             [
                 'name' => 'SqlStatement',
@@ -221,7 +228,7 @@ class PdoSqliteTest extends TestCase
         );
 
         // Verify the record was inserted
-        $iterator = $this->dbDriver->getIterator('select * from users where name = :name', ['name' => 'SqlStatement']);
+        $iterator = $this->executor->getIterator('select * from users where name = :name', ['name' => 'SqlStatement']);
         $this->assertEquals(
             [
                 ['id' => 4, 'name' => 'SqlStatement', 'createdate' => '2023-01-15'],
@@ -233,36 +240,36 @@ class PdoSqliteTest extends TestCase
     public function testGetScalarWithSqlStatement()
     {
         // First add some data
-        $this->dbDriver->execute("insert into users (name, createdate) values ('TestScalar', '2023-05-11')");
+        $this->executor->execute("insert into users (name, createdate) values ('TestScalar', '2023-05-11')");
 
         // Use SqlStatement for scalar queries
         $sqlStatement = new SqlStatement('select count(*) from users where name = :name');
 
         // With params in constructor
         $sqlStatementWithParams = new SqlStatement('select count(*) from users where name = :name', ['name' => 'TestScalar']);
-        $count = $this->dbDriver->getScalar($sqlStatementWithParams);
+        $count = $this->executor->getScalar($sqlStatementWithParams);
         $this->assertEquals(1, $count);
 
         // With params passed separately
-        $count = $this->dbDriver->getScalar($sqlStatement, ['name' => 'TestScalar']);
+        $count = $this->executor->getScalar($sqlStatement, ['name' => 'TestScalar']);
         $this->assertEquals(1, $count);
 
         // Non-existent value should return 0
-        $count = $this->dbDriver->getScalar($sqlStatement, ['name' => 'DoesNotExist']);
+        $count = $this->executor->getScalar($sqlStatement, ['name' => 'DoesNotExist']);
         $this->assertEquals(0, $count);
 
         // Get actual values
         $sqlStatement = new SqlStatement('select id from users where name = :name');
-        $id = $this->dbDriver->getScalar($sqlStatement, ['name' => 'TestScalar']);
+        $id = $this->executor->getScalar($sqlStatement, ['name' => 'TestScalar']);
         $this->assertEquals(4, $id);
     }
 
     public function testExecuteAndGetId()
     {
-        $newId = $this->dbDriver->executeAndGetId("insert into users (name, createdate) values ('Another', '2017-05-11')");
+        $newId = $this->executor->executeAndGetId("insert into users (name, createdate) values ('Another', '2017-05-11')");
 
         $this->assertEquals(4, $newId);
-        $iterator = $this->dbDriver->getIterator('select * from users where name = :name', ['name' => 'Another']);
+        $iterator = $this->executor->getIterator('select * from users where name = :name', ['name' => 'Another']);
 
         $this->assertEquals(
             [
@@ -275,12 +282,12 @@ class PdoSqliteTest extends TestCase
     public function testExecuteAndGetIdWithSqlStatement()
     {
         // First with direct SQL
-        $newId = $this->dbDriver->executeAndGetId("insert into users (name, createdate) values ('Another', '2017-05-11')");
+        $newId = $this->executor->executeAndGetId("insert into users (name, createdate) values ('Another', '2017-05-11')");
         $this->assertEquals(4, $newId);
 
         // Then with SqlStatement
         $sqlStatement = new SqlStatement("insert into users (name, createdate) values (:name, :date)");
-        $newId = $this->dbDriver->executeAndGetId(
+        $newId = $this->executor->executeAndGetId(
             $sqlStatement,
             [
                 'name' => 'Another2',
@@ -290,7 +297,7 @@ class PdoSqliteTest extends TestCase
         $this->assertEquals(5, $newId);
 
         // Verify both records were inserted
-        $iterator = $this->dbDriver->getIterator('select * from users where id in (4, 5) order by id');
+        $iterator = $this->executor->getIterator('select * from users where id in (4, 5) order by id');
         $this->assertEquals(
             [
                 ['id' => 4, 'name' => 'Another', 'createdate' => '2017-05-11'],
@@ -302,18 +309,18 @@ class PdoSqliteTest extends TestCase
 
     public function testGetDbHelper()
     {
-        $helper = $this->dbDriver->getDbHelper();
+        $helper = $this->executor->getHelper();
         $this->assertInstanceOf(DbSqliteFunctions::class, $helper);
     }
 
     public function testTransaction()
     {
-        $this->dbDriver->beginTransaction();
-        $newId = $this->dbDriver->executeAndGetId("insert into users (name, createdate) values ('Another', '2017-05-11')");
+        $this->executor->beginTransaction();
+        $newId = $this->executor->executeAndGetId("insert into users (name, createdate) values ('Another', '2017-05-11')");
         $this->assertEquals(4, $newId);
-        $this->dbDriver->commitTransaction();
+        $this->executor->commitTransaction();
 
-        $iterator = $this->dbDriver->getIterator('select * from users where name = :name', ['name' => 'Another']);
+        $iterator = $this->executor->getIterator('select * from users where name = :name', ['name' => 'Another']);
 
         $this->assertEquals(
             [
@@ -325,12 +332,12 @@ class PdoSqliteTest extends TestCase
 
     public function testTransaction2()
     {
-        $this->dbDriver->beginTransaction();
-        $newId = $this->dbDriver->executeAndGetId("insert into users (name, createdate) values ('Another', '2017-05-11')");
+        $this->executor->beginTransaction();
+        $newId = $this->executor->executeAndGetId("insert into users (name, createdate) values ('Another', '2017-05-11')");
         $this->assertEquals(4, $newId);
-        $this->dbDriver->rollbackTransaction();
+        $this->executor->rollbackTransaction();
 
-        $iterator = $this->dbDriver->getIterator('select * from users where name = :name', ['name' => 'Another']);
+        $iterator = $this->executor->getIterator('select * from users where name = :name', ['name' => 'Another']);
         $this->assertFalse($iterator->valid());
     }
 
@@ -338,23 +345,24 @@ class PdoSqliteTest extends TestCase
     public function testTransactionTwoContext()
     {
         // Context 1
-        $this->dbDriver->beginTransaction();
-        $newId = $this->dbDriver->executeAndGetId("insert into users (name, createdate) values ('Another', '2017-05-11')");
+        $this->executor->beginTransaction();
+        $newId = $this->executor->executeAndGetId("insert into users (name, createdate) values ('Another', '2017-05-11')");
         $this->assertEquals(4, $newId);
-        $this->dbDriver->rollbackTransaction();
+        $this->executor->rollbackTransaction();
 
         // Context 2
         $context2 = Factory::getDbInstance('sqlite:///tmp/test.db');
-        $context2->beginTransaction();
-        $newId = $context2->executeAndGetId("insert into users (name, createdate) values ('Another2', '2017-04-11')");
+        $executor2 = DatabaseExecutor::using($context2);
+        $executor2->beginTransaction();
+        $newId = $executor2->executeAndGetId("insert into users (name, createdate) values ('Another2', '2017-04-11')");
         $this->assertEquals(4, $newId);
-        $context2->commitTransaction();
+        $executor2->commitTransaction();
 
         // Check values
-        $iterator = $this->dbDriver->getIterator('select * from users where name = :name', ['name' => 'Another']);
+        $iterator = $this->executor->getIterator('select * from users where name = :name', ['name' => 'Another']);
         $this->assertFalse($iterator->valid());
 
-        $iterator = $this->dbDriver->getIterator('select * from users where name = :name', ['name' => 'Another2']);
+        $iterator = $this->executor->getIterator('select * from users where name = :name', ['name' => 'Another2']);
         $this->assertEquals(
             [
                 ['id' => 4, 'name' => 'Another2', 'createdate' => '2017-04-11'],
@@ -365,27 +373,27 @@ class PdoSqliteTest extends TestCase
 
     public function testGetDbConnection()
     {
-        $connection = $this->dbDriver->getDbConnection();
+        $connection = $this->executor->getDriver()->getDbConnection();
         $this->assertInstanceOf(PDO::class, $connection);
     }
 
     public function testGetUri()
     {
-        $uri = $this->dbDriver->getUri();
+        $uri = $this->executor->getDriver()->getUri();
         $this->assertInstanceOf(Uri::class, $uri);
         $this->assertEquals('sqlite:///tmp/test.db', $uri->__toString());
     }
 
     // public function testSetAttribute()
     // {
-    //     $this->assertNotEquals(\PDO::CASE_UPPER, $this->dbDriver->getAttribute(\PDO::ATTR_CASE));
-    //     $this->dbDriver->setAttribute(\PDO::ATTR_CASE, \PDO::CASE_UPPER);
-    //     $this->assertEquals(\PDO::CASE_UPPER, $this->dbDriver->getAttribute(\PDO::ATTR_CASE));
+    //     $this->assertNotEquals(\PDO::CASE_UPPER, $this->executor->getAttribute(\PDO::ATTR_CASE));
+    //     $this->executor->setAttribute(\PDO::ATTR_CASE, \PDO::CASE_UPPER);
+    //     $this->assertEquals(\PDO::CASE_UPPER, $this->executor->getAttribute(\PDO::ATTR_CASE));
     // }
 
     public function testisSupportMultRowset()
     {
-        $this->assertFalse($this->dbDriver->isSupportMultiRowset());
+        $this->assertFalse($this->executor->getDriver()->isSupportMultiRowset());
     }
 
     public function testCachedResults()
@@ -395,7 +403,7 @@ class PdoSqliteTest extends TestCase
         // Get the first from Db and then cache it;
         $sqlStatement = new SqlStatement('select * from info where id = :id');
         $sqlStatement->withCache($cache, 'info', 60);
-        $iterator = $this->dbDriver->getIterator($sqlStatement, ['id' => 1]);
+        $iterator = $this->executor->getIterator($sqlStatement, ['id' => 1]);
         $this->assertEquals(
             [
                 ['id' => 1, 'iduser' => 1, 'number' => 10.45, 'property' => 'xxx'],
@@ -404,10 +412,10 @@ class PdoSqliteTest extends TestCase
         );
 
         // Remove it from DB (Still in cache) - Execute don't use cache
-        $this->dbDriver->execute("delete from users where id = :name", ['id' => 1]);
+        $this->executor->execute("delete from users where id = :name", ['id' => 1]);
 
         // Try get from cache
-        $iterator = $this->dbDriver->getIterator($sqlStatement, ['id' => 1]);
+        $iterator = $this->executor->getIterator($sqlStatement, ['id' => 1]);
         $this->assertEquals(
             [
                 ['id' => 1, 'iduser' => 1, 'number' => 10.45, 'property' => 'xxx'],
@@ -423,19 +431,19 @@ class PdoSqliteTest extends TestCase
         // Get the first from Db and then cache it;
         $sqlStatement = SqlStatement::from('select * from info where id = :id')
             ->withCache($cache, 'info_results_1', 60);
-        $iterator = $this->dbDriver->getIterator($sqlStatement, ['id' => 4]);
+        $iterator = $this->executor->getIterator($sqlStatement, ['id' => 4]);
         $this->assertEquals(
             [],
             $iterator->toArray()
         );
 
         // Add a new record to DB
-        $id = $this->dbDriver->execute("insert into info (iduser, number, property) values (2, 20, 40)");
+        $id = $this->executor->execute("insert into info (iduser, number, property) values (2, 20, 40)");
         $this->assertEquals(4, $id);
 
         // Check if the record is there
         $sqlStatementNoCache = new SqlStatement('select * from info where id = :id');
-        $iterator = $this->dbDriver->getIterator($sqlStatementNoCache, ['id' => 4]);
+        $iterator = $this->executor->getIterator($sqlStatementNoCache, ['id' => 4]);
         $this->assertEquals(
             [
                 ["id" => 4, "iduser" => 2, "number" => 20, "property" => '40'],
@@ -444,7 +452,7 @@ class PdoSqliteTest extends TestCase
         );
 
         // Get from cache, should return the same values as before the insert
-        $iterator = $this->dbDriver->getIterator($sqlStatement, ['id' => 4]);
+        $iterator = $this->executor->getIterator($sqlStatement, ['id' => 4]);
         $this->assertEquals(
             [],
             $iterator->toArray()
@@ -458,25 +466,25 @@ class PdoSqliteTest extends TestCase
         $sqlStatement = new SqlStatement('select * from info where id = :id');
 
         // Get the first from Db and then cache it;
-        $iterator = $this->dbDriver->getIterator($sqlStatement, ['id' => 4]);
+        $iterator = $this->executor->getIterator($sqlStatement, ['id' => 4]);
         $this->assertEmpty($iterator->toArray());
-        $iterator = $this->dbDriver->getIterator($sqlStatement, ['id' => 5]);
+        $iterator = $this->executor->getIterator($sqlStatement, ['id' => 5]);
         $this->assertEmpty($iterator->toArray());
 
         // Add a new record to DB
-        $id = $this->dbDriver->execute("insert into info (iduser, number, property) values (2, 20, 40)");
-        $id = $this->dbDriver->execute("insert into info (iduser, number, property) values (3, 30, 60)");
+        $id = $this->executor->execute("insert into info (iduser, number, property) values (2, 20, 40)");
+        $id = $this->executor->execute("insert into info (iduser, number, property) values (3, 30, 60)");
         $this->assertEquals(4, $id);
 
         // Get Without Cache
-        $iterator = $this->dbDriver->getIterator($sqlStatement, ['id' => 4]);
+        $iterator = $this->executor->getIterator($sqlStatement, ['id' => 4]);
         $this->assertEquals(
             [
                 ["id" => 4, "iduser" => 2, "number" => 20, "property" => '40'],
             ],
             $iterator->toArray()
         );
-        $iterator = $this->dbDriver->getIterator($sqlStatement, ['id' => 5]);
+        $iterator = $this->executor->getIterator($sqlStatement, ['id' => 5]);
         $this->assertEquals(
             [
                 ["id" => 5, "iduser" => 3, "number" => 30, "property" => '60'],
@@ -488,14 +496,14 @@ class PdoSqliteTest extends TestCase
         $sqlStatement = $sqlStatement->withCache($cache, 'info', 60);
 
         // Get with cache, should populate the cache
-        $iterator = $this->dbDriver->getIterator($sqlStatement, ['id' => 4]);
+        $iterator = $this->executor->getIterator($sqlStatement, ['id' => 4]);
         $this->assertEquals(
             [
                 ["id" => 4, "iduser" => 2, "number" => 20, "property" => '40'],
             ],
             $iterator->toArray()
         );
-        $iterator = $this->dbDriver->getIterator($sqlStatement, ['id' => 5]);
+        $iterator = $this->executor->getIterator($sqlStatement, ['id' => 5]);
         $this->assertEquals(
             [
                 ["id" => 5, "iduser" => 3, "number" => 30, "property" => '60'],
@@ -504,18 +512,18 @@ class PdoSqliteTest extends TestCase
         );
 
         // Delete the records
-        $id = $this->dbDriver->execute("delete from info where id = :id", ['id' => 4]);
-        $id = $this->dbDriver->execute("delete from info where id = :id", ['id' => 5]);
+        $id = $this->executor->execute("delete from info where id = :id", ['id' => 4]);
+        $id = $this->executor->execute("delete from info where id = :id", ['id' => 5]);
 
         // Get from cache, should return the same values
-        $iterator = $this->dbDriver->getIterator($sqlStatement, ['id' => 4]);
+        $iterator = $this->executor->getIterator($sqlStatement, ['id' => 4]);
         $this->assertEquals(
             [
                 ["id" => 4, "iduser" => 2, "number" => 20, "property" => '40'],
             ],
             $iterator->toArray()
         );
-        $iterator = $this->dbDriver->getIterator($sqlStatement, ['id' => 5]);
+        $iterator = $this->executor->getIterator($sqlStatement, ['id' => 5]);
         $this->assertEquals(
             [
                 ["id" => 5, "iduser" => 3, "number" => 30, "property" => '60'],
@@ -525,9 +533,9 @@ class PdoSqliteTest extends TestCase
 
         // Get direct from DB by disabling cache, should return empty
         $sqlStatement = $sqlStatement->withoutCache();
-        $iterator = $this->dbDriver->getIterator($sqlStatement, ['id' => 4]);
+        $iterator = $this->executor->getIterator($sqlStatement, ['id' => 4]);
         $this->assertEmpty($iterator->toArray());
-        $iterator = $this->dbDriver->getIterator($sqlStatement, ['id' => 5]);
+        $iterator = $this->executor->getIterator($sqlStatement, ['id' => 5]);
         $this->assertEmpty($iterator->toArray());
     }
 
@@ -538,7 +546,7 @@ class PdoSqliteTest extends TestCase
         // Try get from cache (still return the same values)
         $sqlStatement = SqlStatement::from('select * from info where id = :id')
             ->withCache($cache, 'info_results_2', 60);
-        $iterator = $this->dbDriver->getIterator($sqlStatement, ['id' => 1]);
+        $iterator = $this->executor->getIterator($sqlStatement, ['id' => 1]);
         $this->assertEquals(
             [
                 ['id' => 1, 'iduser' => 1, 'number' => 10.45, 'property' => 'xxx'],
@@ -547,11 +555,11 @@ class PdoSqliteTest extends TestCase
         );
 
         // Update a record to DB
-        $this->dbDriver->execute("update info set number = 1500 where id = :id", ["id" => 1]);
+        $this->executor->execute("update info set number = 1500 where id = :id", ["id" => 1]);
 
         // Check if the record is there
         $sqlStatementNoCache = new SqlStatement('select * from info where id = :id');
-        $iterator = $this->dbDriver->getIterator($sqlStatementNoCache, ['id' => 1]);
+        $iterator = $this->executor->getIterator($sqlStatementNoCache, ['id' => 1]);
         $this->assertEquals(
             [
                 ["id" => 1, "iduser" => 1, "number" => 1500, "property" => 'xxx'],
@@ -560,7 +568,7 @@ class PdoSqliteTest extends TestCase
         );
 
         // Get from cache, should return the same values as before the update
-        $iterator = $this->dbDriver->getIterator($sqlStatement, ['id' => 1]);
+        $iterator = $this->executor->getIterator($sqlStatement, ['id' => 1]);
         $this->assertEquals(
             [
                 ['id' => 1, 'iduser' => 1, 'number' => 10.45, 'property' => 'xxx'],
@@ -571,11 +579,11 @@ class PdoSqliteTest extends TestCase
 
     public function testPDOStatement()
     {
-        $pdo = $this->dbDriver->getDbConnection();
+        $pdo = $this->executor->getDriver()->getDbConnection();
         $stmt = $pdo->prepare('select * from info where id = :id');
         $stmt->execute(['id' => 1]);
 
-        $iterator = $this->dbDriver->getDriverIterator($stmt);
+        $iterator = $this->executor->getDriver()->getDriverIterator($stmt);
         $this->assertEquals(
             [
                 ['id' => 1, 'iduser' => 1, 'number' => 10.45, 'property' => 'xxx'],
@@ -592,7 +600,7 @@ class PdoSqliteTest extends TestCase
      */
     public function testPreFetch()
     {
-        $iterator = $this->dbDriver->getIterator('select * from info where id = :id', ["id" => 1], preFetch: 50);
+        $iterator = $this->executor->getIterator('select * from info where id = :id', ["id" => 1], preFetch: 50);
 
         $result = $iterator->toArray();
 
@@ -610,7 +618,7 @@ class PdoSqliteTest extends TestCase
      */
     public function testPreFetch2()
     {
-        $iterator = $this->dbDriver->getIterator('select * from info where id = :id', ["id" => 50], preFetch: 50);
+        $iterator = $this->executor->getIterator('select * from info where id = :id', ["id" => 50], preFetch: 50);
 
         $result = $iterator->toArray();
 
@@ -626,7 +634,7 @@ class PdoSqliteTest extends TestCase
      */
     public function testPreFetchError()
     {
-        $iterator = $this->dbDriver->getIterator('select * from info where id = :id', [], preFetch: 50);
+        $iterator = $this->executor->getIterator('select * from info where id = :id', [], preFetch: 50);
 
         $result = $iterator->toArray();
 
@@ -645,7 +653,7 @@ class PdoSqliteTest extends TestCase
     #[DataProvider('dataProviderPreFetch')]
     public function testPreFetchWhile(int $preFetch, array $rows, array $expected, array $expectedCursor)
     {
-        $iterator = $this->dbDriver->getIterator('select * from info', preFetch: $preFetch);
+        $iterator = $this->executor->getIterator('select * from info', preFetch: $preFetch);
 
         $i = 0;
         while ($iterator->valid()) {
@@ -665,7 +673,7 @@ class PdoSqliteTest extends TestCase
     #[DataProvider('dataProviderPreFetch')]
     public function testPreFetchForEach(int $preFetch, array $rows, array $expected, array $expectedCursor)
     {
-        $iterator = $this->dbDriver->getIterator('select * from info', preFetch: $preFetch);
+        $iterator = $this->executor->getIterator('select * from info', preFetch: $preFetch);
 
         $i = 0;
         foreach ($iterator as $row) {
@@ -685,7 +693,7 @@ class PdoSqliteTest extends TestCase
     #[DataProvider('dataProviderPreFetch')]
     public function testPreFetchPhpIterator(int $preFetch, array $rows, array $expected, array $expectedCursor)
     {
-        $iterator = $this->dbDriver->getIterator('select * from info', preFetch: $preFetch);
+        $iterator = $this->executor->getIterator('select * from info', preFetch: $preFetch);
 
         $i = 0;
         while ($iterator->valid()) {
@@ -722,7 +730,7 @@ class PdoSqliteTest extends TestCase
         // Get iterator with entity class
         $sqlStatement = (new SqlStatement('select * from info'))
             ->withEntityClass(Info::class);
-        $iterator = $this->dbDriver->getIterator($sqlStatement);
+        $iterator = $this->executor->getIterator($sqlStatement);
 
         // Verify we get objects of the correct type
         $i = 0;
@@ -752,7 +760,7 @@ class PdoSqliteTest extends TestCase
             ->withEntityClass(Info::class);
 
         // Get iterator with entity class
-        $iterator = $this->dbDriver->getIterator($sqlStatement);
+        $iterator = $this->executor->getIterator($sqlStatement);
 
         // Verify we get objects of the correct type
         $i = 0;
@@ -782,7 +790,7 @@ class PdoSqliteTest extends TestCase
             ->withEntityClass(UserEntity::class)
             ->withEntityTransformer(new PropertyNameMapper(['id' => 'userId', 'name' => 'userName', 'createdate' => 'userCreatedDate']));
         // Get iterator with entity class and transformer
-        $iterator = $this->dbDriver->getIterator($sqlStatement);
+        $iterator = $this->executor->getIterator($sqlStatement);
 
         // Verify we get objects of the correct type with transformed property names
         $entities = [];
@@ -822,7 +830,7 @@ class PdoSqliteTest extends TestCase
             ->withEntityTransformer($transformer);
 
         // Get iterator with entity class and transformer
-        $iterator = $this->dbDriver->getIterator($sqlStatement);
+        $iterator = $this->executor->getIterator($sqlStatement);
 
         // Verify we get objects of the correct type with transformed property names
         $entities = [];

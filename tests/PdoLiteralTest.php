@@ -2,6 +2,7 @@
 
 namespace Test;
 
+use ByJG\AnyDataset\Db\DatabaseExecutor;
 use ByJG\AnyDataset\Db\PdoLiteral;
 use Override;
 use PDOException;
@@ -15,7 +16,8 @@ class PdoLiteralTest extends BasePdo
     protected function createInstance()
     {
         $dbDriver = new PdoLiteral("sqlite::memory:");
-        $dbDriver->execute("CREATE TABLE Dogs (Id INTEGER NOT NULL PRIMARY KEY, Breed VARCHAR(50), Name VARCHAR(50), Age INTEGER, Weight NUMERIC(10,2))");
+        DatabaseExecutor::using($dbDriver)
+            ->execute("CREATE TABLE Dogs (Id INTEGER NOT NULL PRIMARY KEY, Breed VARCHAR(50), Name VARCHAR(50), Age INTEGER, Weight NUMERIC(10,2))");
 
         return $dbDriver;
     }
@@ -47,21 +49,21 @@ class PdoLiteralTest extends BasePdo
     #[Override]
     public function testDontParseParam()
     {
-        // Ignoring because is using a connection into the memory.
+        // Ignoring because it is using a connection into the memory.
         $this->markTestSkipped('Parameter parsing test not applicable for in-memory database connections');
     }
 
     #[Override]
     public function testDontParseParam_2()
     {
-        // Ignoring because is using a connection into the memory.
+        // Ignoring because it is using a connection into the memory.
         $this->markTestSkipped('Parameter parsing test not applicable for in-memory database connections');
     }
 
     #[Override]
     public function testDontParseParam_3()
     {
-        // Ignoring because is using a connection into the memory.
+        // Ignoring because it is using a connection into the memory.
         $this->markTestSkipped('Parameter parsing test not applicable for in-memory database connections');
     }
 
@@ -71,10 +73,11 @@ class PdoLiteralTest extends BasePdo
         $this->assertFalse($this->dbDriver->reconnect());
         $this->assertTrue($this->dbDriver->reconnect(true));
 
-        // The connection is on memory, it means, when reconnect will be in an empty DB
+        // The connection is on memory. It means when reconnect will be in an empty DB
         $this->expectException(PDOException::class);
         $this->expectExceptionMessageMatches('/no such table/');
-        $iterator = $this->dbDriver->getIterator('select Id, Breed, Name, Age from Dogs where id = 1');
+        $executor = DatabaseExecutor::using($this->dbDriver)
+            ->getIterator('select Id, Breed, Name, Age from Dogs where id = 1');
     }
 
     #[Override]

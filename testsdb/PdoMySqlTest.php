@@ -2,7 +2,9 @@
 
 namespace TestDb;
 
+use ByJG\AnyDataset\Db\DatabaseExecutor;
 use ByJG\AnyDataset\Db\Factory;
+use PDOException;
 
 class PdoMySqlTest extends BasePdo
 {
@@ -24,39 +26,39 @@ class PdoMySqlTest extends BasePdo
         }
 
         $dbDriver = Factory::getDbInstance("mysql://root:$password@$host");
-        $dbDriver->execute('CREATE DATABASE IF NOT EXISTS test');
+        DatabaseExecutor::using($dbDriver)->execute('CREATE DATABASE IF NOT EXISTS test');
         return Factory::getDbInstance("mysql://root:$password@$host/test");
     }
 
     protected function createDatabase()
     {
         //create the database
-        $this->dbDriver->execute("CREATE TABLE Dogs (Id INTEGER PRIMARY KEY auto_increment, Breed VARCHAR(50), Name VARCHAR(50), Age INTEGER, Weight NUMERIC(10,2))");
+        $this->executor->execute("CREATE TABLE Dogs (Id INTEGER PRIMARY KEY auto_increment, Breed VARCHAR(50), Name VARCHAR(50), Age INTEGER, Weight NUMERIC(10,2))");
     }
 
     public function deleteDatabase()
     {
-        $this->dbDriver->execute('drop table Dogs;');
+        $this->executor->execute('drop table Dogs;');
     }
 
     public function testGetDate() {
-        $data = $this->dbDriver->getScalar("SELECT CONVERT('2018-07-26 20:02:03', date) ");
+        $data = $this->executor->getScalar("SELECT CONVERT('2018-07-26 20:02:03', date) ");
         $this->assertEquals("2018-07-26", $data);
 
-        $data = $this->dbDriver->getScalar("SELECT CONVERT('2018-07-26 20:02:03', datetime) ");
+        $data = $this->executor->getScalar("SELECT CONVERT('2018-07-26 20:02:03', datetime) ");
         $this->assertEquals("2018-07-26 20:02:03", $data);
     }
 
     public function testDontParseParam_3() {
-        $this->expectException(\PDOException::class);
+        $this->expectException(PDOException::class);
         
         parent::testDontParseParam_3();
     }
 
     public function testCheckInitialParameters()
     {
-        $this->assertStringStartsWith('utf8', $this->dbDriver->getScalar("SELECT @@character_set_client"));
-        $this->assertStringStartsWith('utf8', $this->dbDriver->getScalar("SELECT @@character_set_results"));
-        $this->assertStringStartsWith('utf8', $this->dbDriver->getScalar("SELECT @@character_set_connection"));
+        $this->assertStringStartsWith('utf8', $this->executor->getScalar("SELECT @@character_set_client"));
+        $this->assertStringStartsWith('utf8', $this->executor->getScalar("SELECT @@character_set_results"));
+        $this->assertStringStartsWith('utf8', $this->executor->getScalar("SELECT @@character_set_connection"));
     }
 }
