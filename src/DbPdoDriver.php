@@ -145,12 +145,16 @@ abstract class DbPdoDriver implements DbDriverInterface
     #[Override]
     public function processMultiRowset(mixed $statement): void
     {
+        if (!($statement instanceof PDOStatement)) {
+            throw new InvalidArgumentException("The statement parameter must be a PDOStatement object");
+        }
+
         if ($this->isSupportMultiRowset()) {
-            // Advance through rowsets to surface any errors from subsequent statements
-            do {
-                // This loop is only to throw an error (if exists)
-                // in case of execute multiple queries
-            } while ($statement->nextRowset());
+            // Advance through rowsets to surface any errors from later statements
+            // This loop intentionally does nothing but advance - any errors will be thrown automatically
+            while ($statement->nextRowset()) {
+                // Intentionally empty - just consuming rowsets to trigger any errors
+            }
         }
     }
 
