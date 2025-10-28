@@ -149,6 +149,7 @@ class DbOci8Driver implements DbDriverInterface
         }
     }
 
+    #[Override]
     public function processMultiRowset(mixed $statement): void
     {
         // TODO: Implement processMultiRowset() method.

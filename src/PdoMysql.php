@@ -2,6 +2,7 @@
 
 namespace ByJG\AnyDataset\Db;
 
+use ByJG\AnyDataset\Core\Exception\NotAvailableException;
 use ByJG\AnyDataset\Db\Exception\DbDriverNotConnected;
 use ByJG\Util\Uri;
 use Override;
@@ -21,6 +22,8 @@ class PdoMysql extends DbPdoDriver
      *
      * @param Uri $connUri
      * @throws DbDriverNotConnected
+     * @throws NotAvailableException
+     * @psalm-suppress InvalidClass
      */
     public function __construct(Uri $connUri)
     {

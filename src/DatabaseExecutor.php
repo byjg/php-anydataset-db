@@ -6,10 +6,12 @@ use ByJG\AnyDataset\Core\AnyDataset;
 use ByJG\AnyDataset\Core\Exception\DatabaseException;
 use ByJG\AnyDataset\Core\GenericIterator;
 use ByJG\AnyDataset\Db\Exception\DbDriverNotConnected;
+use ByJG\AnyDataset\Db\Interfaces\DbTransactionInterface;
 use ByJG\XmlUtil\Exception\FileException;
 use ByJG\XmlUtil\Exception\XmlUtilException;
 use DateInterval;
 use InvalidArgumentException;
+use Override;
 use PDOStatement;
 use Psr\SimpleCache\CacheInterface;
 use Psr\SimpleCache\InvalidArgumentException as PsrInvalidArgumentException;
@@ -18,7 +20,7 @@ use Psr\SimpleCache\InvalidArgumentException as PsrInvalidArgumentException;
  * DatabaseExecutor handles high-level database operations (queries, commands)
  * while delegating low-level operations (connections, statement preparation) to DbDriverInterface
  */
-class DatabaseExecutor implements Interfaces\DbTransactionInterface
+class DatabaseExecutor implements DbTransactionInterface
 {
     protected DbDriverInterface $driver;
 
@@ -285,6 +287,7 @@ class DatabaseExecutor implements Interfaces\DbTransactionInterface
      * @param bool $allowJoin Whether to allow joining an existing transaction
      * @return void
      */
+    #[Override]
     public function beginTransaction(?IsolationLevelEnum $isolationLevel = null, bool $allowJoin = false): void
     {
         $this->driver->beginTransaction($isolationLevel, $allowJoin);
@@ -295,6 +298,7 @@ class DatabaseExecutor implements Interfaces\DbTransactionInterface
      *
      * @return void
      */
+    #[Override]
     public function commitTransaction(): void
     {
         $this->driver->commitTransaction();
@@ -305,6 +309,7 @@ class DatabaseExecutor implements Interfaces\DbTransactionInterface
      *
      * @return void
      */
+    #[Override]
     public function rollbackTransaction(): void
     {
         $this->driver->rollbackTransaction();
@@ -315,6 +320,7 @@ class DatabaseExecutor implements Interfaces\DbTransactionInterface
      *
      * @return bool
      */
+    #[Override]
     public function hasActiveTransaction(): bool
     {
         return $this->driver->hasActiveTransaction();
@@ -325,6 +331,7 @@ class DatabaseExecutor implements Interfaces\DbTransactionInterface
      *
      * @return IsolationLevelEnum|null
      */
+    #[Override]
     public function activeIsolationLevel(): ?IsolationLevelEnum
     {
         return $this->driver->activeIsolationLevel();
@@ -335,6 +342,7 @@ class DatabaseExecutor implements Interfaces\DbTransactionInterface
      *
      * @return int
      */
+    #[Override]
     public function remainingCommits(): int
     {
         return $this->driver->remainingCommits();
@@ -345,6 +353,7 @@ class DatabaseExecutor implements Interfaces\DbTransactionInterface
      *
      * @return void
      */
+    #[Override]
     public function requiresTransaction(): void
     {
         $this->driver->requiresTransaction();

@@ -33,8 +33,8 @@ class PdoSqliteTest extends TestCase
     #[Override]
     public function setUp(): void
     {
-        $this->executor = Factory::getDbInstance('sqlite:///tmp/test.db');
-        $this->executor = DatabaseExecutor::using($this->executor);
+        $this->dbDriver = Factory::getDbInstance('sqlite:///tmp/test.db');
+        $this->executor = DatabaseExecutor::using($this->dbDriver);
 
         $this->executor->execute(
             'create table users (
