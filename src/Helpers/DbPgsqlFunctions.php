@@ -2,7 +2,7 @@
 
 namespace ByJG\AnyDataset\Db\Helpers;
 
-use ByJG\AnyDataset\Db\DbDriverInterface;
+use ByJG\AnyDataset\Db\DatabaseExecutor;
 use ByJG\AnyDataset\Db\IsolationLevelEnum;
 use ByJG\AnyDataset\Db\SqlStatement;
 use Override;
@@ -130,11 +130,11 @@ class DbPgsqlFunctions extends DbBaseFunctions
     }
 
     #[Override]
-    public function getTableMetadata(DbDriverInterface $dbdataset, string $tableName): array
+    public function getTableMetadata(DatabaseExecutor $executor, string $tableName): array
     {
         $tableName = strtolower($tableName);
         $sql = "select column_name, data_type || '(' || coalesce(cast(character_maximum_length as varchar), cast(numeric_precision_radix as varchar) || ',' || numeric_scale) || ')' as type, column_default, is_nullable from INFORMATION_SCHEMA.COLUMNS where table_name = '$tableName' ";
-        return $this->getTableMetadataFromSql($dbdataset, $sql);
+        return $this->getTableMetadataFromSql($executor, $sql);
     }
 
     #[Override]

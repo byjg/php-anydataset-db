@@ -267,17 +267,15 @@ class DatabaseExecutor implements DbTransactionInterface
      * @param string|SqlStatement $sql The SQL statement to execute
      * @param array|null $array Parameters for the SQL query
      * @return mixed The generated ID
-     * @throws DatabaseException
-     * @throws DbDriverNotConnected
      */
     public function executeAndGetId(string|SqlStatement $sql, ?array $array = null): mixed
     {
         if ($sql instanceof SqlStatement) {
             $sql = $sql->withParams($array);
-            return $this->driver->getDbHelper()->executeAndGetInsertedId($this->driver, $sql->getSql(), $sql->getParams());
+            return $this->getHelper()->executeAndGetInsertedId($this, $sql->getSql(), $sql->getParams());
         }
 
-        return $this->driver->getDbHelper()->executeAndGetInsertedId($this->driver, $sql, $array);
+        return $this->getHelper()->executeAndGetInsertedId($this, $sql, $array);
     }
 
     /**

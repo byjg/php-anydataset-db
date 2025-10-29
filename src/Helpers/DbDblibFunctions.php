@@ -3,7 +3,7 @@
 namespace ByJG\AnyDataset\Db\Helpers;
 
 use ByJG\AnyDataset\Core\Exception\NotAvailableException;
-use ByJG\AnyDataset\Db\DbDriverInterface;
+use ByJG\AnyDataset\Db\DatabaseExecutor;
 use ByJG\AnyDataset\Db\IsolationLevelEnum;
 use Override;
 
@@ -145,10 +145,10 @@ class DbDblibFunctions extends DbBaseFunctions
     }
 
     #[Override]
-    public function getTableMetadata(DbDriverInterface $dbdataset, string $tableName): array
+    public function getTableMetadata(DatabaseExecutor $executor, string $tableName): array
     {
         $sql = "select * from INFORMATION_SCHEMA.COLUMNS where TABLE_NAME = '$tableName'";
-        return $this->getTableMetadataFromSql($dbdataset, $sql);
+        return $this->getTableMetadataFromSql($executor, $sql);
     }
 
     #[Override]

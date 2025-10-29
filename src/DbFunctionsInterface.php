@@ -60,12 +60,12 @@ interface DbFunctionsInterface
 
     /**
      *
-     * @param DbDriverInterface $dbDriver
+     * @param DatabaseExecutor $executor
      * @param string|SqlStatement $sql
      * @param array|null $param
      * @return mixed
      */
-    public function executeAndGetInsertedId(DbDriverInterface $dbDriver, string|SqlStatement $sql, ?array $param = null): mixed;
+    public function executeAndGetInsertedId(DatabaseExecutor $executor, string|SqlStatement $sql, ?array $param = null): mixed;
 
     public function getSqlLastInsertId(): string;
 
@@ -85,7 +85,7 @@ interface DbFunctionsInterface
 
     public function hasForUpdate(): bool;
 
-    public function getTableMetadata(DbDriverInterface $dbdataset, string $tableName): array;
+    public function getTableMetadata(DatabaseExecutor $executor, string $tableName): array;
 
     public function getIsolationLevelCommand(?IsolationLevelEnum $isolationLevel = null): string;
 

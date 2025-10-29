@@ -2,9 +2,14 @@
 
 namespace ByJG\AnyDataset\Db\Helpers;
 
-use ByJG\AnyDataset\Db\DbDriverInterface;
+use ByJG\AnyDataset\Core\Exception\DatabaseException;
+use ByJG\AnyDataset\Db\DatabaseExecutor;
+use ByJG\AnyDataset\Db\Exception\DbDriverNotConnected;
 use ByJG\AnyDataset\Db\SqlStatement;
+use ByJG\XmlUtil\Exception\FileException;
+use ByJG\XmlUtil\Exception\XmlUtilException;
 use Override;
+use Psr\SimpleCache\InvalidArgumentException;
 
 /**
  * DbSqlsrvFunctions class for Microsoft SQL Server using the SQLSRV extension
@@ -22,16 +27,21 @@ class DbSqlsrvFunctions extends DbDblibFunctions
     /**
      * Execute SQL with optimized handling for SQLSRV
      *
-     * @param DbDriverInterface $dbDriver
+     * @param DatabaseExecutor $executor
      * @param string|SqlStatement $sql
      * @param array|null $param
      * @return mixed
+     * @throws DatabaseException
+     * @throws DbDriverNotConnected
+     * @throws FileException
+     * @throws XmlUtilException
+     * @throws InvalidArgumentException
      */
     #[Override]
-    public function executeAndGetInsertedId(DbDriverInterface $dbDriver, string|SqlStatement $sql, ?array $param = null): mixed
+    public function executeAndGetInsertedId(DatabaseExecutor $executor, string|SqlStatement $sql, ?array $param = null): mixed
     {
         // For SQLSRV, we use a more efficient method to get the inserted ID
-        $dbDriver->execute($sql, $param);
-        return $dbDriver->getScalar("select SCOPE_IDENTITY() as id");
+        $executor->execute($sql, $param);
+        return $executor->getScalar("select SCOPE_IDENTITY() as id");
     }
 }

@@ -2,12 +2,17 @@
 
 namespace ByJG\AnyDataset\Db\Helpers;
 
-use ByJG\AnyDataset\Db\DbDriverInterface;
+use ByJG\AnyDataset\Core\Exception\DatabaseException;
+use ByJG\AnyDataset\Db\DatabaseExecutor;
 use ByJG\AnyDataset\Db\DbFunctionsInterface;
+use ByJG\AnyDataset\Db\Exception\DbDriverNotConnected;
 use ByJG\AnyDataset\Db\IsolationLevelEnum;
 use ByJG\AnyDataset\Db\SqlStatement;
+use ByJG\XmlUtil\Exception\FileException;
+use ByJG\XmlUtil\Exception\XmlUtilException;
 use Exception;
 use Override;
+use Psr\SimpleCache\InvalidArgumentException;
 
 abstract class DbBaseFunctions implements DbFunctionsInterface
 {
@@ -102,17 +107,22 @@ abstract class DbBaseFunctions implements DbFunctionsInterface
     }
 
     /**
-     * @param DbDriverInterface $dbDriver
+     * @param DatabaseExecutor $executor
      * @param string|SqlStatement $sql
      * @param array|null $param
      * @return mixed
+     * @throws DatabaseException
+     * @throws DbDriverNotConnected
+     * @throws FileException
+     * @throws XmlUtilException
+     * @throws InvalidArgumentException
      */
     #[Override]
-    public function executeAndGetInsertedId(DbDriverInterface $dbDriver, string|SqlStatement $sql, ?array $param = null): mixed
+    public function executeAndGetInsertedId(DatabaseExecutor $executor, string|SqlStatement $sql, ?array $param = null): mixed
     {
-        $dbDriver->execute($sql, $param);
+        $executor->execute($sql, $param);
 
-        return $dbDriver->getScalar($this->getSqlLastInsertId());
+        return $executor->getScalar($this->getSqlLastInsertId());
     }
 
     #[Override]
@@ -163,14 +173,14 @@ abstract class DbBaseFunctions implements DbFunctionsInterface
     abstract public function hasForUpdate(): bool;
 
     #[Override]
-    public function getTableMetadata(DbDriverInterface $dbdataset, string $tableName): array
+    public function getTableMetadata(DatabaseExecutor $executor, string $tableName): array
     {
         throw new Exception("Not implemented");
     }
 
-    protected function getTableMetadataFromSql(DbDriverInterface $dbdataset, string $sql): array
+    protected function getTableMetadataFromSql(DatabaseExecutor $executor, string $sql): array
     {
-        $metadata = $dbdataset->getIterator($sql)->toArray();
+        $metadata = $executor->getIterator($sql)->toArray();
         return $this->parseColumnMetadata($metadata);
     }
 

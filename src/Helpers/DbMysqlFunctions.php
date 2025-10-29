@@ -2,7 +2,7 @@
 
 namespace ByJG\AnyDataset\Db\Helpers;
 
-use ByJG\AnyDataset\Db\DbDriverInterface;
+use ByJG\AnyDataset\Db\DatabaseExecutor;
 use ByJG\AnyDataset\Db\IsolationLevelEnum;
 use ByJG\AnyDataset\Db\SqlStatement;
 use Override;
@@ -132,10 +132,10 @@ class DbMysqlFunctions extends DbBaseFunctions
     }
 
     #[Override]
-    public function getTableMetadata(DbDriverInterface $dbdataset, string $tableName): array
+    public function getTableMetadata(DatabaseExecutor $executor, string $tableName): array
     {
         $sql = "EXPLAIN " . $this->deliTableLeft . $tableName . $this->deliTableRight;
-        return $this->getTableMetadataFromSql($dbdataset, $sql);
+        return $this->getTableMetadataFromSql($executor, $sql);
     }
 
     #[Override]

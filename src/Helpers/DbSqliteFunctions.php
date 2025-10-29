@@ -3,7 +3,7 @@
 namespace ByJG\AnyDataset\Db\Helpers;
 
 use ByJG\AnyDataset\Core\Exception\NotAvailableException;
-use ByJG\AnyDataset\Db\DbDriverInterface;
+use ByJG\AnyDataset\Db\DatabaseExecutor;
 use ByJG\AnyDataset\Db\IsolationLevelEnum;
 use Override;
 
@@ -148,10 +148,10 @@ class DbSqliteFunctions extends DbBaseFunctions
     }
 
     #[Override]
-    public function getTableMetadata(DbDriverInterface $dbdataset, string $tableName): array
+    public function getTableMetadata(DatabaseExecutor $executor, string $tableName): array
     {
         $sql = "PRAGMA table_info(" . $this->deliTableLeft . $tableName . $this->deliTableRight . ")";
-        return $this->getTableMetadataFromSql($dbdataset, $sql);
+        return $this->getTableMetadataFromSql($executor, $sql);
     }
 
     #[Override]

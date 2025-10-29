@@ -59,7 +59,7 @@ class PdoPostgresTest extends BasePdo
 
     public function testGetMetadata()
     {
-        $metadata = $this->executor->getHelper()->getTableMetadata($this->dbDriver, 'Dogs');
+        $metadata = $this->executor->getHelper()->getTableMetadata($this->executor, 'Dogs');
 
         foreach ($metadata as $key => $field) {
             unset($metadata[$key]['dbType']);

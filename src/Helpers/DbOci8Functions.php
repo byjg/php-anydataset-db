@@ -2,10 +2,15 @@
 
 namespace ByJG\AnyDataset\Db\Helpers;
 
-use ByJG\AnyDataset\Db\DbDriverInterface;
+use ByJG\AnyDataset\Core\Exception\DatabaseException;
+use ByJG\AnyDataset\Db\DatabaseExecutor;
+use ByJG\AnyDataset\Db\Exception\DbDriverNotConnected;
 use ByJG\AnyDataset\Db\IsolationLevelEnum;
 use ByJG\AnyDataset\Db\SqlStatement;
+use ByJG\XmlUtil\Exception\FileException;
+use ByJG\XmlUtil\Exception\XmlUtilException;
 use Override;
+use Psr\SimpleCache\InvalidArgumentException;
 
 class DbOci8Functions extends DbBaseFunctions
 {
@@ -118,13 +123,18 @@ class DbOci8Functions extends DbBaseFunctions
     }
 
     /**
-     * @param DbDriverInterface $dbDriver
+     * @param DatabaseExecutor $executor
      * @param string|SqlStatement $sql
      * @param array|null $param
      * @return mixed
+     * @throws DatabaseException
+     * @throws DbDriverNotConnected
+     * @throws FileException
+     * @throws XmlUtilException
+     * @throws InvalidArgumentException
      */
     #[Override]
-    public function executeAndGetInsertedId(DbDriverInterface $dbDriver, string|SqlStatement $sql, ?array $param = null): mixed
+    public function executeAndGetInsertedId(DatabaseExecutor $executor, string|SqlStatement $sql, ?array $param = null): mixed
     {
         preg_match('/INSERT INTO ([a-zA-Z0-9_]+)/i', $sql, $matches);
         $tableName = $matches[1] ?? null;
@@ -133,7 +143,7 @@ class DbOci8Functions extends DbBaseFunctions
             $tableName = strtoupper($tableName);
 
             // Get the primary key of the table
-            $primaryKeyResult = $dbDriver->getScalar("SELECT cols.column_name
+            $primaryKeyResult = $executor->getScalar("SELECT cols.column_name
                 FROM all_constraints cons, all_cons_columns cols
                 WHERE cols.table_name = '{$tableName}'
                 AND cons.constraint_type = 'P'
@@ -142,13 +152,13 @@ class DbOci8Functions extends DbBaseFunctions
                 AND ROWNUM = 1");
 
             // Get the default value of the primary key
-            $defaultValueResult = $dbDriver->getScalar("SELECT DATA_DEFAULT
+            $defaultValueResult = $executor->getScalar("SELECT DATA_DEFAULT
                 FROM USER_TAB_COLUMNS
                 WHERE TABLE_NAME = '{$tableName}'
                 AND COLUMN_NAME = '{$primaryKeyResult}'");
         }
 
-        $dbDriver->execute($sql, $param);
+        $executor->execute($sql, $param);
 
         if (!empty($tableName) && !empty($defaultValueResult)) {
 
@@ -158,7 +168,7 @@ class DbOci8Functions extends DbBaseFunctions
                 $sequenceName = str_replace('.nextval', '', $defaultValueResult);
 
                 // Return the CURRVAL of the sequence
-                return $dbDriver->getScalar("SELECT {$sequenceName}.currval FROM DUAL");
+                return $executor->getScalar("SELECT {$sequenceName}.currval FROM DUAL");
             }
         }
 
@@ -173,7 +183,7 @@ class DbOci8Functions extends DbBaseFunctions
     }
 
     #[Override]
-    public function getTableMetadata(DbDriverInterface $dbdataset, string $tableName): array
+    public function getTableMetadata(DatabaseExecutor $executor, string $tableName): array
     {
         $tableName = strtoupper($tableName);
         $sql = "SELECT
@@ -189,7 +199,7 @@ class DbOci8Functions extends DbBaseFunctions
                     NULLABLE
                 FROM ALL_TAB_COLUMNS WHERE TABLE_NAME = '{$tableName}'";
 
-        return $this->getTableMetadataFromSql($dbdataset, $sql);
+        return $this->getTableMetadataFromSql($executor, $sql);
     }
 
     #[Override]
