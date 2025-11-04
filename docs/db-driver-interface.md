@@ -7,9 +7,11 @@ sidebar_position: 10
 The `DbDriverInterface` is the core interface for all database drivers in AnyDataset-DB. It defines the standard methods
 that all database drivers must implement, providing a consistent API for interacting with different database systems.
 
-> **Important**: As of version 6.0, some high-level query methods in `DbDriverInterface` are deprecated in favor of
-> using `DatabaseExecutor`. See the [deprecation section](#deprecated-methods) below and the
-> [DatabaseExecutor documentation](database-executor.md) for the recommended approach.
+:::warning Important
+As of version 6.0, some high-level query methods in `DbDriverInterface` are deprecated in favor of
+using `DatabaseExecutor`. See the [deprecation section](#deprecated-methods) below and the
+[DatabaseExecutor documentation](database-executor.md) for the recommended approach.
+:::
 
 ## Interface Definition
 
@@ -46,8 +48,10 @@ interface DbDriverInterface extends DbTransactionInterface
 
 ### High-Level Query Execution (Deprecated)
 
-> **⚠️ Deprecated in version 6.0, will be removed in version 7.0**
-> Use [DatabaseExecutor](database-executor.md) instead for these operations.
+:::danger Deprecated
+Deprecated in version 6.0, will be removed in version 7.0.
+Use [DatabaseExecutor](database-executor.md) instead for these operations.
+:::
 
 | Method                                                                                                                 | Description                                                   | Replacement                                           |
 |------------------------------------------------------------------------------------------------------------------------|---------------------------------------------------------------|-------------------------------------------------------|

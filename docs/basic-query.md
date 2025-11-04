@@ -4,9 +4,11 @@ sidebar_position: 2
 
 # Basics
 
-> **Note**: As of version 6.0, the recommended approach is to use `DatabaseExecutor` for all query operations.
-> Direct calls to driver methods like `$dbDriver->getIterator()` are deprecated and will be removed in version 7.0.
-> See [DatabaseExecutor documentation](database-executor.md) for more details.
+:::info
+As of version 6.0, the recommended approach is to use `DatabaseExecutor` for all query operations.
+Direct calls to driver methods like `$dbDriver->getIterator()` are deprecated and will be removed in version 7.0.
+See [DatabaseExecutor documentation](database-executor.md) for more details.
+:::
 
 ## Basic Query
 

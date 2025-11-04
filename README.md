@@ -15,7 +15,7 @@ Learn more about Anydataset [here](https://opensource.byjg.com/anydataset).
 
 - Connection based on URI
 - Handles compatibility and code optimization across multiple databases (e.g., MySQL, PostgreSQL, MS SQL Server)
-- Built-in Query Cache support using a PSR-6 compliant interface
+- Built-in Query Cache support using a PSR-16 compliant interface
 - Enables connection routing based on regular expressions for queries (e.g., directing queries to different databases
   for specific tables)
 
