@@ -14,7 +14,7 @@ use Exception;
 use Override;
 use Psr\SimpleCache\InvalidArgumentException;
 
-abstract class SqlDialect implements SqlDialectInterface
+abstract class BaseSqlDialect implements SqlDialectInterface
 {
 
     const DMY = "d-m-Y";

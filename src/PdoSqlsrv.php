@@ -3,7 +3,7 @@
 namespace ByJG\AnyDataset\Db;
 
 use ByJG\AnyDataset\Core\Exception\NotAvailableException;
-use ByJG\AnyDataset\Db\SqlDialect\SqlsrvSqlDialect;
+use ByJG\AnyDataset\Db\SqlDialect\SqlsrvDialect;
 use ByJG\Util\Uri;
 use Override;
 
@@ -19,7 +19,7 @@ class PdoSqlsrv extends PdoDblib
     #[Override]
     public function getSqlDialectClass(): string
     {
-        return SqlsrvSqlDialect::class;
+        return SqlsrvDialect::class;
     }
 
     /**

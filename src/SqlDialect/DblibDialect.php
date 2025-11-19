@@ -7,7 +7,7 @@ use ByJG\AnyDataset\Db\DatabaseExecutor;
 use ByJG\AnyDataset\Db\IsolationLevelEnum;
 use Override;
 
-class DblibSqlDialect extends SqlDialect
+class DblibDialect extends BaseSqlDialect
 {
 
     public function __construct()

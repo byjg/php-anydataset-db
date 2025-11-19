@@ -2,18 +2,18 @@
 
 namespace Test;
 
+use ByJG\AnyDataset\Db\DatabaseRouter;
 use ByJG\AnyDataset\Db\Exception\RouteNotFoundException;
 use ByJG\AnyDataset\Db\Exception\RouteNotMatchedException;
 use ByJG\AnyDataset\Db\Factory;
 use ByJG\AnyDataset\Db\Interfaces\DbDriverInterface;
-use ByJG\AnyDataset\Db\Route;
 use Override;
 use PHPUnit\Framework\TestCase;
 
-class RouteTest extends TestCase
+class DatabaseRouterTest extends TestCase
 {
     /**
-     * @var Route
+     * @var DatabaseRouter
      */
     protected $object;
 
@@ -35,7 +35,7 @@ class RouteTest extends TestCase
     #[Override]
     public function setUp(): void
     {
-        $this->object = new Route();
+        $this->object = new DatabaseRouter();
 
         $this->obj1 = Factory::getDbInstance('sqlite:///tmp/a.db');
         $this->obj2 = Factory::getDbInstance('sqlite:///tmp/b.db');

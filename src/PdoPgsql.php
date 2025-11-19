@@ -4,7 +4,7 @@ namespace ByJG\AnyDataset\Db;
 
 use ByJG\AnyDataset\Core\Exception\NotAvailableException;
 use ByJG\AnyDataset\Db\Exception\DbDriverNotConnected;
-use ByJG\AnyDataset\Db\SqlDialect\PostgresSqlDialect;
+use ByJG\AnyDataset\Db\SqlDialect\PgsqlDialect;
 use ByJG\Util\Uri;
 use Override;
 
@@ -19,7 +19,7 @@ class PdoPgsql extends DbPdoDriver
     #[Override]
     public function getSqlDialectClass(): string
     {
-        return PostgresSqlDialect::class;
+        return PgsqlDialect::class;
     }
 
     /**

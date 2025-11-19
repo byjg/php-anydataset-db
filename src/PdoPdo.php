@@ -3,13 +3,13 @@
 namespace ByJG\AnyDataset\Db;
 
 use ByJG\AnyDataset\Db\Exception\DbDriverNotConnected;
-use ByJG\AnyDataset\Db\SqlDialect\DblibSqlDialect;
-use ByJG\AnyDataset\Db\SqlDialect\GenericPdoSqlDialect;
-use ByJG\AnyDataset\Db\SqlDialect\MysqlSqlDialect;
-use ByJG\AnyDataset\Db\SqlDialect\OciSqlDialect;
-use ByJG\AnyDataset\Db\SqlDialect\PostgresSqlDialect;
-use ByJG\AnyDataset\Db\SqlDialect\SqliteSqlDialect;
-use ByJG\AnyDataset\Db\SqlDialect\SqlsrvSqlDialect;
+use ByJG\AnyDataset\Db\SqlDialect\DblibDialect;
+use ByJG\AnyDataset\Db\SqlDialect\GenericPdoDialect;
+use ByJG\AnyDataset\Db\SqlDialect\MysqlDialect;
+use ByJG\AnyDataset\Db\SqlDialect\OciDialect;
+use ByJG\AnyDataset\Db\SqlDialect\PgsqlDialect;
+use ByJG\AnyDataset\Db\SqlDialect\SqliteDialect;
+use ByJG\AnyDataset\Db\SqlDialect\SqlsrvDialect;
 use ByJG\Util\Uri;
 use Override;
 use PDO;
@@ -32,17 +32,17 @@ class PdoPdo extends DbPdoDriver
             $driver = $pdo->getAttribute(PDO::ATTR_DRIVER_NAME);
 
             return match ($driver) {
-                'mysql' => MysqlSqlDialect::class,
-                'sqlite' => SqliteSqlDialect::class,
-                'pgsql' => PostgresSqlDialect::class,
-                'sqlsrv' => SqlsrvSqlDialect::class,
-                'dblib' => DblibSqlDialect::class,
-                'oci' => OciSqlDialect::class,
-                default => GenericPdoSqlDialect::class,
+                'mysql' => MysqlDialect::class,
+                'sqlite' => SqliteDialect::class,
+                'pgsql' => PgsqlDialect::class,
+                'sqlsrv' => SqlsrvDialect::class,
+                'dblib' => DblibDialect::class,
+                'oci' => OciDialect::class,
+                default => GenericPdoDialect::class,
             };
         }
 
-        return GenericPdoSqlDialect::class;
+        return GenericPdoDialect::class;
     }
 
     /**

@@ -14,7 +14,7 @@ use InvalidArgumentException;
 use Override;
 use Psr\Log\LoggerInterface;
 
-class Route implements DbDriverInterface
+class DatabaseRouter implements DbDriverInterface
 {
     #[Override]
     public static function schema()
@@ -38,13 +38,13 @@ class Route implements DbDriverInterface
     protected ?DbDriverInterface $lastMatchedDriver = null;
 
     /**
-     * Route constructor.
+     * DatabaseRouter constructor.
      */
     public function __construct()
     {
     }
 
-    //<editor-fold desc="Route Methods">
+    //<editor-fold desc="DatabaseRouter Methods">
 
     /**
      * Add one or more database drivers to a route
@@ -232,7 +232,7 @@ class Route implements DbDriverInterface
             return $driver;
         }
 
-        throw new RouteNotMatchedException('Route not matched');
+        throw new RouteNotMatchedException('DatabaseRouter not matched');
     }
     //</editor-fold>
 
@@ -388,33 +388,6 @@ class Route implements DbDriverInterface
     }
 
     /**
-     * @param string $name
-     * @param mixed $value
-     * @return void
-     * @throws RouteNotInitializedException If no driver has been matched yet
-     */
-    public function setAttribute(string $name, mixed $value): void
-    {
-        if ($this->lastMatchedDriver === null) {
-            throw new RouteNotInitializedException('Cannot set attribute: no database has been selected. Execute a query first to match a route.');
-        }
-        $this->lastMatchedDriver->setAttribute($name, $value);
-    }
-
-    /**
-     * @param string $name
-     * @return mixed
-     * @throws RouteNotInitializedException If no driver has been matched yet
-     */
-    public function getAttribute(string $name): mixed
-    {
-        if ($this->lastMatchedDriver === null) {
-            throw new RouteNotInitializedException('Cannot get attribute: no database has been selected. Execute a query first to match a route.');
-        }
-        return $this->lastMatchedDriver->getAttribute($name);
-    }
-
-    /**
      * @param string|SqlStatement $sql
      * @param array|null $array
      * @return mixed
@@ -506,31 +479,8 @@ class Route implements DbDriverInterface
         }
         $this->lastMatchedDriver->setSupportMultiRowset($multipleRowSet);
     }
-
-    public function getMaxStmtCache(): int
-    {
-        if ($this->lastMatchedDriver === null) {
-            throw new RouteNotInitializedException('Cannot get max statement cache: no database has been selected. Execute a query first to match a route.');
-        }
-        return $this->lastMatchedDriver->getMaxStmtCache();
-    }
-
-    public function setMaxStmtCache(int $maxStmtCache): void
-    {
-        if ($this->lastMatchedDriver === null) {
-            throw new RouteNotInitializedException('Cannot set max statement cache: no database has been selected. Execute a query first to match a route.');
-        }
-        $this->lastMatchedDriver->setMaxStmtCache($maxStmtCache);
-    }
-
-    public function getCountStmtCache(): int
-    {
-        if ($this->lastMatchedDriver === null) {
-            return 0;
-        }
-        return $this->lastMatchedDriver->getCountStmtCache();
-    }
     //</editor-fold>
+
     #[Override]
     public function reconnect(bool $force = false): bool
     {

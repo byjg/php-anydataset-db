@@ -2,12 +2,12 @@
 
 namespace ByJG\AnyDataset\Db\SqlDialect;
 
+use ByJG\AnyDataset\Core\Exception\NotAvailableException;
 use ByJG\AnyDataset\Db\DatabaseExecutor;
 use ByJG\AnyDataset\Db\IsolationLevelEnum;
-use ByJG\AnyDataset\Db\SqlStatement;
 use Override;
 
-class MysqlSqlDialect extends SqlDialect
+class SqliteDialect extends BaseSqlDialect
 {
 
     public function __construct()
@@ -18,10 +18,15 @@ class MysqlSqlDialect extends SqlDialect
         $this->deliTableRight = '`';
     }
 
+    /**
+     * @param string $str1
+     * @param string|null $str2
+     * @return string
+     */
     #[Override]
     public function concat(string $str1, ?string $str2 = null): string
     {
-        return "concat(" . implode(', ', func_get_args()) . ")";
+        return implode(' || ', func_get_args());
     }
 
     /**
@@ -90,51 +95,62 @@ class MysqlSqlDialect extends SqlDialect
     public function sqlDate(string $format, ?string $column = null): string
     {
         if (is_null($column)) {
-            $column = 'now()';
+            $column = "'now'";
         }
 
         $pattern = [
             'Y' => "%Y",
-            'y' => "%y",
-            'M' => "%b",
+            'y' => "%Y",
+            'M' => "%m",
             'm' => "%m",
             'Q' => "",
             'q' => "",
             'D' => "%d",
-            'd' => "%e",
-            'h' => "%I",
+            'd' => "%d",
+            'h' => "%H",
             'H' => "%H",
-            'i' => "%i",
-            's' => "%s",
-            'a' => "%p",
-            'A' => "%p",
+            'i' => "%M",
+            's' => "%S",
+            'a' => "",
+            'A' => "",
         ];
 
         $preparedSql = $this->prepareSqlDate($format, $pattern, '');
 
         return sprintf(
-            "DATE_FORMAT(%s,'%s')",
-            $column,
-            implode('', $preparedSql)
+            "strftime('%s', %s)",
+            implode('', $preparedSql),
+            $column
         );
     }
 
     #[Override]
     public function getSqlLastInsertId(): string
     {
-        return "select LAST_INSERT_ID() id";
+        return "select last_insert_rowid() id";
+    }
+
+    /**
+     * @param string $sql
+     * @return string
+     * @throws NotAvailableException
+     */
+    #[Override]
+    public function forUpdate(string $sql): string
+    {
+        throw new NotAvailableException('FOR UPDATE not available for SQLite');
     }
 
     #[Override]
     public function hasForUpdate(): bool
     {
-        return true;
+        return false;
     }
 
     #[Override]
     public function getTableMetadata(DatabaseExecutor $executor, string $tableName): array
     {
-        $sql = "EXPLAIN " . $this->deliTableLeft . $tableName . $this->deliTableRight;
+        $sql = "PRAGMA table_info(" . $this->deliTableLeft . $tableName . $this->deliTableRight . ")";
         return $this->getTableMetadataFromSql($executor, $sql);
     }
 
@@ -144,11 +160,11 @@ class MysqlSqlDialect extends SqlDialect
         $return = [];
 
         foreach ($metadata as $key => $value) {
-            $return[strtolower($value['field'])] = [
-                'name' => $value['field'],
+            $return[strtolower($value['name'])] = [
+                'name' => $value['name'],
                 'dbType' => strtolower($value['type']),
-                'required' => $value['null'] == 'NO',
-                'default' => $value['default'],
+                'required' => $value['notnull'] == 1,
+                'default' => $value['dflt_value'],
             ] + $this->parseTypeMetadata(strtolower($value['type']));
         }
 
@@ -158,32 +174,15 @@ class MysqlSqlDialect extends SqlDialect
     #[Override]
     public function getIsolationLevelCommand(?IsolationLevelEnum $isolationLevel = null): string
     {
-        return match ($isolationLevel) {
-            IsolationLevelEnum::READ_UNCOMMITTED => "SET SESSION TRANSACTION ISOLATION LEVEL READ UNCOMMITTED",
-            IsolationLevelEnum::READ_COMMITTED => "SET SESSION TRANSACTION ISOLATION LEVEL READ COMMITTED",
-            IsolationLevelEnum::REPEATABLE_READ => "SET SESSION TRANSACTION ISOLATION LEVEL REPEATABLE READ",
-            IsolationLevelEnum::SERIALIZABLE => "SET SESSION TRANSACTION ISOLATION LEVEL SERIALIZABLE",
-            default => "",
-        };
-    }
-
-    #[Override]
-    public function getJoinTablesUpdate(array $tables): array
-    {
-        $joinTables = [];
-        foreach ($tables as $table) {
-            if ($table["table"] instanceof SqlStatement) {
-                $table["table"] = "({$table["table"]->getSql()})";
-            } else {
-                $table["table"] = $this->deliTableLeft . $table['table'] . $this->deliTableRight;
-            }
-            $table["table"] = $table["table"] . (isset($table["alias"]) ? " AS " . $table["alias"] : "");
-            $joinTables[] = " INNER JOIN " . $table["table"] . " ON " . $table['condition'];
+        switch ($isolationLevel) {
+            case IsolationLevelEnum::READ_UNCOMMITTED:
+                return "PRAGMA read_uncommitted = true;";
+            case IsolationLevelEnum::READ_COMMITTED:
+            case IsolationLevelEnum::REPEATABLE_READ:
+            case IsolationLevelEnum::SERIALIZABLE:
+            default:
+                return "";
         }
-
-        return [
-            "position" => "before_set",
-            "sql" => implode(' ', $joinTables)
-        ];
     }
+    
 }

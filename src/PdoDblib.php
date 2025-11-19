@@ -3,7 +3,7 @@
 namespace ByJG\AnyDataset\Db;
 
 use ByJG\AnyDataset\Core\Exception\NotAvailableException;
-use ByJG\AnyDataset\Db\SqlDialect\DblibSqlDialect;
+use ByJG\AnyDataset\Db\SqlDialect\DblibDialect;
 use ByJG\Util\Uri;
 use Override;
 
@@ -18,7 +18,7 @@ class PdoDblib extends PdoPdo
     #[Override]
     public function getSqlDialectClass(): string
     {
-        return DblibSqlDialect::class;
+        return DblibDialect::class;
     }
 
 

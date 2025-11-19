@@ -7,7 +7,7 @@ use ByJG\AnyDataset\Db\IsolationLevelEnum;
 use ByJG\AnyDataset\Db\SqlStatement;
 use Override;
 
-class PostgresSqlDialect extends SqlDialect
+class PgsqlDialect extends BaseSqlDialect
 {
 
     public function __construct()

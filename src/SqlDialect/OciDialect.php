@@ -12,7 +12,7 @@ use ByJG\XmlUtil\Exception\XmlUtilException;
 use Override;
 use Psr\SimpleCache\InvalidArgumentException;
 
-class OciSqlDialect extends SqlDialect
+class OciDialect extends BaseSqlDialect
 {
 
     public function __construct()

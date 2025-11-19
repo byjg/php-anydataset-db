@@ -85,10 +85,10 @@ $route
     ->addDriver('slaves', [$slave1Driver, $slave2Driver])
 ;
 
-// Route all write operations to master
+// DatabaseRouter all write operations to master
 $route->addRouteForWrite('master');
 
-// Route read operations to slaves (random selection between slave1 and slave2)
+// DatabaseRouter read operations to slaves (random selection between slave1 and slave2)
 $route->addRouteForRead('slaves');
 
 // Create executor to perform queries
@@ -123,7 +123,7 @@ $route
     ->addDriver('db3', $db3Driver)
 ;
 
-// Route queries for specific tables
+// DatabaseRouter queries for specific tables
 $route
     ->addRouteForRead('db1', 'users')
     ->addRouteForRead('db2', 'products')
@@ -166,7 +166,7 @@ $route
     ->addDriver('asia_db', $asiaDriver)
 ;
 
-// Route based on region in WHERE clause
+// DatabaseRouter based on region in WHERE clause
 $route
     ->addRouteForFilter('us_db', 'region', 'US')
     ->addRouteForFilter('eu_db', 'region', 'EU')
@@ -203,10 +203,10 @@ $route
     ->addDriver('transactional', $transactionalDriver)
 ;
 
-// Route complex queries to analytics database
+// DatabaseRouter complex queries to analytics database
 $route->addCustomRoute('analytics', '.*GROUP\s+BY.*HAVING.*');
 
-// Route other queries to transactional database
+// DatabaseRouter other queries to transactional database
 $route->addRouteForRead('transactional');
 $route->addRouteForWrite('transactional');
 

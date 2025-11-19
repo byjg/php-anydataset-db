@@ -8,7 +8,6 @@ use ByJG\AnyDataset\Core\GenericIterator;
 use ByJG\AnyDataset\Db\Exception\DbDriverNotConnected;
 use ByJG\AnyDataset\Db\Interfaces\DbDriverInterface;
 use ByJG\AnyDataset\Db\Interfaces\SqlDialectInterface;
-use ByJG\AnyDataset\Db\SqlDialect\SqlBind;
 use ByJG\AnyDataset\Db\Traits\DbCacheTrait;
 use ByJG\AnyDataset\Db\Traits\TransactionTrait;
 use ByJG\Serializer\PropertyHandler\PropertyHandlerInterface;
@@ -108,7 +107,7 @@ abstract class DbPdoDriver implements DbDriverInterface
     public function prepareStatement(string $sql, ?array $params = null, ?array &$cacheInfo = []): PDOStatement
     {
         if (!$this->getUri()->hasQueryKey(self::DONT_PARSE_PARAM)) {
-            list($sql, $params) = SqlBind::parseSQL($this->pdoObj->getUri(), $sql, $params);
+            list($sql, $params) = ParameterBinder::prepareParameterBindings($this->pdoObj->getUri(), $sql, $params);
         }
 
         if (($cacheInfo['sql'] ?? "") != $sql || empty($cacheInfo['stmt'])) {
@@ -119,7 +118,7 @@ abstract class DbPdoDriver implements DbDriverInterface
 
         if (!empty($params)) {
             foreach ($params as $key => $value) {
-                $stmt->bindValue(":" . SqlBind::keyAdj($key), $value);
+                $stmt->bindValue(":" . ParameterBinder::sanitizeParameterKey($key), $value);
             }
         }
 

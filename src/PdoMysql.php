@@ -4,7 +4,7 @@ namespace ByJG\AnyDataset\Db;
 
 use ByJG\AnyDataset\Core\Exception\NotAvailableException;
 use ByJG\AnyDataset\Db\Exception\DbDriverNotConnected;
-use ByJG\AnyDataset\Db\SqlDialect\MysqlSqlDialect;
+use ByJG\AnyDataset\Db\SqlDialect\MysqlDialect;
 use ByJG\Util\Uri;
 use Override;
 use PDO;
@@ -21,7 +21,7 @@ class PdoMysql extends DbPdoDriver
     #[Override]
     public function getSqlDialectClass(): string
     {
-        return MysqlSqlDialect::class;
+        return MysqlDialect::class;
     }
 
     /**

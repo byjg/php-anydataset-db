@@ -96,8 +96,6 @@ The following methods are **NOT** deprecated and remain as core driver functiona
 - `getSqlDialectClass()` - Gets the class name of the SQL dialect implementation
 - `isSupportMultiRowset()` - Checks multi-rowset support
 - `setSupportMultiRowset()` - Configures multi-rowset support
-- `getAttribute()` - Gets driver attributes
-- `setAttribute()` - Sets driver attributes
 
 #### Logging
 
@@ -157,7 +155,7 @@ The following interfaces and classes have been renamed for better clarity:
 | `DbSqlsrvFunctions` | `SqlsrvDialect`     | `Helpers\`     | `SqlDialect\`  |
 | `DbOci8Functions`   | `OciDialect`        | `Helpers\`     | `SqlDialect\`  |
 | `DbPdoFunctions`    | `GenericPdoDialect` | `Helpers\`     | `SqlDialect\`  |
-| `DbBaseFunctions`   | `BaseDialect`       | `Helpers\`     | `SqlDialect\`  |
+| `DbBaseFunctions`   | `BaseSqlDialect`    | `Helpers\`     | `SqlDialect\`  |
 | `Route`             | `DatabaseRouter`    | Root namespace | Root namespace |
 
 #### Method Renames
@@ -234,9 +232,9 @@ $concat = $dialect->concat("'Hello '", "name");
 **Before:**
 
 ```php
-use ByJG\AnyDataset\Db\Route;
+use ByJG\AnyDataset\Db\DatabaseRouter;
 
-$route = new Route();
+$route = new DatabaseRouter();
 $route->addDriver('master', $masterDriver);
 $route->addRouteForWrite('master');
 ```
@@ -289,7 +287,7 @@ grep -r "->getDbHelper()" --include="*.php" .
 # Find old helper class imports
 grep -r "use.*Helpers\\Db.*Functions" --include="*.php" .
 
-# Find Route class usage
+# Find DatabaseRouter class usage
 grep -r "new Route()\|use.*\\Route;" --include="*.php" .
 ```
 

@@ -12,12 +12,12 @@ use Override;
 use Psr\SimpleCache\InvalidArgumentException;
 
 /**
- * SqlsrvSqlDialect class for Microsoft SQL Server using the SQLSRV extension
+ * SqlsrvDialect class for Microsoft SQL Server using the SQLSRV extension
  */
-class SqlsrvSqlDialect extends DblibSqlDialect
+class SqlsrvDialect extends DblibDialect
 {
     /**
-     * SqlsrvSqlDialect constructor.
+     * SqlsrvDialect constructor.
      */
     public function __construct()
     {

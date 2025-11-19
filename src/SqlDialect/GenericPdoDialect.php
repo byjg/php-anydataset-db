@@ -4,7 +4,7 @@ namespace ByJG\AnyDataset\Db\SqlDialect;
 
 use Override;
 
-class GenericPdoSqlDialect extends SqlDialect
+class GenericPdoDialect extends BaseSqlDialect
 {
 
     public function __construct()

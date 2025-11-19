@@ -3,16 +3,16 @@
 namespace TestDb;
 
 use ByJG\AnyDataset\Db\DatabaseExecutor;
+use ByJG\AnyDataset\Db\DatabaseRouter;
 use ByJG\AnyDataset\Db\Factory;
 use ByJG\AnyDataset\Db\Interfaces\DbDriverInterface;
 use ByJG\AnyDataset\Db\Interfaces\SqlDialectInterface;
-use ByJG\AnyDataset\Db\Route;
 use Exception;
 use PHPUnit\Framework\TestCase;
 
-class RouteRealDbTest extends TestCase
+class DatabaseRouterlDbTest extends TestCase
 {
-    protected Route $route;
+    protected DatabaseRouter $route;
     protected DatabaseExecutor $executor;
     protected DbDriverInterface $masterDriver;
     protected DbDriverInterface $slave1Driver;
@@ -32,8 +32,8 @@ class RouteRealDbTest extends TestCase
         $this->slave2Driver = Factory::getDbInstance("sqlite://$this->slave2Db");
         $this->analyticsDriver = Factory::getDbInstance("sqlite://$this->analyticsDb");
 
-        // Create the Route instance
-        $this->route = new Route();
+        // Create the DatabaseRouter instance
+        $this->route = new DatabaseRouter();
 
         // Set up routing
         $this->route
@@ -48,7 +48,7 @@ class RouteRealDbTest extends TestCase
             ->addRouteForWrite('master')                    // All writes go to master
             ->addRouteForRead('slaves');                    // All reads go to slaves (load balanced)
 
-        // Create DatabaseExecutor wrapper around Route
+        // Create DatabaseExecutor wrapper around DatabaseRouter
         $this->executor = DatabaseExecutor::using($this->route);
 
         // Create tables and populate data

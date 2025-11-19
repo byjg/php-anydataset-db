@@ -2,7 +2,7 @@
 
 namespace Test\Helpers;
 
-use ByJG\AnyDataset\Db\SqlDialect\PostgresSqlDialect;
+use ByJG\AnyDataset\Db\SqlDialect\PgsqlDialect;
 use ByJG\AnyDataset\Db\SqlStatement;
 use Override;
 use PHPUnit\Framework\TestCase;
@@ -10,14 +10,14 @@ use PHPUnit\Framework\TestCase;
 class DbPostgresFunctionsTest extends TestCase
 {
     /**
-     * @var PostgresSqlDialect|null
+     * @var PgsqlDialect|null
      */
-    private ?PostgresSqlDialect $object;
+    private ?PgsqlDialect $object;
 
     #[Override]
     protected function setUp(): void
     {
-        $this->object = new PostgresSqlDialect();
+        $this->object = new PgsqlDialect();
     }
 
     #[Override]

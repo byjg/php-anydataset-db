@@ -8,8 +8,7 @@ use ByJG\AnyDataset\Core\GenericIterator;
 use ByJG\AnyDataset\Db\Exception\DbDriverNotConnected;
 use ByJG\AnyDataset\Db\Interfaces\DbDriverInterface;
 use ByJG\AnyDataset\Db\Interfaces\SqlDialectInterface;
-use ByJG\AnyDataset\Db\SqlDialect\OciSqlDialect;
-use ByJG\AnyDataset\Db\SqlDialect\SqlBind;
+use ByJG\AnyDataset\Db\SqlDialect\OciDialect;
 use ByJG\AnyDataset\Db\Traits\DbCacheTrait;
 use ByJG\AnyDataset\Db\Traits\TransactionTrait;
 use ByJG\Serializer\PropertyHandler\PropertyHandlerInterface;
@@ -40,7 +39,7 @@ class DbOci8Driver implements DbDriverInterface
     #[Override]
     public function getSqlDialectClass(): string
     {
-        return OciSqlDialect::class;
+        return OciDialect::class;
     }
 
     /**
@@ -116,7 +115,7 @@ class DbOci8Driver implements DbDriverInterface
         if (is_null($this->conn)) {
             throw new DbDriverNotConnected('Instance not connected');
         }
-        list($query, $params) = SqlBind::parseSQL($this->connectionUri, $sql, $params);
+        list($query, $params) = ParameterBinder::prepareParameterBindings($this->connectionUri, $sql, $params);
 
         $this->logger->debug("SQL: $query, Params: " . json_encode($params));
 
