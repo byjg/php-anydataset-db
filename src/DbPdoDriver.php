@@ -246,7 +246,8 @@ abstract class DbPdoDriver implements DbDriverInterface
     public function getDbHelper(): DbFunctionsInterface
     {
         if (empty($this->dbHelper)) {
-            $this->dbHelper = Factory::getDbFunctions($this->pdoObj->getUri());
+            $helperClass = $this->getDbHelperClass();
+            $this->dbHelper = new $helperClass();
         }
         return $this->dbHelper;
     }

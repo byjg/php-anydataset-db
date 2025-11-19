@@ -6,6 +6,7 @@ use ByJG\AnyDataset\Core\Exception\DatabaseException;
 use ByJG\AnyDataset\Core\Exception\NotImplementedException;
 use ByJG\AnyDataset\Core\GenericIterator;
 use ByJG\AnyDataset\Db\Exception\DbDriverNotConnected;
+use ByJG\AnyDataset\Db\Helpers\DbOci8Functions;
 use ByJG\AnyDataset\Db\Helpers\SqlBind;
 use ByJG\AnyDataset\Db\Traits\DbCacheTrait;
 use ByJG\AnyDataset\Db\Traits\TransactionTrait;
@@ -32,6 +33,12 @@ class DbOci8Driver implements DbDriverInterface
     public static function schema(): array
     {
         return ['oci8'];
+    }
+
+    #[Override]
+    public function getDbHelperClass(): string
+    {
+        return DbOci8Functions::class;
     }
 
     /**
@@ -318,7 +325,8 @@ class DbOci8Driver implements DbDriverInterface
     public function getDbHelper(): DbFunctionsInterface
     {
         if (empty($this->dbHelper)) {
-            $this->dbHelper = Factory::getDbFunctions($this->getUri());
+            $helperClass = $this->getDbHelperClass();
+            $this->dbHelper = new $helperClass();
         }
         return $this->dbHelper;
     }

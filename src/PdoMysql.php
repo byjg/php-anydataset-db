@@ -4,6 +4,7 @@ namespace ByJG\AnyDataset\Db;
 
 use ByJG\AnyDataset\Core\Exception\NotAvailableException;
 use ByJG\AnyDataset\Db\Exception\DbDriverNotConnected;
+use ByJG\AnyDataset\Db\Helpers\DbMysqlFunctions;
 use ByJG\Util\Uri;
 use Override;
 use PDO;
@@ -15,6 +16,12 @@ class PdoMysql extends DbPdoDriver
     public static function schema(): array
     {
         return ['mysql', 'mariadb'];
+    }
+
+    #[Override]
+    public function getDbHelperClass(): string
+    {
+        return DbMysqlFunctions::class;
     }
 
     /**

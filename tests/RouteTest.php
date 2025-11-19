@@ -41,9 +41,9 @@ class RouteTest extends TestCase
         $this->obj2 = Factory::getDbInstance('sqlite:///tmp/b.db');
         $this->obj3 = Factory::getDbInstance('sqlite:///tmp/c.db');
 
-        $this->object->addDbDriverInterface('route1', 'sqlite:///tmp/a.db');
-        $this->object->addDbDriverInterface('route2', $this->obj2);
-        $this->object->addDbDriverInterface('route3', 'sqlite:///tmp/c.db');
+        $this->object->addDriver('route1', $this->obj1);
+        $this->object->addDriver('route2', $this->obj2);
+        $this->object->addDriver('route3', $this->obj3);
     }
 
     #[Override]

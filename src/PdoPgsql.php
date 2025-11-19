@@ -4,6 +4,7 @@ namespace ByJG\AnyDataset\Db;
 
 use ByJG\AnyDataset\Core\Exception\NotAvailableException;
 use ByJG\AnyDataset\Db\Exception\DbDriverNotConnected;
+use ByJG\AnyDataset\Db\Helpers\DbPgsqlFunctions;
 use ByJG\Util\Uri;
 use Override;
 
@@ -13,6 +14,12 @@ class PdoPgsql extends DbPdoDriver
     public static function schema(): array
     {
         return ['pgsql', 'postgres', 'postgresql'];
+    }
+
+    #[Override]
+    public function getDbHelperClass(): string
+    {
+        return DbPgsqlFunctions::class;
     }
 
     /**

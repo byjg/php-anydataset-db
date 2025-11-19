@@ -3,6 +3,7 @@
 namespace ByJG\AnyDataset\Db;
 
 use ByJG\AnyDataset\Core\Exception\NotAvailableException;
+use ByJG\AnyDataset\Db\Helpers\DbDblibFunctions;
 use ByJG\Util\Uri;
 use Override;
 
@@ -12,6 +13,12 @@ class PdoDblib extends PdoPdo
     public static function schema(): array
     {
         return ['dblib'];
+    }
+
+    #[Override]
+    public function getDbHelperClass(): string
+    {
+        return DbDblibFunctions::class;
     }
 
 

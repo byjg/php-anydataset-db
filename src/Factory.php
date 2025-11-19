@@ -91,16 +91,14 @@ class Factory
     }
 
     /**
-     * Get a IDbFunctions class to execute Database specific operations.
+     * Get a DbFunctions class to execute Database specific operations.
      *
      * @param Uri $connectionUri
      * @return DbFunctionsInterface
      */
     public static function getDbFunctions(Uri $connectionUri): DbFunctionsInterface
     {
-        $dbFunc = "\\ByJG\\AnyDataset\\Db\\Helpers\\Db"
-            . ucfirst($connectionUri->getScheme())
-            . "Functions";
-        return new $dbFunc();
+        $driver = self::getDbInstance($connectionUri);
+        return $driver->getDbHelper();
     }
 }

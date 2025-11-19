@@ -12,6 +12,11 @@ class PdoDblibTest extends BasePdo
 
     protected function createInstance()
     {
+        if (!extension_loaded('pdo_dblib')) {
+            $this->testSkipped = true;
+            $this->markTestSkipped("PDO DBLIB extension is not loaded");
+        }
+
         $this->floatSize = 53;
         $host = getenv('MSSQL_TEST_HOST');
         if (empty($host)) {

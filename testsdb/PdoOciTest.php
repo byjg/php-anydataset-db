@@ -17,6 +17,11 @@ class PdoOciTest extends BasePdo
 
     protected function createInstance()
     {
+        if (!extension_loaded('pdo_oci')) {
+            $this->testSkipped = true;
+            $this->markTestSkipped("PDO ORACLE OCI extension is not loaded");
+        }
+
         $this->escapeQuote = "''";
 
         $host = getenv('ORACLE_TEST_HOST');

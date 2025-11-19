@@ -36,6 +36,8 @@ abstract class BasePdo extends TestCase
 
     protected int $floatSize = 10;
 
+    protected bool $testSkipped = false;
+
     /**
      * @throws Exception
      */
@@ -71,6 +73,9 @@ abstract class BasePdo extends TestCase
 
     public function tearDown(): void
     {
+        if ($this->testSkipped) {
+            return;
+        }
         $this->executor->getDriver()->reconnect();
         $this->deleteDatabase();
     }

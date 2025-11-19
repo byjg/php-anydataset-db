@@ -10,6 +10,11 @@ class PdoSqlsrvTest extends PdoDblibTest
 
     protected function createInstance()
     {
+        if (!extension_loaded('pdo_sqlsrv')) {
+            $this->testSkipped = true;
+            $this->markTestSkipped("PDO SQLSRV extension is not loaded");
+        }
+
         $this->floatSize = 53;
         $host = getenv('MSSQL_TEST_HOST');
         if (empty($host)) {

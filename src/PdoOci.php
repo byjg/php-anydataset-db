@@ -2,6 +2,7 @@
 
 namespace ByJG\AnyDataset\Db;
 
+use ByJG\AnyDataset\Db\Helpers\DbOci8Functions;
 use ByJG\Util\Uri;
 use Override;
 
@@ -12,6 +13,12 @@ class PdoOci extends PdoLiteral
     public static function schema(): array
     {
         return ['oracle'];
+    }
+
+    #[Override]
+    public function getDbHelperClass(): string
+    {
+        return DbOci8Functions::class;
     }
 
     public function __construct(Uri $connUri)

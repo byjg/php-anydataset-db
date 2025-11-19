@@ -3,6 +3,7 @@
 namespace ByJG\AnyDataset\Db;
 
 use ByJG\AnyDataset\Core\Exception\NotAvailableException;
+use ByJG\AnyDataset\Db\Helpers\DbSqlsrvFunctions;
 use ByJG\Util\Uri;
 use Override;
 
@@ -13,6 +14,12 @@ class PdoSqlsrv extends PdoDblib
     public static function schema(): array
     {
         return ['sqlsrv'];
+    }
+
+    #[Override]
+    public function getDbHelperClass(): string
+    {
+        return DbSqlsrvFunctions::class;
     }
 
     /**
