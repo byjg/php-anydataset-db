@@ -2,6 +2,8 @@
 
 namespace ByJG\AnyDataset\Db;
 
+use ByJG\AnyDataset\Db\Interfaces\DbDriverInterface;
+use ByJG\AnyDataset\Db\Interfaces\SqlDialectInterface;
 use ByJG\Util\Uri;
 use InvalidArgumentException;
 
@@ -94,11 +96,11 @@ class Factory
      * Get a DbFunctions class to execute Database specific operations.
      *
      * @param Uri $connectionUri
-     * @return DbFunctionsInterface
+     * @return SqlDialectInterface
      */
-    public static function getDbFunctions(Uri $connectionUri): DbFunctionsInterface
+    public static function getDbFunctions(Uri $connectionUri): SqlDialectInterface
     {
         $driver = self::getDbInstance($connectionUri);
-        return $driver->getDbHelper();
+        return $driver->getSqlDialect();
     }
 }

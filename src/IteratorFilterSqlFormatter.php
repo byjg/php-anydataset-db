@@ -4,7 +4,7 @@ namespace ByJG\AnyDataset\Db;
 
 use ByJG\AnyDataset\Core\Enum\Relation;
 use ByJG\AnyDataset\Core\IteratorFilterFormatter;
-use ByJG\AnyDataset\Db\Helpers\SqlHelper;
+use ByJG\AnyDataset\Db\SqlDialect\SqlHelper;
 use Override;
 
 class IteratorFilterSqlFormatter extends IteratorFilterFormatter
@@ -20,7 +20,7 @@ class IteratorFilterSqlFormatter extends IteratorFilterFormatter
             $sql .= " where @@sqlFilter ";
         }
 
-        return SqlHelper::createSafeSQL(
+        return self::createSafeSQL(
             $sql,
             [
                 "@@returnFields" => $returnFields,
@@ -98,5 +98,11 @@ class IteratorFilterSqlFormatter extends IteratorFilterFormatter
             },
         };
 
-        return $data($param, $name, $paramName, $value);    }
+        return $data($param, $name, $paramName, $value);
+    }
+
+    public static function createSafeSQL(string $sql, array $list): string
+    {
+        return str_replace(array_keys($list), array_values($list), $sql);
+    }
 }

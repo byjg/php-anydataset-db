@@ -6,8 +6,10 @@ use ByJG\AnyDataset\Core\Exception\DatabaseException;
 use ByJG\AnyDataset\Core\Exception\NotImplementedException;
 use ByJG\AnyDataset\Core\GenericIterator;
 use ByJG\AnyDataset\Db\Exception\DbDriverNotConnected;
-use ByJG\AnyDataset\Db\Helpers\DbOci8Functions;
-use ByJG\AnyDataset\Db\Helpers\SqlBind;
+use ByJG\AnyDataset\Db\Interfaces\DbDriverInterface;
+use ByJG\AnyDataset\Db\Interfaces\SqlDialectInterface;
+use ByJG\AnyDataset\Db\SqlDialect\OciSqlDialect;
+use ByJG\AnyDataset\Db\SqlDialect\SqlBind;
 use ByJG\AnyDataset\Db\Traits\DbCacheTrait;
 use ByJG\AnyDataset\Db\Traits\TransactionTrait;
 use ByJG\Serializer\PropertyHandler\PropertyHandlerInterface;
@@ -27,7 +29,7 @@ class DbOci8Driver implements DbDriverInterface
 
     private LoggerInterface $logger;
 
-    private ?DbFunctionsInterface $dbHelper = null;
+    private ?SqlDialectInterface $dbHelper = null;
 
     #[Override]
     public static function schema(): array
@@ -36,9 +38,9 @@ class DbOci8Driver implements DbDriverInterface
     }
 
     #[Override]
-    public function getDbHelperClass(): string
+    public function getSqlDialectClass(): string
     {
-        return DbOci8Functions::class;
+        return OciSqlDialect::class;
     }
 
     /**
@@ -319,13 +321,13 @@ class DbOci8Driver implements DbDriverInterface
     }
 
     /**
-     * @return DbFunctionsInterface
+     * @return SqlDialectInterface
      */
     #[Override]
-    public function getDbHelper(): DbFunctionsInterface
+    public function getSqlDialect(): SqlDialectInterface
     {
         if (empty($this->dbHelper)) {
-            $helperClass = $this->getDbHelperClass();
+            $helperClass = $this->getSqlDialectClass();
             $this->dbHelper = new $helperClass();
         }
         return $this->dbHelper;

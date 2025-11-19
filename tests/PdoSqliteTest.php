@@ -3,9 +3,9 @@
 namespace Test;
 
 use ByJG\AnyDataset\Db\DatabaseExecutor;
-use ByJG\AnyDataset\Db\DbDriverInterface;
 use ByJG\AnyDataset\Db\Factory;
-use ByJG\AnyDataset\Db\Helpers\DbSqliteFunctions;
+use ByJG\AnyDataset\Db\Interfaces\DbDriverInterface;
+use ByJG\AnyDataset\Db\SqlDialect\SqliteSqlDialect;
 use ByJG\AnyDataset\Db\SqlStatement;
 use ByJG\Cache\Psr16\ArrayCacheEngine;
 use ByJG\Serializer\PropertyHandler\PropertyNameMapper;
@@ -310,7 +310,7 @@ class PdoSqliteTest extends TestCase
     public function testGetDbHelper()
     {
         $helper = $this->executor->getHelper();
-        $this->assertInstanceOf(DbSqliteFunctions::class, $helper);
+        $this->assertInstanceOf(SqliteSqlDialect::class, $helper);
     }
 
     public function testTransaction()

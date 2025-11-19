@@ -1,13 +1,13 @@
 <?php
 
-namespace ByJG\AnyDataset\Db\Helpers;
+namespace ByJG\AnyDataset\Db\SqlDialect;
 
 use ByJG\AnyDataset\Db\DatabaseExecutor;
 use ByJG\AnyDataset\Db\IsolationLevelEnum;
 use ByJG\AnyDataset\Db\SqlStatement;
 use Override;
 
-class DbMysqlFunctions extends DbBaseFunctions
+class MysqlSqlDialect extends SqlDialect
 {
 
     public function __construct()

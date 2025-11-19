@@ -1,11 +1,11 @@
 <?php
 
-namespace ByJG\AnyDataset\Db\Helpers;
+namespace ByJG\AnyDataset\Db\SqlDialect;
 
 use ByJG\AnyDataset\Core\Exception\DatabaseException;
 use ByJG\AnyDataset\Db\DatabaseExecutor;
-use ByJG\AnyDataset\Db\DbFunctionsInterface;
 use ByJG\AnyDataset\Db\Exception\DbDriverNotConnected;
+use ByJG\AnyDataset\Db\Interfaces\SqlDialectInterface;
 use ByJG\AnyDataset\Db\IsolationLevelEnum;
 use ByJG\AnyDataset\Db\SqlStatement;
 use ByJG\XmlUtil\Exception\FileException;
@@ -14,7 +14,7 @@ use Exception;
 use Override;
 use Psr\SimpleCache\InvalidArgumentException;
 
-abstract class DbBaseFunctions implements DbFunctionsInterface
+abstract class SqlDialect implements SqlDialectInterface
 {
 
     const DMY = "d-m-Y";

@@ -2,7 +2,7 @@
 
 namespace ByJG\AnyDataset\Db;
 
-use ByJG\AnyDataset\Db\Helpers\DbOci8Functions;
+use ByJG\AnyDataset\Db\SqlDialect\OciSqlDialect;
 use ByJG\Util\Uri;
 use Override;
 
@@ -16,9 +16,9 @@ class PdoOci extends PdoLiteral
     }
 
     #[Override]
-    public function getDbHelperClass(): string
+    public function getSqlDialectClass(): string
     {
-        return DbOci8Functions::class;
+        return OciSqlDialect::class;
     }
 
     public function __construct(Uri $connUri)

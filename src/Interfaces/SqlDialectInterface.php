@@ -1,8 +1,12 @@
 <?php
 
-namespace ByJG\AnyDataset\Db;
+namespace ByJG\AnyDataset\Db\Interfaces;
 
-interface DbFunctionsInterface
+use ByJG\AnyDataset\Db\DatabaseExecutor;
+use ByJG\AnyDataset\Db\IsolationLevelEnum;
+use ByJG\AnyDataset\Db\SqlStatement;
+
+interface SqlDialectInterface
 {
 
     /**

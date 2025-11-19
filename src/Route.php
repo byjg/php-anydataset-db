@@ -6,6 +6,8 @@ use ByJG\AnyDataset\Core\GenericIterator;
 use ByJG\AnyDataset\Db\Exception\RouteNotFoundException;
 use ByJG\AnyDataset\Db\Exception\RouteNotInitializedException;
 use ByJG\AnyDataset\Db\Exception\RouteNotMatchedException;
+use ByJG\AnyDataset\Db\Interfaces\DbDriverInterface;
+use ByJG\AnyDataset\Db\Interfaces\SqlDialectInterface;
 use ByJG\Serializer\PropertyHandler\PropertyHandlerInterface;
 use ByJG\Util\Uri;
 use InvalidArgumentException;
@@ -432,37 +434,37 @@ class Route implements DbDriverInterface
      * @throws RouteNotInitializedException If no driver has been matched yet and no drivers are configured
      */
     #[Override]
-    public function getDbHelperClass(): string
+    public function getSqlDialectClass(): string
     {
         if ($this->lastMatchedDriver === null) {
             // Try to use a fallback driver (first available driver from any route)
             foreach ($this->drivers as $drivers) {
                 if (!empty($drivers)) {
-                    return $drivers[0]->getDbHelperClass();
+                    return $drivers[0]->getSqlDialectClass();
                 }
             }
             throw new RouteNotInitializedException('Cannot get helper class: no database has been selected and no drivers are configured.');
         }
-        return $this->lastMatchedDriver->getDbHelperClass();
+        return $this->lastMatchedDriver->getSqlDialectClass();
     }
 
     /**
-     * @return DbFunctionsInterface
+     * @return SqlDialectInterface
      * @throws RouteNotInitializedException If no driver has been matched yet and no drivers are configured
      */
     #[Override]
-    public function getDbHelper(): DbFunctionsInterface
+    public function getSqlDialect(): SqlDialectInterface
     {
         if ($this->lastMatchedDriver === null) {
             // Try to use a fallback driver (first available driver from any route)
             foreach ($this->drivers as $drivers) {
                 if (!empty($drivers)) {
-                    return $drivers[0]->getDbHelper();
+                    return $drivers[0]->getSqlDialect();
                 }
             }
             throw new RouteNotInitializedException('Cannot get helper: no database has been selected and no drivers are configured.');
         }
-        return $this->lastMatchedDriver->getDbHelper();
+        return $this->lastMatchedDriver->getSqlDialect();
     }
 
     /**

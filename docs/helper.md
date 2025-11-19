@@ -36,7 +36,7 @@ E.g.
 
 ```php
 $dbDriver = \ByJG\AnyDataset\Db\Factory::getDbInstance('...connection string...');
-$dbHelper = $dbDriver->getDbHelper();
+$dbHelper = $dbDriver->getSqlDialect();
 
 // This will return the proper SQL with the TOP 10
 // based on the current connection

@@ -3,13 +3,13 @@
 namespace ByJG\AnyDataset\Db;
 
 use ByJG\AnyDataset\Db\Exception\DbDriverNotConnected;
-use ByJG\AnyDataset\Db\Helpers\DbDblibFunctions;
-use ByJG\AnyDataset\Db\Helpers\DbMysqlFunctions;
-use ByJG\AnyDataset\Db\Helpers\DbOci8Functions;
-use ByJG\AnyDataset\Db\Helpers\DbPdoFunctions;
-use ByJG\AnyDataset\Db\Helpers\DbPgsqlFunctions;
-use ByJG\AnyDataset\Db\Helpers\DbSqliteFunctions;
-use ByJG\AnyDataset\Db\Helpers\DbSqlsrvFunctions;
+use ByJG\AnyDataset\Db\SqlDialect\DblibSqlDialect;
+use ByJG\AnyDataset\Db\SqlDialect\GenericPdoSqlDialect;
+use ByJG\AnyDataset\Db\SqlDialect\MysqlSqlDialect;
+use ByJG\AnyDataset\Db\SqlDialect\OciSqlDialect;
+use ByJG\AnyDataset\Db\SqlDialect\PostgresSqlDialect;
+use ByJG\AnyDataset\Db\SqlDialect\SqliteSqlDialect;
+use ByJG\AnyDataset\Db\SqlDialect\SqlsrvSqlDialect;
 use ByJG\Util\Uri;
 use Override;
 use PDO;
@@ -24,7 +24,7 @@ class PdoLiteral extends DbPdoDriver
     }
 
     #[Override]
-    public function getDbHelperClass(): string
+    public function getSqlDialectClass(): string
     {
         // Detect PDO driver at runtime
         $pdo = $this->getDbConnection();
@@ -32,17 +32,17 @@ class PdoLiteral extends DbPdoDriver
             $driver = $pdo->getAttribute(PDO::ATTR_DRIVER_NAME);
 
             return match ($driver) {
-                'mysql' => DbMysqlFunctions::class,
-                'sqlite' => DbSqliteFunctions::class,
-                'pgsql' => DbPgsqlFunctions::class,
-                'sqlsrv' => DbSqlsrvFunctions::class,
-                'dblib' => DbDblibFunctions::class,
-                'oci' => DbOci8Functions::class,
-                default => DbPdoFunctions::class,
+                'mysql' => MysqlSqlDialect::class,
+                'sqlite' => SqliteSqlDialect::class,
+                'pgsql' => PostgresSqlDialect::class,
+                'sqlsrv' => SqlsrvSqlDialect::class,
+                'dblib' => DblibSqlDialect::class,
+                'oci' => OciSqlDialect::class,
+                default => GenericPdoSqlDialect::class,
             };
         }
 
-        return DbPdoFunctions::class;
+        return GenericPdoSqlDialect::class;
     }
 
     /**

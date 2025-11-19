@@ -1,6 +1,6 @@
 <?php
 
-namespace ByJG\AnyDataset\Db\Helpers;
+namespace ByJG\AnyDataset\Db\SqlDialect;
 
 use ByJG\AnyDataset\Core\Exception\DatabaseException;
 use ByJG\AnyDataset\Db\DatabaseExecutor;
@@ -12,7 +12,7 @@ use ByJG\XmlUtil\Exception\XmlUtilException;
 use Override;
 use Psr\SimpleCache\InvalidArgumentException;
 
-class DbOci8Functions extends DbBaseFunctions
+class OciSqlDialect extends SqlDialect
 {
 
     public function __construct()

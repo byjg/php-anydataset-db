@@ -122,8 +122,7 @@ Nested transactions use a "Two-Phase Commit" process to ensure consistency:
 
 ```php
 <?php
-use ByJG\AnyDataset\Db\IsolationLevelEnum;
-use ByJG\AnyDataset\Db\DbDriverInterface;
+use ByJG\AnyDataset\Db\Interfaces\DbDriverInterface;use ByJG\AnyDataset\Db\IsolationLevelEnum;
 
 function mainFunction(DbDriverInterface $dbDriver)
 {

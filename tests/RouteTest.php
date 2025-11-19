@@ -2,10 +2,10 @@
 
 namespace Test;
 
-use ByJG\AnyDataset\Db\DbDriverInterface;
 use ByJG\AnyDataset\Db\Exception\RouteNotFoundException;
 use ByJG\AnyDataset\Db\Exception\RouteNotMatchedException;
 use ByJG\AnyDataset\Db\Factory;
+use ByJG\AnyDataset\Db\Interfaces\DbDriverInterface;
 use ByJG\AnyDataset\Db\Route;
 use Override;
 use PHPUnit\Framework\TestCase;

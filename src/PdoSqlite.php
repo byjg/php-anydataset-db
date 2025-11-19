@@ -3,7 +3,7 @@
 namespace ByJG\AnyDataset\Db;
 
 use ByJG\AnyDataset\Db\Exception\DbDriverNotConnected;
-use ByJG\AnyDataset\Db\Helpers\DbSqliteFunctions;
+use ByJG\AnyDataset\Db\SqlDialect\SqliteSqlDialect;
 use ByJG\Util\Uri;
 use Override;
 
@@ -17,9 +17,9 @@ class PdoSqlite extends DbPdoDriver
     }
 
     #[Override]
-    public function getDbHelperClass(): string
+    public function getSqlDialectClass(): string
     {
-        return DbSqliteFunctions::class;
+        return SqliteSqlDialect::class;
     }
 
     /**

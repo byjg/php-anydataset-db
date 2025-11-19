@@ -3,7 +3,7 @@
 namespace ByJG\AnyDataset\Db;
 
 use ByJG\AnyDataset\Db\Exception\DbDriverNotConnected;
-use ByJG\AnyDataset\Db\Helpers\DbPdoFunctions;
+use ByJG\AnyDataset\Db\SqlDialect\GenericPdoSqlDialect;
 use ByJG\Util\Uri;
 use Override;
 
@@ -17,9 +17,9 @@ class PdoOdbc extends DbPdoDriver
     }
 
     #[Override]
-    public function getDbHelperClass(): string
+    public function getSqlDialectClass(): string
     {
-        return DbPdoFunctions::class;
+        return GenericPdoSqlDialect::class;
     }
 
     /**

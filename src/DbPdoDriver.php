@@ -6,7 +6,9 @@ use ByJG\AnyDataset\Core\Exception\DatabaseException;
 use ByJG\AnyDataset\Core\Exception\NotAvailableException;
 use ByJG\AnyDataset\Core\GenericIterator;
 use ByJG\AnyDataset\Db\Exception\DbDriverNotConnected;
-use ByJG\AnyDataset\Db\Helpers\SqlBind;
+use ByJG\AnyDataset\Db\Interfaces\DbDriverInterface;
+use ByJG\AnyDataset\Db\Interfaces\SqlDialectInterface;
+use ByJG\AnyDataset\Db\SqlDialect\SqlBind;
 use ByJG\AnyDataset\Db\Traits\DbCacheTrait;
 use ByJG\AnyDataset\Db\Traits\TransactionTrait;
 use ByJG\Serializer\PropertyHandler\PropertyHandlerInterface;
@@ -240,13 +242,13 @@ abstract class DbPdoDriver implements DbDriverInterface
         return $this->instance;
     }
 
-    protected ?DbFunctionsInterface $dbHelper = null;
+    protected ?SqlDialectInterface $dbHelper = null;
 
     #[Override]
-    public function getDbHelper(): DbFunctionsInterface
+    public function getSqlDialect(): SqlDialectInterface
     {
         if (empty($this->dbHelper)) {
-            $helperClass = $this->getDbHelperClass();
+            $helperClass = $this->getSqlDialectClass();
             $this->dbHelper = new $helperClass();
         }
         return $this->dbHelper;

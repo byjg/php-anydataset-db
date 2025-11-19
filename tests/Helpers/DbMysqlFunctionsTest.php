@@ -2,7 +2,7 @@
 
 namespace Test\Helpers;
 
-use ByJG\AnyDataset\Db\Helpers\DbMysqlFunctions;
+use ByJG\AnyDataset\Db\SqlDialect\MysqlSqlDialect;
 use ByJG\AnyDataset\Db\SqlStatement;
 use Override;
 use PHPUnit\Framework\TestCase;
@@ -10,14 +10,14 @@ use PHPUnit\Framework\TestCase;
 class DbMysqlFunctionsTest extends TestCase
 {
     /**
-     * @var DbMysqlFunctions|null
+     * @var MysqlSqlDialect|null
      */
-    protected ?DbMysqlFunctions $object;
+    protected ?MysqlSqlDialect $object;
 
     #[Override]
     protected function setUp(): void
     {
-        $this->object = new DbMysqlFunctions();
+        $this->object = new MysqlSqlDialect();
     }
 
     #[Override]

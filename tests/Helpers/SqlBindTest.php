@@ -2,7 +2,7 @@
 
 namespace Test\Helpers;
 
-use ByJG\AnyDataset\Db\Helpers\SqlBind;
+use ByJG\AnyDataset\Db\SqlDialect\SqlBind;
 use ByJG\Util\Uri;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;

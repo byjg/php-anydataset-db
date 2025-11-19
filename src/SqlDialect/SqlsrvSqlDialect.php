@@ -1,6 +1,6 @@
 <?php
 
-namespace ByJG\AnyDataset\Db\Helpers;
+namespace ByJG\AnyDataset\Db\SqlDialect;
 
 use ByJG\AnyDataset\Core\Exception\DatabaseException;
 use ByJG\AnyDataset\Db\DatabaseExecutor;
@@ -12,12 +12,12 @@ use Override;
 use Psr\SimpleCache\InvalidArgumentException;
 
 /**
- * DbSqlsrvFunctions class for Microsoft SQL Server using the SQLSRV extension
+ * SqlsrvSqlDialect class for Microsoft SQL Server using the SQLSRV extension
  */
-class DbSqlsrvFunctions extends DbDblibFunctions
+class SqlsrvSqlDialect extends DblibSqlDialect
 {
     /**
-     * DbSqlsrvFunctions constructor.
+     * SqlsrvSqlDialect constructor.
      */
     public function __construct()
     {

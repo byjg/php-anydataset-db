@@ -1,6 +1,6 @@
 <?php
 
-namespace ByJG\AnyDataset\Db\Helpers;
+namespace ByJG\AnyDataset\Db\SqlDialect;
 
 use ByJG\Util\Uri;
 

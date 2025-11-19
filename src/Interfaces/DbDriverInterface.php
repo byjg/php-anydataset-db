@@ -1,9 +1,10 @@
 <?php
 
-namespace ByJG\AnyDataset\Db;
+namespace ByJG\AnyDataset\Db\Interfaces;
 
 use ByJG\AnyDataset\Core\GenericIterator;
-use ByJG\AnyDataset\Db\Interfaces\DbTransactionInterface;
+use ByJG\AnyDataset\Db\GenericDbIterator;
+use ByJG\AnyDataset\Db\SqlStatement;
 use ByJG\Serializer\PropertyHandler\PropertyHandlerInterface;
 use ByJG\Util\Uri;
 use Psr\Log\LoggerInterface;
@@ -81,16 +82,16 @@ interface DbDriverInterface extends DbTransactionInterface
     public function getDriverIterator(mixed $statement, int $preFetch = 0, ?string $entityClass = null, ?PropertyHandlerInterface $entityTransformer = null): GenericDbIterator|GenericIterator;
 
     /**
-     * @return DbFunctionsInterface
+     * @return SqlDialectInterface
      */
     /**
      * Get the class name of the DbFunctionsInterface implementation for this driver
      *
      * @return string Fully qualified class name of the DbFunctionsInterface implementation
      */
-    public function getDbHelperClass(): string;
+    public function getSqlDialectClass(): string;
 
-    public function getDbHelper(): DbFunctionsInterface;
+    public function getSqlDialect(): SqlDialectInterface;
 
     /**
      * @return mixed

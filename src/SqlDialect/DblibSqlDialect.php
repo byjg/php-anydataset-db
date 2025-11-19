@@ -1,13 +1,13 @@
 <?php
 
-namespace ByJG\AnyDataset\Db\Helpers;
+namespace ByJG\AnyDataset\Db\SqlDialect;
 
 use ByJG\AnyDataset\Core\Exception\NotAvailableException;
 use ByJG\AnyDataset\Db\DatabaseExecutor;
 use ByJG\AnyDataset\Db\IsolationLevelEnum;
 use Override;
 
-class DbDblibFunctions extends DbBaseFunctions
+class DblibSqlDialect extends SqlDialect
 {
 
     public function __construct()

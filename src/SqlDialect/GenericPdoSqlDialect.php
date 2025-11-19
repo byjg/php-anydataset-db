@@ -1,10 +1,10 @@
 <?php
 
-namespace ByJG\AnyDataset\Db\Helpers;
+namespace ByJG\AnyDataset\Db\SqlDialect;
 
 use Override;
 
-class DbPdoFunctions extends DbBaseFunctions
+class GenericPdoSqlDialect extends SqlDialect
 {
 
     public function __construct()

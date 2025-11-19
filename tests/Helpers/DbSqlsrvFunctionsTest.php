@@ -2,7 +2,7 @@
 
 namespace Test\Helpers;
 
-use ByJG\AnyDataset\Db\Helpers\DbSqlsrvFunctions;
+use ByJG\AnyDataset\Db\SqlDialect\SqlsrvSqlDialect;
 use Override;
 
 /**
@@ -18,6 +18,6 @@ class DbSqlsrvFunctionsTest extends DbDblibFunctionsTest
     #[Override]
     protected function setUp(): void
     {
-        $this->object = new DbSqlsrvFunctions();
+        $this->object = new SqlsrvSqlDialect();
     }
 }

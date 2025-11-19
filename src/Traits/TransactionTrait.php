@@ -31,7 +31,7 @@ trait TransactionTrait
         }
 
         $this->logger->debug("SQL: Begin transaction");
-        $isolLevelCommand = $this->getDbHelper()->getIsolationLevelCommand($isolationLevel);
+        $isolLevelCommand = $this->getSqlDialect()->getIsolationLevelCommand($isolationLevel);
         $this->transactionHandler(TransactionStageEnum::begin, $isolLevelCommand);
         $this->transactionCount = 1;
         $this->isolationLevel = $isolationLevel;

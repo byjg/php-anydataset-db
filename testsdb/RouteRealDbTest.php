@@ -3,9 +3,9 @@
 namespace TestDb;
 
 use ByJG\AnyDataset\Db\DatabaseExecutor;
-use ByJG\AnyDataset\Db\DbDriverInterface;
-use ByJG\AnyDataset\Db\DbFunctionsInterface;
 use ByJG\AnyDataset\Db\Factory;
+use ByJG\AnyDataset\Db\Interfaces\DbDriverInterface;
+use ByJG\AnyDataset\Db\Interfaces\SqlDialectInterface;
 use ByJG\AnyDataset\Db\Route;
 use Exception;
 use PHPUnit\Framework\TestCase;
@@ -283,8 +283,8 @@ class RouteRealDbTest extends TestCase
         $this->executor->getIterator('SELECT * FROM users');
 
         // Call getDbHelper() on the route (DbDriverInterface)
-        $helper = $this->route->getDbHelper();
-        $this->assertInstanceOf(DbFunctionsInterface::class, $helper);
+        $helper = $this->route->getSqlDialect();
+        $this->assertInstanceOf(SqlDialectInterface::class, $helper);
     }
 
     public function testConnectionMethodsThroughRoute(): void

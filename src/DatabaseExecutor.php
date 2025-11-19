@@ -6,7 +6,9 @@ use ByJG\AnyDataset\Core\AnyDataset;
 use ByJG\AnyDataset\Core\Exception\DatabaseException;
 use ByJG\AnyDataset\Core\GenericIterator;
 use ByJG\AnyDataset\Db\Exception\DbDriverNotConnected;
+use ByJG\AnyDataset\Db\Interfaces\DbDriverInterface;
 use ByJG\AnyDataset\Db\Interfaces\DbTransactionInterface;
+use ByJG\AnyDataset\Db\Interfaces\SqlDialectInterface;
 use ByJG\XmlUtil\Exception\FileException;
 use ByJG\XmlUtil\Exception\XmlUtilException;
 use DateInterval;
@@ -54,11 +56,11 @@ class DatabaseExecutor implements DbTransactionInterface
     }
 
     /**
-     * @return DbFunctionsInterface
+     * @return SqlDialectInterface
      */
-    public function getHelper(): DbFunctionsInterface
+    public function getHelper(): SqlDialectInterface
     {
-        return $this->driver->getDbHelper();
+        return $this->driver->getSqlDialect();
     }
 
     /**
@@ -196,7 +198,7 @@ class DatabaseExecutor implements DbTransactionInterface
         // Build a SQL query that returns 0 rows but includes all columns
         // Use the driver's helper to apply the correct syntax (LIMIT vs TOP vs WHERE 1=0)
         $sql = "SELECT * FROM $tablename";
-        $helper = $this->driver->getDbHelper();
+        $helper = $this->driver->getSqlDialect();
 
         // Use TOP or LIMIT depending on what the database supports
         if ($helper->hasTop()) {
