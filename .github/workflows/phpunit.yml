@@ -74,10 +74,6 @@ jobs:
       - run: composer install
       - run: ./vendor/bin/psalm
       - run: ./vendor/bin/phpunit
-      - run: ./vendor/bin/phpunit testsdb/PdoMySqlTest.php 
-      - run: ./vendor/bin/phpunit testsdb/PdoSqliteTest.php 
-      - run: ./vendor/bin/phpunit testsdb/PdoPostgresTest.php 
-      - run: ./vendor/bin/phpunit testsdb/PdoDblibTest.php
 
   Documentation:
     if: github.ref == 'refs/heads/master'

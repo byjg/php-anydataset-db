@@ -195,7 +195,7 @@ $driver = $executor->getDriver();
 
 // Access driver-specific methods
 $connection = $driver->getDbConnection();
-$helper = $driver->getDbHelper();
+$dialect = $driver->getSqlDialect();
 ```
 
 ## Complete Example

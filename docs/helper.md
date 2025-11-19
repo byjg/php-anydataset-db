@@ -2,9 +2,10 @@
 sidebar_position: 7
 ---
 
-# Helper - DbFunctions
+# SQL Dialect Helper
 
-The AnyDataset library provides a helper interface, `ByJG\AnyDataset\Db\DbFunctionsInterface`, which returns
+The AnyDataset library provides a SQL dialect interface, `ByJG\AnyDataset\Db\Interfaces\SqlDialectInterface`, which
+returns
 database-specific SQL operations based on the current database connection.
 
 ## Available Methods
@@ -28,7 +29,7 @@ database-specific SQL operations based on the current database connection.
 
 ## Use Case
 
-The `DbFunctionsInterface` is especially useful when working with multiple database connections. It helps ensure that
+The `SqlDialectInterface` is especially useful when working with multiple database connections. It helps ensure that
 SQL operations are dynamically adapted to the specific database being used, avoiding hardcoding database-specific
 details in your code.
 
@@ -36,15 +37,15 @@ E.g.
 
 ```php
 $dbDriver = \ByJG\AnyDataset\Db\Factory::getDbInstance('...connection string...');
-$dbHelper = $dbDriver->getSqlDialect();
+$dialect = $dbDriver->getSqlDialect();
 
 // This will return the proper SQL with the TOP 10
 // based on the current connection
-$sql = $dbHelper->top("select * from foo", 10);
+$sql = $dialect->top("select * from foo", 10);
 
 // This will return the proper concatenation operation
 // based on the current connection
-$concat = $dbHelper->concat("'This is '", "field1", "'concatenated'");
+$concat = $dialect->concat("'This is '", "field1", "'concatenated'");
 
 
 // This will return the proper function to format a date field
@@ -64,8 +65,8 @@ $concat = $dbHelper->concat("'This is '", "field1", "'concatenated'");
 // s => Seconds leading zero
 // a => a/p
 // A => AM/PM
-$date = $dbHelper->sqlDate("d-m-Y H:i", "some_field_date");
-$date2 = $dbHelper->sqlDate(DbBaseFunctions::DMYH, "some_field_date"); // Same as above
+$date = $dialect->sqlDate("d-m-Y H:i", "some_field_date");
+$date2 = $dialect->sqlDate(BaseDialect::DMYH, "some_field_date"); // Same as above
 
 
 // This will return the fields with proper field delimiter

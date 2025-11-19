@@ -63,9 +63,10 @@ Use [DatabaseExecutor](database-executor.md) instead for these operations.
 
 ### Database Metadata and Helpers
 
-| Method                                | Description                                              |
-|---------------------------------------|----------------------------------------------------------|
-| `getDbHelper(): DbFunctionsInterface` | Returns a helper object with database-specific functions |
+| Method                                 | Description                                              |
+|----------------------------------------|----------------------------------------------------------|
+| `getSqlDialect(): SqlDialectInterface` | Returns a helper object with database-specific functions |
+| `getSqlDialectClass(): string`         | Returns the class name of the SQL dialect implementation |
 
 ### Advanced Settings
 
@@ -213,18 +214,18 @@ For a complete migration guide, see [Deprecated Features](deprecated-features.md
 
 AnyDataset-DB provides several implementations of the `DbDriverInterface`:
 
-| Class          | Schema | Description                                               |
-|----------------|--------|-----------------------------------------------------------|
-| `PdoMysql`     | mysql  | MySQL and MariaDB driver                                  |
-| `PdoPgsql`     | pgsql  | PostgreSQL driver                                         |
-| `PdoSqlite`    | sqlite | SQLite driver                                             |
-| `PdoDblib`     | dblib  | SQL Server driver (using FreeTDS)                         |
-| `PdoSqlsrv`    | sqlsrv | SQL Server driver (using Microsoft driver)                |
-| `PdoOci`       | oci    | Oracle driver (using PDO OCI)                             |
-| `DbOci8Driver` | oci8   | Oracle driver (using OCI8 extension)                      |
-| `PdoOdbc`      | odbc   | ODBC driver                                               |
-| `PdoPdo`       | pdo    | Generic PDO driver                                        |
-| `Route`        | route  | Special driver for routing queries to different databases |
+| Class            | Schema | Description                                               |
+|------------------|--------|-----------------------------------------------------------|
+| `PdoMysql`       | mysql  | MySQL and MariaDB driver                                  |
+| `PdoPgsql`       | pgsql  | PostgreSQL driver                                         |
+| `PdoSqlite`      | sqlite | SQLite driver                                             |
+| `PdoDblib`       | dblib  | SQL Server driver (using FreeTDS)                         |
+| `PdoSqlsrv`      | sqlsrv | SQL Server driver (using Microsoft driver)                |
+| `PdoOci`         | oci    | Oracle driver (using PDO OCI)                             |
+| `DbOci8Driver`   | oci8   | Oracle driver (using OCI8 extension)                      |
+| `PdoOdbc`        | odbc   | ODBC driver                                               |
+| `PdoPdo`         | pdo    | Generic PDO driver                                        |
+| `DatabaseRouter` | N/A    | Special driver for routing queries to different databases |
 
 ## See Also
 

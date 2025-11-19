@@ -92,7 +92,8 @@ The following methods are **NOT** deprecated and remain as core driver functiona
 #### Configuration
 
 - `getUri()` - Gets the connection URI
-- `getDbHelper()` - Gets database-specific helper functions
+- `getSqlDialect()` - Gets database-specific SQL dialect functions
+- `getSqlDialectClass()` - Gets the class name of the SQL dialect implementation
 - `isSupportMultiRowset()` - Checks multi-rowset support
 - `setSupportMultiRowset()` - Configures multi-rowset support
 - `getAttribute()` - Gets driver attributes
@@ -131,10 +132,130 @@ DatabaseExecutor::using($dbDriver)->getIterator($sql, $params);
 In version 7.0, the deprecated methods will be removed from `DbDriverInterface`. Code that hasn't been migrated will
 throw errors.
 
+## Renamed Classes and Methods (Version 6.0)
+
+**Breaking Changes in:** Version 6.0
+
+### Interface and Class Renames
+
+The following interfaces and classes have been renamed for better clarity:
+
+#### Interface Renames
+
+| Old Name               | New Name              | Location                         |
+|------------------------|-----------------------|----------------------------------|
+| `DbFunctionsInterface` | `SqlDialectInterface` | `Interfaces\SqlDialectInterface` |
+
+#### Class Renames
+
+| Old Name            | New Name            | Old Location   | New Location   |
+|---------------------|---------------------|----------------|----------------|
+| `DbMysqlFunctions`  | `MysqlDialect`      | `Helpers\`     | `SqlDialect\`  |
+| `DbSqliteFunctions` | `SqliteDialect`     | `Helpers\`     | `SqlDialect\`  |
+| `DbPgsqlFunctions`  | `PgsqlDialect`      | `Helpers\`     | `SqlDialect\`  |
+| `DbDblibFunctions`  | `DblibDialect`      | `Helpers\`     | `SqlDialect\`  |
+| `DbSqlsrvFunctions` | `SqlsrvDialect`     | `Helpers\`     | `SqlDialect\`  |
+| `DbOci8Functions`   | `OciDialect`        | `Helpers\`     | `SqlDialect\`  |
+| `DbPdoFunctions`    | `GenericPdoDialect` | `Helpers\`     | `SqlDialect\`  |
+| `DbBaseFunctions`   | `BaseDialect`       | `Helpers\`     | `SqlDialect\`  |
+| `Route`             | `DatabaseRouter`    | Root namespace | Root namespace |
+
+#### Method Renames
+
+| Old Method                            | New Method                             | Returns                    |
+|---------------------------------------|----------------------------------------|----------------------------|
+| `getDbHelper(): DbFunctionsInterface` | `getSqlDialect(): SqlDialectInterface` | SqlDialectInterface        |
+| N/A                                   | `getSqlDialectClass(): string`         | Fully qualified class name |
+
+### Migration Examples
+
+#### Example 1: Interface Type Hints
+
+**Before:**
+
+```php
+use ByJG\AnyDataset\Db\DbFunctionsInterface;
+
+function processQuery(DbFunctionsInterface $helper) {
+    $sql = $helper->limit("SELECT * FROM users", 0, 10);
+}
+```
+
+**After:**
+
+```php
+use ByJG\AnyDataset\Db\Interfaces\SqlDialectInterface;
+
+function processQuery(SqlDialectInterface $dialect) {
+    $sql = $dialect->limit("SELECT * FROM users", 0, 10);
+}
+```
+
+#### Example 2: Method Calls
+
+**Before:**
+
+```php
+$dbDriver = Factory::getDbInstance('mysql://...');
+$helper = $dbDriver->getDbHelper();
+$sql = $helper->top("SELECT * FROM products", 100);
+```
+
+**After:**
+
+```php
+$dbDriver = Factory::getDbInstance('mysql://...');
+$dialect = $dbDriver->getSqlDialect();
+$sql = $dialect->top("SELECT * FROM products", 100);
+```
+
+#### Example 3: Direct Class Usage
+
+**Before:**
+
+```php
+use ByJG\AnyDataset\Db\Helpers\DbMysqlFunctions;
+
+$helper = new DbMysqlFunctions();
+$concat = $helper->concat("'Hello '", "name");
+```
+
+**After:**
+
+```php
+use ByJG\AnyDataset\Db\SqlDialect\MysqlDialect;
+
+$dialect = new MysqlDialect();
+$concat = $dialect->concat("'Hello '", "name");
+```
+
+#### Example 4: Router Class
+
+**Before:**
+
+```php
+use ByJG\AnyDataset\Db\Route;
+
+$route = new Route();
+$route->addDriver('master', $masterDriver);
+$route->addRouteForWrite('master');
+```
+
+**After:**
+
+```php
+use ByJG\AnyDataset\Db\DatabaseRouter;
+
+$router = new DatabaseRouter();
+$router->addDriver('master', $masterDriver);
+$router->addRouteForWrite('master');
+```
+
 ## Migration Checklist
 
 Use this checklist to ensure your code is ready for version 7.0:
 
+### DatabaseExecutor Migration
 - [ ] Replace `$dbDriver->getIterator()` with `$executor->getIterator()`
 - [ ] Replace `$dbDriver->getScalar()` with `$executor->getScalar()`
 - [ ] Replace `$dbDriver->getAllFields()` with `$executor->getAllFields()`
@@ -142,8 +263,35 @@ Use this checklist to ensure your code is ready for version 7.0:
 - [ ] Replace `$dbDriver->executeAndGetId()` with `$executor->executeAndGetId()`
 - [ ] Create `DatabaseExecutor` instances using `DatabaseExecutor::using($dbDriver)`
 - [ ] Update your tests to use `DatabaseExecutor` where appropriate
-- [ ] Search your codebase for deprecated method calls:
-  `grep -r "->getIterator\|->getScalar\|->execute\|->executeAndGetId\|->getAllFields"`
+
+### Interface and Class Migration
+
+- [ ] Replace `DbFunctionsInterface` with `SqlDialectInterface` in type hints
+- [ ] Replace `getDbHelper()` calls with `getSqlDialect()`
+- [ ] Update imports: `use ByJG\AnyDataset\Db\Helpers\*` → `use ByJG\AnyDataset\Db\SqlDialect\*`
+- [ ] Replace `Route` with `DatabaseRouter`
+- [ ] Update class names: `Db*Functions` → `*Dialect`
+- [ ] Replace `DbBaseFunctions` constants with `BaseDialect` constants
+- [ ] Update any direct instantiation of helper/dialect classes
+
+### Search Commands
+
+```bash
+# Find deprecated query methods
+grep -r "->getIterator\|->getScalar\|->execute\|->executeAndGetId\|->getAllFields" --include="*.php" .
+
+# Find old interface references
+grep -r "DbFunctionsInterface" --include="*.php" .
+
+# Find old method calls
+grep -r "->getDbHelper()" --include="*.php" .
+
+# Find old helper class imports
+grep -r "use.*Helpers\\Db.*Functions" --include="*.php" .
+
+# Find Route class usage
+grep -r "new Route()\|use.*\\Route;" --include="*.php" .
+```
 
 ## Finding Deprecated Usage
 

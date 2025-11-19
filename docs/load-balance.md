@@ -6,7 +6,7 @@ sidebar_position: 6
 
 The API supports connection load balancing, connection pooling, and persistent connections.
 
-The `Route` class, an implementation of the `DbDriverInterface`, provides routing capabilities.
+The `DatabaseRouter` class, an implementation of the `DbDriverInterface`, provides routing capabilities.
 You can define routes, and the system will automatically select the appropriate `DbDriver` based on your route
 definitions.
 
@@ -14,11 +14,11 @@ definitions.
 
 ```php
 <?php
-use ByJG\AnyDataset\Db\Route;
+use ByJG\AnyDataset\Db\DatabaseRouter;
 use ByJG\AnyDataset\Db\DatabaseExecutor;
 use ByJG\AnyDataset\Db\Factory;
 
-$route = new Route();
+$route = new DatabaseRouter();
 
 // Create database driver instances from connection strings
 $driver1 = Factory::getDbInstance('sqlite:///tmp/a.db');
@@ -68,11 +68,11 @@ A common use case is to have a master database for write operations and multiple
 
 ```php
 <?php
-use ByJG\AnyDataset\Db\Route;
+use ByJG\AnyDataset\Db\DatabaseRouter;
 use ByJG\AnyDataset\Db\DatabaseExecutor;
 use ByJG\AnyDataset\Db\Factory;
 
-$route = new Route();
+$route = new DatabaseRouter();
 
 // Create driver instances
 $masterDriver = Factory::getDbInstance('mysql://user:pass@master-host/database');
@@ -105,11 +105,11 @@ You can route queries for specific tables to different databases:
 
 ```php
 <?php
-use ByJG\AnyDataset\Db\Route;
+use ByJG\AnyDataset\Db\DatabaseRouter;
 use ByJG\AnyDataset\Db\DatabaseExecutor;
 use ByJG\AnyDataset\Db\Factory;
 
-$route = new Route();
+$route = new DatabaseRouter();
 
 // Create driver instances
 $db1Driver = Factory::getDbInstance('mysql://user:pass@host1/database');
@@ -148,11 +148,11 @@ You can route queries based on values in the WHERE clause:
 
 ```php
 <?php
-use ByJG\AnyDataset\Db\Route;
+use ByJG\AnyDataset\Db\DatabaseRouter;
 use ByJG\AnyDataset\Db\DatabaseExecutor;
 use ByJG\AnyDataset\Db\Factory;
 
-$route = new Route();
+$route = new DatabaseRouter();
 
 // Create driver instances for different regions
 $usDriver = Factory::getDbInstance('mysql://user:pass@us-host/database');
@@ -187,11 +187,11 @@ For more complex routing needs, you can use custom regular expressions:
 
 ```php
 <?php
-use ByJG\AnyDataset\Db\Route;
+use ByJG\AnyDataset\Db\DatabaseRouter;
 use ByJG\AnyDataset\Db\DatabaseExecutor;
 use ByJG\AnyDataset\Db\Factory;
 
-$route = new Route();
+$route = new DatabaseRouter();
 
 // Create driver instances
 $analyticsDriver = Factory::getDbInstance('mysql://user:pass@analytics-host/database');
@@ -221,7 +221,8 @@ $executor->getIterator('SELECT * FROM users WHERE id = 1');
 
 ## Implementation Details
 
-The `Route` class is an implementation of `DbDriverInterface` that works by analyzing SQL queries and routing them to
+The `DatabaseRouter` class is an implementation of `DbDriverInterface` that works by analyzing SQL queries and routing
+them to
 the appropriate database driver. When a match is found, the corresponding driver is selected to execute the query.
 
 The routing process follows these steps:
@@ -229,16 +230,18 @@ The routing process follows these steps:
 1. You create `DbDriverInterface` instances (drivers) from connection strings using `Factory::getDbInstance()`
 2. You add these drivers to named routes using the `addDriver()` method
 3. You define routing rules (for reads, writes, specific tables, filters, etc.) that map SQL patterns to route names
-4. You wrap the Route in a `DatabaseExecutor` using `DatabaseExecutor::using($route)`
-5. When a query is executed through the executor, the SQL is passed to the Route's `matchRoute()` method
+4. You wrap the DatabaseRouter in a `DatabaseExecutor` using `DatabaseExecutor::using($route)`
+5. When a query is executed through the executor, the SQL is passed to the DatabaseRouter's `matchRoute()` method
 6. The method iterates through all defined routes and checks if the query matches any of them
 7. If a match is found, the corresponding driver is returned and used to execute the query
 8. If no match is found, a `RouteNotMatchedException` is thrown
 
-All `DbDriverInterface` methods are implemented in the `Route` class and delegate to the matched driver, making the
+All `DbDriverInterface` methods are implemented in the `DatabaseRouter` class and delegate to the matched driver, making
+the
 routing process transparent to the application code.
 
 ### Load Balancing
 
-When you add multiple drivers to a single route (by passing an array), the `Route` class will randomly select one of
+When you add multiple drivers to a single route (by passing an array), the `DatabaseRouter` class will randomly select
+one of
 them for each query, providing simple load balancing across multiple database servers.
