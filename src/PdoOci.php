@@ -23,7 +23,7 @@ class PdoOci extends PdoLiteral
 
     public function __construct(Uri $connUri)
     {
-        parent::__construct($this->createPdoConnStr($connUri), $connUri->getUsername(), $connUri->getPassword(), [], []);
+        parent::__construct($this->createPdoConnStr($connUri), $connUri->getUsername() ?? '', $connUri->getPassword() ?? '', [], []);
     }
 
     protected function createPdoConnStr(Uri $connUri): string

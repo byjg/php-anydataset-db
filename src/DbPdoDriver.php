@@ -127,7 +127,7 @@ abstract class DbPdoDriver implements DbDriverInterface
             }
         }
 
-        $this->logger->debug("SQL: $sql\nParams: " . json_encode($params ?? []));
+        $this->logger->debug("SQL: $sql\nParams: " . (json_encode($params ?? []) ?: '[]'));
 
         $cacheInfo['sql'] = $sql;
         $cacheInfo['stmt'] = $stmt;
@@ -309,9 +309,12 @@ abstract class DbPdoDriver implements DbDriverInterface
         return true;
     }
 
-    protected function getInstance(): ?PDO
+    protected function getInstance(): PDO
     {
         $this->isConnected(true, true);
+        if ($this->instance === null) {
+            throw new DbDriverNotConnected('PDO instance is null');
+        }
         return $this->instance;
     }
 
@@ -330,9 +333,6 @@ abstract class DbPdoDriver implements DbDriverInterface
     protected function transactionHandler(TransactionStageEnum $action, string $isoLevelCommand = ""): void
     {
         $instance = $this->getInstance();
-        if (is_null($instance)) {
-            throw new RuntimeException('Database connection is not established');
-        }
 
         switch ($action) {
             case TransactionStageEnum::begin:

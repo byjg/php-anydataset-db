@@ -136,7 +136,8 @@ class OciDialect extends BaseSqlDialect
     #[Override]
     public function executeAndGetInsertedId(DatabaseExecutor $executor, string|SqlStatement $sql, ?array $param = null): mixed
     {
-        preg_match('/INSERT INTO ([a-zA-Z0-9_]+)/i', $sql, $matches);
+        $sqlString = $sql instanceof SqlStatement ? $sql->getSql() : $sql;
+        preg_match('/INSERT INTO ([a-zA-Z0-9_]+)/i', $sqlString, $matches);
         $tableName = $matches[1] ?? null;
 
         if (!empty($tableName)) {

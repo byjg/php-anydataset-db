@@ -11,7 +11,7 @@ class Oci8Iterator extends GenericDbIterator
     use PreFetchTrait;
 
     /**
-     * @var resource Cursor
+     * @var resource|null Cursor
      */
     private $cursor;
 
@@ -43,6 +43,9 @@ class Oci8Iterator extends GenericDbIterator
     #[Override]
     public function fetchRow(): array|bool
     {
+        if ($this->cursor === null) {
+            return false;
+        }
         return oci_fetch_assoc($this->cursor);
     }
 

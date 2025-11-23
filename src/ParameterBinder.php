@@ -48,7 +48,7 @@ class ParameterBinder
         $sqlAlter = preg_replace("~'.*?((\\\\'|'').*?)*'~", "", $sql);
         preg_match_all(
             "/(?<!:):(?<param>[_\\w\\d]+)\b/",
-            $sqlAlter,
+            $sqlAlter ?? $sql,
             $matches
         );
 
@@ -61,7 +61,7 @@ class ParameterBinder
         foreach ($matches['param'] as $paramName) {
             if (!array_key_exists($paramName, $params)) {
                 // Remove NON DEFINED parameters
-                $sql = preg_replace(
+                $replaced = preg_replace(
                     [
                         "/(?<!:):$paramName\b/"
                     ],
@@ -70,6 +70,7 @@ class ParameterBinder
                     ],
                     $sql
                 );
+                $sql = $replaced ?? $sql;
                 continue;
             }
 
@@ -77,7 +78,7 @@ class ParameterBinder
             $dbArg = str_replace("_", self::sanitizeParameterKey($paramName), $paramSubstName);
 
             $count = 0;
-            $sql = preg_replace(
+            $replaced = preg_replace(
                 [
                     "/(?<!:):$paramName\b/",
                 ],
@@ -88,6 +89,7 @@ class ParameterBinder
                 -1,
                 $count
             );
+            $sql = $replaced ?? $sql;
         }
 
         return [$sql, $usedParams];

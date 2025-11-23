@@ -17,7 +17,8 @@ class Factory
      */
     public static function registerDbDriver(string $class): void
     {
-        if (!in_array(DbDriverInterface::class, class_implements($class))) {
+        $implements = class_implements($class);
+        if ($implements === false || !in_array(DbDriverInterface::class, $implements)) {
             throw new InvalidArgumentException(
                 "The class '$class' is not a instance of DbDriverInterface"
             );
@@ -86,7 +87,7 @@ class Factory
             $connectionUri = new Uri($connectionUri);
         }
 
-        /** @var string $class */
+        /** @var class-string<DbDriverInterface> $class */
         $class = self::getRegisteredDrivers($connectionUri->getScheme());
 
         return new $class($connectionUri);

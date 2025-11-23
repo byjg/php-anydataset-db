@@ -95,8 +95,9 @@ abstract class BaseSqlDialect implements SqlDialectInterface
 
     protected function prepareSqlDate(string $input, array $pattern, string $delimitString = "'"): array
     {
+        $split = preg_split('/([YyMmQqDdhHisaA])/', $input, -1, PREG_SPLIT_DELIM_CAPTURE);
         $prepareString = array_filter(
-            preg_split('/([YyMmQqDdhHisaA])/', $input, -1, PREG_SPLIT_DELIM_CAPTURE),
+            $split !== false ? $split : [],
             fn($value) => $value !== ''
         );
 
@@ -155,7 +156,7 @@ abstract class BaseSqlDialect implements SqlDialectInterface
     #[Override]
     public function delimiterTable(string|array $table): string
     {
-        $parts = explode('.', $table);
+        $parts = is_array($table) ? $table : explode('.', $table);
         return implode('.', array_map(
             fn($part) => $this->deliTableLeft . $part . $this->deliTableRight,
             $parts

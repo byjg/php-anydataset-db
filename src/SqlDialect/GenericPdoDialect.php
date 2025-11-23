@@ -89,6 +89,7 @@ class GenericPdoDialect extends BaseSqlDialect
     #[Override]
     protected function parseColumnMetadata(array $metadata): array
     {
+        /** @var array<string, array{name: string, dbType: string, required: bool, default: mixed, phpType: string, length: int|null, precision: int|null}> */
         return $metadata;
     }
 }

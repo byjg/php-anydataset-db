@@ -403,7 +403,7 @@ class DatabaseRouter implements DbDriverInterface
     }
 
     /**
-     * @return string
+     * @return class-string<SqlDialectInterface>
      * @throws RouteNotInitializedException If no driver has been matched yet and no drivers are configured
      */
     #[Override]

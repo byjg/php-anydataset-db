@@ -50,9 +50,9 @@ class DbOci8Driver implements DbDriverInterface
     protected Uri $connectionUri;
 
     /**
-     * @var resource|false
+     * @var resource|null
      */
-    protected mixed $conn;
+    protected mixed $conn = null;
     protected int $ociAutoCommit;
 
     /**
@@ -117,14 +117,14 @@ class DbOci8Driver implements DbDriverInterface
         }
         list($query, $params) = ParameterBinder::prepareParameterBindings($this->connectionUri, $sql, $params);
 
-        $this->logger->debug("SQL: $query, Params: " . json_encode($params));
+        $this->logger->debug("SQL: $query, Params: " . (json_encode($params) ?: '[]'));
 
         // Prepare the statement
         $query = rtrim($query, ' ;');
         $stid = oci_parse($this->conn, $query);
         if (!$stid) {
             $error = oci_error($this->conn);
-            throw new DatabaseException($error['message']);
+            throw new DatabaseException(is_array($error) ? $error['message'] : 'Unknown OCI error');
         }
 
         // Bind the parameters
@@ -153,7 +153,7 @@ class DbOci8Driver implements DbDriverInterface
         // Check if is OK;
         if (!$result) {
             $error = oci_error($statement);
-            throw new DatabaseException($error['message']);
+            throw new DatabaseException(is_array($error) ? $error['message'] : 'Unknown OCI error');
         }
     }
 
@@ -243,10 +243,13 @@ class DbOci8Driver implements DbDriverInterface
                 /** @psalm-suppress UndefinedConstant */
                 $this->ociAutoCommit = OCI_COMMIT_ON_SUCCESS;
 
+                if ($this->conn === null) {
+                    throw new DatabaseException('Cannot commit: connection is null');
+                }
                 $result = oci_commit($this->conn);
                 if (!$result) {
                     $error = oci_error($this->conn);
-                    throw new DatabaseException($error['message']);
+                    throw new DatabaseException(is_array($error) ? $error['message'] : 'Unknown OCI error');
                 }
                 break;
 
@@ -259,6 +262,9 @@ class DbOci8Driver implements DbDriverInterface
                 /** @psalm-suppress UndefinedConstant */
                 $this->ociAutoCommit = OCI_COMMIT_ON_SUCCESS;
 
+                if ($this->conn === null) {
+                    throw new DatabaseException('Cannot rollback: connection is null');
+                }
                 oci_rollback($this->conn);
                 break;
         }
@@ -280,7 +286,7 @@ class DbOci8Driver implements DbDriverInterface
 
     /**
      *
-     * @return resource|false
+     * @return resource|null
      */
     #[Override]
     public function getDbConnection(): mixed
@@ -393,7 +399,7 @@ class DbOci8Driver implements DbDriverInterface
 
         if (!$this->conn) {
             $error = oci_error();
-            throw new DatabaseException($error['message']);
+            throw new DatabaseException(is_array($error) ? $error['message'] : 'Failed to connect to Oracle database');
         }
 
         return true;
