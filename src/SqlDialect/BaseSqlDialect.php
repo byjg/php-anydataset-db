@@ -143,7 +143,7 @@ abstract class BaseSqlDialect implements SqlDialectInterface
     #[Override]
     public function delimiterField(string|array $field): string|array
     {
-        $delimiter = fn($fld) => $this->deliFieldLeft .
+        $delimiter = fn($fld): string => $this->deliFieldLeft .
             implode($this->deliFieldRight . '.' . $this->deliFieldLeft, explode('.', $fld)) .
             $this->deliFieldRight;
 

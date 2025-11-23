@@ -90,7 +90,7 @@ class DatabaseExecutor implements DbTransactionInterface
 
         $cache = $sql->getCache();
         $sqlText = $sql->getSql();
-        $params = $sql->withParams($params)->getParams();
+        $params = $sql->withParams($params)->getParams() ?? [];
 
         // If no cache is configured, directly execute the query
         if (empty($cache)) {
@@ -99,9 +99,13 @@ class DatabaseExecutor implements DbTransactionInterface
             return $this->driver->getDriverIterator($statement, $preFetch, $sql->getEntityClass(), $sql->getEntityTransformer());
         }
 
-        // Cache is configured - try to get from cache first
+        // Cache is configured - try to get from the cache first
         ksort($params);
-        $cacheKey = $sql->getCacheKey() . ':' . md5(json_encode($params));
+        $encodedParams = json_encode($params);
+        if ($encodedParams === false) {
+            throw new InvalidArgumentException('Failed to encode parameters for cache key');
+        }
+        $cacheKey = $sql->getCacheKey() . ':' . md5($encodedParams);
 
         if ($cache->has($cacheKey)) {
             return $this->getIteratorFromCache($cache, $cacheKey);
@@ -400,10 +404,11 @@ class DatabaseExecutor implements DbTransactionInterface
      *
      * @param CacheInterface $cache
      * @param string $cacheKey
-     * @throws InvalidArgumentException
+     * @throws PsrInvalidArgumentException
      */
     protected function mutexLock(CacheInterface $cache, string $cacheKey): void
     {
+        /** @psalm-suppress PossiblyFalseArgument */
         $cache->set($cacheKey . ".lock", time(), DateInterval::createFromDateString('5 min'));
     }
 

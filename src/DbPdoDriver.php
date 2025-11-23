@@ -21,6 +21,7 @@ use PDO;
 use PDOStatement;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
+use RuntimeException;
 
 abstract class DbPdoDriver implements DbDriverInterface
 {
@@ -31,8 +32,8 @@ abstract class DbPdoDriver implements DbDriverInterface
 
     protected bool $supportMultiRowset = false;
 
-    const DONT_PARSE_PARAM = "dont_parse_param";
-    const UNIX_SOCKET = "unix_socket";
+    const string DONT_PARSE_PARAM = "dont_parse_param";
+    const string UNIX_SOCKET = "unix_socket";
 
     protected PdoObj $pdoObj;
 
@@ -80,7 +81,7 @@ abstract class DbPdoDriver implements DbDriverInterface
         $this->disconnect();
 
         // Connect
-        $this->instance = $this->pdoObj->createInstance($this->preOptions, $this->postOptions, $this->executeAfterConnect);
+        $this->instance = $this->pdoObj->createInstance($this->preOptions, $this->postOptions, $this->executeAfterConnect ?? []);
 
         return true;
     }
@@ -106,6 +107,10 @@ abstract class DbPdoDriver implements DbDriverInterface
     #[Override]
     public function prepareStatement(string $sql, ?array $params = null, ?array &$cacheInfo = []): PDOStatement
     {
+        if (is_null($this->getInstance())) {
+            throw new RuntimeException('Database connection is not established');
+        }
+
         if (!$this->getUri()->hasQueryKey(self::DONT_PARSE_PARAM)) {
             list($sql, $params) = ParameterBinder::prepareParameterBindings($this->pdoObj->getUri(), $sql, $params);
         }
@@ -122,7 +127,7 @@ abstract class DbPdoDriver implements DbDriverInterface
             }
         }
 
-        $this->logger->debug("SQL: $sql\nParams: " . json_encode($params));
+        $this->logger->debug("SQL: $sql\nParams: " . json_encode($params ?? []));
 
         $cacheInfo['sql'] = $sql;
         $cacheInfo['stmt'] = $stmt;
@@ -241,16 +246,16 @@ abstract class DbPdoDriver implements DbDriverInterface
         return $this->instance;
     }
 
-    protected ?SqlDialectInterface $dbHelper = null;
+    protected ?SqlDialectInterface $sqlDialect = null;
 
     #[Override]
     public function getSqlDialect(): SqlDialectInterface
     {
-        if (empty($this->dbHelper)) {
+        if (empty($this->sqlDialect)) {
             $helperClass = $this->getSqlDialectClass();
-            $this->dbHelper = new $helperClass();
+            $this->sqlDialect = new $helperClass();
         }
-        return $this->dbHelper;
+        return $this->sqlDialect;
     }
 
     #[Override]
@@ -324,18 +329,23 @@ abstract class DbPdoDriver implements DbDriverInterface
 
     protected function transactionHandler(TransactionStageEnum $action, string $isoLevelCommand = ""): void
     {
+        $instance = $this->getInstance();
+        if (is_null($instance)) {
+            throw new RuntimeException('Database connection is not established');
+        }
+
         switch ($action) {
             case TransactionStageEnum::begin:
                 if (!empty($isoLevelCommand)) {
-                    $this->getInstance()->exec($isoLevelCommand);
+                    $instance->exec($isoLevelCommand);
                 }
-                $this->getInstance()->beginTransaction();
+                $instance->beginTransaction();
                 break;
             case TransactionStageEnum::commit:
-                $this->getInstance()->commit();
+                $instance->commit();
                 break;
             case TransactionStageEnum::rollback:
-                $this->getInstance()->rollBack();
+                $instance->rollBack();
                 break;
         }
     }

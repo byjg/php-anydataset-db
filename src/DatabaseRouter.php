@@ -547,10 +547,7 @@ class DatabaseRouter implements DbDriverInterface
     #[Override]
     public function activeIsolationLevel(): ?IsolationLevelEnum
     {
-        if ($this->lastMatchedDriver === null) {
-            return null;
-        }
-        return $this->lastMatchedDriver->activeIsolationLevel();
+        return $this->lastMatchedDriver?->activeIsolationLevel();
     }
 
     #[Override]

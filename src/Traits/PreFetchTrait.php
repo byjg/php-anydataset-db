@@ -38,7 +38,7 @@ trait PreFetchTrait
 
         $rowFetched = $this->fetchRow();
         if (!empty($rowFetched)) {
-            $rowFetched = array_change_key_case($rowFetched, CASE_LOWER);
+            $rowFetched = array_change_key_case($rowFetched);
 
             // Create row based on entityClass if provided
             if (!empty($this->entityClass)) {

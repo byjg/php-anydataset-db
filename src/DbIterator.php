@@ -51,6 +51,7 @@ class DbIterator extends GenericDbIterator
     public function releaseCursor(): void
     {
         if ($this->isCursorOpen()) {
+            /** @psalm-suppress PossiblyNullReference */
             $this->statement->closeCursor();
             $this->statement = null;
         }
@@ -59,7 +60,7 @@ class DbIterator extends GenericDbIterator
     #[Override]
     protected function fetchRow(): array|bool
     {
-        return $this->statement->fetch(PDO::FETCH_ASSOC);
+        return $this->statement?->fetch(PDO::FETCH_ASSOC) ?? false;
     }
 
     public function __destruct()

@@ -174,15 +174,10 @@ class SqliteDialect extends BaseSqlDialect
     #[Override]
     public function getIsolationLevelCommand(?IsolationLevelEnum $isolationLevel = null): string
     {
-        switch ($isolationLevel) {
-            case IsolationLevelEnum::READ_UNCOMMITTED:
-                return "PRAGMA read_uncommitted = true;";
-            case IsolationLevelEnum::READ_COMMITTED:
-            case IsolationLevelEnum::REPEATABLE_READ:
-            case IsolationLevelEnum::SERIALIZABLE:
-            default:
-                return "";
-        }
+        return match ($isolationLevel) {
+            IsolationLevelEnum::READ_UNCOMMITTED => "PRAGMA read_uncommitted = true;",
+            default => "",
+        };
     }
     
 }

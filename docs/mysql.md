@@ -17,7 +17,7 @@ $sslKey = "/path/to/Key";
 $sslCert = "/path/to/cert";
 $sslCaPath = "/path";
 $sslCipher = "DHE-RSA-AES256-SHA:AES128-SHA";
-$verifySsl = 'false';  // or 'true'. Since PHP 7.1.
+$verifySsl = 'false';  // or 'true'. Since PHP 8.3.
 
 $db = \ByJG\AnyDataset\Db\Factory::getDbInstance(
     "mysql://localhost/database?ca=$sslCa&key=$sslKey&cert=$sslCert&capath=$sslCaPath&verifyssl=$verifySsl&cipher=$sslCipher"

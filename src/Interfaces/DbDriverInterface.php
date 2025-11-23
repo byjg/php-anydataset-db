@@ -87,7 +87,7 @@ interface DbDriverInterface extends DbTransactionInterface
     /**
      * Get the class name of the DbFunctionsInterface implementation for this driver
      *
-     * @return string Fully qualified class name of the DbFunctionsInterface implementation
+     * @return class-string<SqlDialectInterface> Fully qualified class name of the DbFunctionsInterface implementation
      */
     public function getSqlDialectClass(): string;
 

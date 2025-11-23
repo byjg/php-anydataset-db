@@ -145,7 +145,7 @@ class OciDialect extends BaseSqlDialect
             // Get the primary key of the table
             $primaryKeyResult = $executor->getScalar("SELECT cols.column_name
                 FROM all_constraints cons, all_cons_columns cols
-                WHERE cols.table_name = '{$tableName}'
+                WHERE cols.table_name = '$tableName'
                 AND cons.constraint_type = 'P'
                 AND cons.constraint_name = cols.constraint_name
                 AND cons.owner = cols.owner
@@ -154,8 +154,8 @@ class OciDialect extends BaseSqlDialect
             // Get the default value of the primary key
             $defaultValueResult = $executor->getScalar("SELECT DATA_DEFAULT
                 FROM USER_TAB_COLUMNS
-                WHERE TABLE_NAME = '{$tableName}'
-                AND COLUMN_NAME = '{$primaryKeyResult}'");
+                WHERE TABLE_NAME = '$tableName'
+                AND COLUMN_NAME = '$primaryKeyResult'");
         }
 
         $executor->execute($sql, $param);
@@ -168,7 +168,7 @@ class OciDialect extends BaseSqlDialect
                 $sequenceName = str_replace('.nextval', '', $defaultValueResult);
 
                 // Return the CURRVAL of the sequence
-                return $executor->getScalar("SELECT {$sequenceName}.currval FROM DUAL");
+                return $executor->getScalar("SELECT $sequenceName.currval FROM DUAL");
             }
         }
 
@@ -197,7 +197,7 @@ class OciDialect extends BaseSqlDialect
                         END AS TYPE,
                     DATA_DEFAULT AS COLUMN_DEFAULT,
                     NULLABLE
-                FROM ALL_TAB_COLUMNS WHERE TABLE_NAME = '{$tableName}'";
+                FROM ALL_TAB_COLUMNS WHERE TABLE_NAME = '$tableName'";
 
         return $this->getTableMetadataFromSql($executor, $sql);
     }
@@ -212,7 +212,7 @@ class OciDialect extends BaseSqlDialect
                     'name' => $value['column_name'],
                     'dbType' => strtolower($value['type']),
                     'required' => $value['nullable'] == 'N',
-                    'default' => isset($value['column_default']) ? $value['column_default'] : null,
+                    'default' => $value['column_default'] ?? null,
                 ] + $this->parseTypeMetadata(strtolower($value['type']));
         }
 
