@@ -3,6 +3,7 @@
 namespace ByJG\AnyDataset\Db;
 
 use ByJG\AnyDataset\Core\Exception\NotAvailableException;
+use ByJG\AnyDataset\Db\Exception\DbDriverNotConnected;
 use ByJG\AnyDataset\Db\SqlDialect\DblibDialect;
 use ByJG\Util\Uri;
 use Override;
@@ -26,6 +27,7 @@ class PdoDblib extends PdoPdo
      * PdoDblib constructor.
      *
      * @param Uri $connUri
+     * @throws DbDriverNotConnected
      * @throws NotAvailableException
      */
     public function __construct(Uri $connUri)
@@ -58,7 +60,7 @@ class PdoDblib extends PdoPdo
         return $uri
             ->withUserInfo($connUri->getUsername() ?? '', $connUri->getPassword())
             ->withHost($connUri->getScheme())
-            ->withQueryKeyValue("host", $connUri->getHost() . (!empty($connUri->getPort()) ? "," . (string)$connUri->getPort() : ""))
+            ->withQueryKeyValue("host", $connUri->getHost() . (!empty($connUri->getPort()) ? "," . $connUri->getPort() : ""))
             ->withQueryKeyValue("dbname", ltrim($connUri->getPath(), "/"))
         ;
     }

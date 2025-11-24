@@ -3,6 +3,7 @@
 namespace ByJG\AnyDataset\Db;
 
 use ByJG\AnyDataset\Core\Exception\NotAvailableException;
+use ByJG\AnyDataset\Db\Exception\DbDriverNotConnected;
 use ByJG\AnyDataset\Db\SqlDialect\SqlsrvDialect;
 use ByJG\Util\Uri;
 use Override;
@@ -26,6 +27,7 @@ class PdoSqlsrv extends PdoDblib
      * PdoSqlsrv constructor.
      *
      * @param Uri $connUri
+     * @throws DbDriverNotConnected
      * @throws NotAvailableException
      */
     public function __construct(Uri $connUri)
@@ -42,7 +44,7 @@ class PdoSqlsrv extends PdoDblib
         return $uri
             ->withUserInfo($connUri->getUsername() ?? '', $connUri->getPassword())
             ->withHost($connUri->getScheme())
-            ->withQueryKeyValue("Server", $connUri->getHost() . (!empty($connUri->getPort()) ? "," . (string)$connUri->getPort() : ""))
+            ->withQueryKeyValue("Server", $connUri->getHost() . (!empty($connUri->getPort()) ? "," . $connUri->getPort() : ""))
             ->withQueryKeyValue("Database", ltrim($connUri->getPath(), "/"))
             ->withQueryKeyValue('TrustServerCertificate', 'true')
         ;

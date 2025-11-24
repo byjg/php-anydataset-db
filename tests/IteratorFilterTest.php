@@ -29,42 +29,33 @@ class IteratorFilterTest extends TestCase
     public function testGetSql()
     {
         $params = [];
-        $returnFields = '*';
         $sql = $this->object->format(
-            new IteratorFilterSqlFormatter(),
-            'tablename',
-            $params,
-            $returnFields
+            new IteratorFilterSqlFormatter('tablename', '*'),
+            $params
         );
         $this->assertEquals([], $params);
         $this->assertEquals('select * from tablename ', $sql);
 
         $this->object->and('field', Relation::EQUAL, 'test');
         $sql = $this->object->format(
-            new IteratorFilterSqlFormatter(),
-            'tablename',
-            $params,
-            $returnFields
+            new IteratorFilterSqlFormatter('tablename', '*'),
+            $params
         );
         $this->assertEquals(['field' => 'test'], $params);
         $this->assertEquals('select * from tablename  where  field = :field  ', $sql);
 
         $this->object->and('field2', Relation::GREATER_OR_EQUAL_THAN, 'test2');
         $sql = $this->object->format(
-            new IteratorFilterSqlFormatter(),
-            'tablename',
-            $params,
-            $returnFields
+            new IteratorFilterSqlFormatter('tablename', '*'),
+            $params
         );
         $this->assertEquals(['field' => 'test', 'field2' => 'test2'], $params);
         $this->assertEquals('select * from tablename  where  field = :field  and  field2 >= :field2  ', $sql);
 
         $this->object->and('field3', Relation::CONTAINS, 'test3');
         $sql = $this->object->format(
-            new IteratorFilterSqlFormatter(),
-            'tablename',
-            $params,
-            $returnFields
+            new IteratorFilterSqlFormatter('tablename', '*'),
+            $params
         );
         $this->assertEquals(['field' => 'test', 'field2' => 'test2', 'field3' => '%test3%'], $params);
         $this->assertEquals('select * from tablename  where  field = :field  and  field2 >= :field2  and  field3  like  :field3  ', $sql);
@@ -75,32 +66,25 @@ class IteratorFilterTest extends TestCase
         $literalObject = new LiteralSample(10);
 
         $params = [];
-        $returnFields = '*';
         $sql = $this->object->format(
-            new IteratorFilterSqlFormatter(),
-            'tablename',
-            $params,
-            $returnFields
+            new IteratorFilterSqlFormatter('tablename', '*'),
+            $params
         );
         $this->assertEquals([], $params);
         $this->assertEquals('select * from tablename ', $sql);
 
         $this->object->and('field', Relation::GREATER_THAN, $literalObject);
         $sql = $this->object->format(
-            new IteratorFilterSqlFormatter(),
-            'tablename',
-            $params,
-            $returnFields
+            new IteratorFilterSqlFormatter('tablename', '*'),
+            $params
         );
         $this->assertEquals([], $params);
         $this->assertEquals('select * from tablename  where  field > cast(\'10\' as integer)  ', $sql);
 
         $this->object->and('field2', Relation::LESS_THAN, 5);
         $sql = $this->object->format(
-            new IteratorFilterSqlFormatter(),
-            'tablename',
-            $params,
-            $returnFields
+            new IteratorFilterSqlFormatter('tablename', '*'),
+            $params
         );
         $this->assertEquals(['field2' => 5], $params);
         $this->assertEquals('select * from tablename  where  field > cast(\'10\' as integer)  and  field2 < :field2  ', $sql);
@@ -110,12 +94,9 @@ class IteratorFilterTest extends TestCase
     {
         $this->object->and('field', Relation::IN, ['value1', 'value2']);
         $params = [];
-        $returnFields = '*';
         $sql = $this->object->format(
-            new IteratorFilterSqlFormatter(),
-            'tablename',
-            $params,
-            $returnFields
+            new IteratorFilterSqlFormatter('tablename', '*'),
+            $params
         );
         $this->assertEquals(['field0' => 'value1', 'field1' => 'value2'], $params);
         $this->assertEquals('select * from tablename  where  field IN (:field0, :field1)  ', $sql);
@@ -125,12 +106,9 @@ class IteratorFilterTest extends TestCase
     {
         $this->object->and('field', Relation::NOT_IN, ['value1', 'value2']);
         $params = [];
-        $returnFields = '*';
         $sql = $this->object->format(
-            new IteratorFilterSqlFormatter(),
-            'tablename',
-            $params,
-            $returnFields
+            new IteratorFilterSqlFormatter('tablename', '*'),
+            $params
         );
         $this->assertEquals(['field0' => 'value1', 'field1' => 'value2'], $params);
         $this->assertEquals('select * from tablename  where  field NOT IN (:field0, :field1)  ', $sql);
@@ -142,12 +120,9 @@ class IteratorFilterTest extends TestCase
         $this->object->or('field2', Relation::EQUAL, 'test2');
 
         $params = [];
-        $returnFields = '*';
         $sql = $this->object->format(
-            new IteratorFilterSqlFormatter(),
-            'tablename',
-            $params,
-            $returnFields
+            new IteratorFilterSqlFormatter('tablename', '*'),
+            $params
         );
         $this->assertEquals(['field' => 'test', 'field2' => 'test2'], $params);
         $this->assertEquals('select * from tablename  where  field = :field  or  field2 = :field2  ', $sql);
@@ -158,12 +133,9 @@ class IteratorFilterTest extends TestCase
         $this->object->and('field', Relation::IS_NULL, null);
 
         $params = [];
-        $returnFields = '*';
         $sql = $this->object->format(
-            new IteratorFilterSqlFormatter(),
-            'tablename',
-            $params,
-            $returnFields
+            new IteratorFilterSqlFormatter('tablename', '*'),
+            $params
         );
 
         $this->assertEquals([], $params);
@@ -175,12 +147,9 @@ class IteratorFilterTest extends TestCase
         $this->object->and('field', Relation::IS_NOT_NULL, null);
 
         $params = [];
-        $returnFields = '*';
         $sql = $this->object->format(
-            new IteratorFilterSqlFormatter(),
-            'tablename',
-            $params,
-            $returnFields
+            new IteratorFilterSqlFormatter('tablename', '*'),
+            $params
         );
 
         $this->assertEquals([], $params);
@@ -195,12 +164,9 @@ class IteratorFilterTest extends TestCase
         $this->object->or('field3', Relation::EQUAL, 'test3');
 
         $params = [];
-        $returnFields = '*';
         $sql = $this->object->format(
-            new IteratorFilterSqlFormatter(),
-            'tablename',
-            $params,
-            $returnFields
+            new IteratorFilterSqlFormatter('tablename', '*'),
+            $params
         );
         $this->assertEquals(['field' => 'test', 'field2' => 'test2', 'field3' => 'test3'], $params);
         $this->assertEquals(

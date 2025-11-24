@@ -2,6 +2,7 @@
 
 namespace ByJG\AnyDataset\Db;
 
+use ByJG\AnyDataset\Core\Exception\NotAvailableException;
 use ByJG\AnyDataset\Db\Exception\DbDriverNotConnected;
 use ByJG\AnyDataset\Db\SqlDialect\DblibDialect;
 use ByJG\AnyDataset\Db\SqlDialect\GenericPdoDialect;
@@ -53,6 +54,7 @@ class PdoPdo extends DbPdoDriver
      * @param array|null $postOptions
      * @param array $executeAfterConnect
      * @throws DbDriverNotConnected
+     * @throws NotAvailableException
      */
     public function __construct(Uri $connUri, ?array $preOptions = [], ?array $postOptions = [], array $executeAfterConnect = [])
     {

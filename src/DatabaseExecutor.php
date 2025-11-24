@@ -249,8 +249,6 @@ class DatabaseExecutor implements DbTransactionInterface
      * @param string|SqlStatement $sql The SQL statement to execute
      * @param array|null $array Parameters for the SQL query
      * @return bool True on success
-     * @throws DatabaseException
-     * @throws DbDriverNotConnected
      */
     public function execute(string|SqlStatement $sql, ?array $array = null): bool
     {
@@ -417,7 +415,7 @@ class DatabaseExecutor implements DbTransactionInterface
      *
      * @param CacheInterface $cache
      * @param string $cacheKey
-     * @throws InvalidArgumentException
+     * @throws PsrInvalidArgumentException
      */
     protected function mutexRelease(CacheInterface $cache, string $cacheKey): void
     {

@@ -62,6 +62,7 @@ class DbOci8Driver implements DbDriverInterface
      *
      * @param Uri $connectionString
      * @throws DatabaseException
+     * @throws DbDriverNotConnected
      */
     public function __construct(Uri $connectionString)
     {
@@ -105,6 +106,7 @@ class DbOci8Driver implements DbDriverInterface
     /**
      * @param string $sql
      * @param array|null $params
+     * @param array|null $cacheInfo
      * @return resource
      * @throws DatabaseException
      * @throws DbDriverNotConnected
@@ -204,7 +206,10 @@ class DbOci8Driver implements DbDriverInterface
      * @return mixed
      * @throws DatabaseException
      * @throws DbDriverNotConnected
-     *@deprecated Use DatabaseExecutor::using($driver)->getScalar() instead. This method will be removed in version 7.0.
+     * @throws FileException
+     * @throws XmlUtilException
+     * @throws \Psr\SimpleCache\InvalidArgumentException
+     * @deprecated Use DatabaseExecutor::using($driver)->getScalar() instead. This method will be removed in version 7.0.
      */
     #[Override]
     public function getScalar(string|SqlStatement $sql, ?array $array = null): mixed
@@ -225,6 +230,11 @@ class DbOci8Driver implements DbDriverInterface
         return DatabaseExecutor::using($this)->getAllFields($tablename);
     }
 
+    /**
+     * @param TransactionStageEnum $action
+     * @param string $isoLevelCommand
+     * @throws DatabaseException
+     */
     protected function transactionHandler(TransactionStageEnum $action, string $isoLevelCommand = ""): void
     {
         switch ($action) {
@@ -269,14 +279,12 @@ class DbOci8Driver implements DbDriverInterface
                 break;
         }
     }
-    
+
     /**
      * @param string|SqlStatement $sql
      * @param array|null $array
      * @return bool
-     * @throws DatabaseException
-     * @throws DbDriverNotConnected
-     *@deprecated Use DatabaseExecutor::using($driver)->execute() instead. This method will be removed in version 7.0.
+     * @deprecated Use DatabaseExecutor::using($driver)->execute() instead. This method will be removed in version 7.0.
      */
     #[Override]
     public function execute(string|SqlStatement $sql, ?array $array = null): bool
@@ -316,7 +324,7 @@ class DbOci8Driver implements DbDriverInterface
     /**
      * @param string|SqlStatement $sql
      * @param array|null $array
-     * @throws NotImplementedException
+     * @return mixed
      * @deprecated Use DatabaseExecutor::using($driver)->executeAndGetId() instead. This method will be removed in version 7.0.
      */
     #[Override]
@@ -366,6 +374,10 @@ class DbOci8Driver implements DbDriverInterface
         throw new NotImplementedException('Method not implemented for OCI Driver');
     }
 
+    /**
+     * @throws DatabaseException
+     * @throws DbDriverNotConnected
+     */
     #[Override]
     public function reconnect(bool $force = false): bool
     {
@@ -411,6 +423,9 @@ class DbOci8Driver implements DbDriverInterface
         $this->conn = null;
     }
 
+    /**
+     * @throws DbDriverNotConnected
+     */
     #[Override]
     public function isConnected(bool $softCheck = false, bool $throwError = false): bool
     {

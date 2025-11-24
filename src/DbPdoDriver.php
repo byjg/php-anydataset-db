@@ -103,6 +103,7 @@ abstract class DbPdoDriver implements DbDriverInterface
      * @param array|null $params
      * @param array|null &$cacheInfo
      * @return PDOStatement
+     * @throws DbDriverNotConnected
      */
     #[Override]
     public function prepareStatement(string $sql, ?array $params = null, ?array &$cacheInfo = []): PDOStatement
@@ -283,6 +284,9 @@ abstract class DbPdoDriver implements DbDriverInterface
     }
 
 
+    /**
+     * @throws DbDriverNotConnected
+     */
     #[Override]
     public function isConnected(bool $softCheck = false, bool $throwError = false): bool
     {
@@ -309,6 +313,9 @@ abstract class DbPdoDriver implements DbDriverInterface
         return true;
     }
 
+    /**
+     * @throws DbDriverNotConnected
+     */
     protected function getInstance(): PDO
     {
         $this->isConnected(true, true);
@@ -330,6 +337,9 @@ abstract class DbPdoDriver implements DbDriverInterface
         $this->logger->debug($message, $context);
     }
 
+    /**
+     * @throws DbDriverNotConnected
+     */
     protected function transactionHandler(TransactionStageEnum $action, string $isoLevelCommand = ""): void
     {
         $instance = $this->getInstance();

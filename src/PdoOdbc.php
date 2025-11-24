@@ -2,6 +2,7 @@
 
 namespace ByJG\AnyDataset\Db;
 
+use ByJG\AnyDataset\Core\Exception\NotAvailableException;
 use ByJG\AnyDataset\Db\Exception\DbDriverNotConnected;
 use ByJG\AnyDataset\Db\SqlDialect\GenericPdoDialect;
 use ByJG\Util\Uri;
@@ -27,6 +28,7 @@ class PdoOdbc extends DbPdoDriver
      *
      * @param Uri $connUri
      * @throws DbDriverNotConnected
+     * @throws NotAvailableException
      */
     public function __construct(Uri $connUri)
     {

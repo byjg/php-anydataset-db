@@ -173,12 +173,22 @@ abstract class BaseSqlDialect implements SqlDialectInterface
     #[Override]
     abstract public function hasForUpdate(): bool;
 
+    /**
+     * @throws Exception
+     */
     #[Override]
     public function getTableMetadata(DatabaseExecutor $executor, string $tableName): array
     {
         throw new Exception("Not implemented");
     }
 
+    /**
+     * @throws XmlUtilException
+     * @throws DatabaseException
+     * @throws DbDriverNotConnected
+     * @throws FileException
+     * @throws InvalidArgumentException
+     */
     protected function getTableMetadataFromSql(DatabaseExecutor $executor, string $sql): array
     {
         $metadata = $executor->getIterator($sql)->toArray();

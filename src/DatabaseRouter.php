@@ -238,6 +238,9 @@ class DatabaseRouter implements DbDriverInterface
 
     //<editor-fold desc="DbDriverInterface">
 
+    /**
+     * @throws RouteNotMatchedException
+     */
     #[Override]
     public function prepareStatement(string $sql, ?array $params = null, ?array &$cacheInfo = []): mixed
     {
@@ -263,6 +266,9 @@ class DatabaseRouter implements DbDriverInterface
         return $driver->prepareStatement($sql, $params, $cacheInfo);
     }
 
+    /**
+     * @throws RouteNotInitializedException
+     */
     #[Override]
     public function executeCursor(mixed $statement): void
     {
@@ -481,6 +487,9 @@ class DatabaseRouter implements DbDriverInterface
     }
     //</editor-fold>
 
+    /**
+     * @throws RouteNotInitializedException
+     */
     #[Override]
     public function reconnect(bool $force = false): bool
     {
@@ -490,6 +499,9 @@ class DatabaseRouter implements DbDriverInterface
         return $this->lastMatchedDriver->reconnect($force);
     }
 
+    /**
+     * @throws RouteNotInitializedException
+     */
     #[Override]
     public function disconnect(): void
     {
@@ -508,6 +520,9 @@ class DatabaseRouter implements DbDriverInterface
         return $this->lastMatchedDriver->isConnected($softCheck, $throwError);
     }
 
+    /**
+     * @throws RouteNotInitializedException
+     */
     #[Override]
     public function enableLogger(LoggerInterface $logger): void
     {
@@ -517,6 +532,9 @@ class DatabaseRouter implements DbDriverInterface
         $this->lastMatchedDriver->enableLogger($logger);
     }
 
+    /**
+     * @throws RouteNotInitializedException
+     */
     #[Override]
     public function log(string $message, array $context = []): void
     {
@@ -535,6 +553,9 @@ class DatabaseRouter implements DbDriverInterface
         return $this->lastMatchedDriver->hasActiveTransaction();
     }
 
+    /**
+     * @throws RouteNotInitializedException
+     */
     #[Override]
     public function requiresTransaction(): void
     {
@@ -578,6 +599,9 @@ class DatabaseRouter implements DbDriverInterface
         return $this->lastMatchedDriver->getDriverIterator($statement, $preFetch, $entityClass, $entityTransformer);
     }
 
+    /**
+     * @throws RouteNotInitializedException
+     */
     #[Override]
     public function processMultiRowset(mixed $statement): void
     {

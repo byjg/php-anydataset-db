@@ -2,6 +2,8 @@
 
 namespace ByJG\AnyDataset\Db\Traits;
 
+use ByJG\AnyDataset\Core\Exception\DatabaseException;
+use ByJG\AnyDataset\Db\Exception\DbDriverNotConnected;
 use ByJG\AnyDataset\Db\Exception\TransactionNotStartedException;
 use ByJG\AnyDataset\Db\Exception\TransactionStartedException;
 use ByJG\AnyDataset\Db\IsolationLevelEnum;
@@ -18,6 +20,11 @@ trait TransactionTrait
 
     protected int $transactionCount = 0;
 
+    /**
+     * @throws TransactionStartedException
+     * @throws DatabaseException
+     * @throws DbDriverNotConnected
+     */
     public function beginTransaction(?IsolationLevelEnum $isolationLevel = null, bool $allowJoin = false): void
     {
         if ($this->hasActiveTransaction()) {
@@ -37,6 +44,11 @@ trait TransactionTrait
         $this->isolationLevel = $isolationLevel;
     }
 
+    /**
+     * @throws DatabaseException
+     * @throws TransactionNotStartedException
+     * @throws DbDriverNotConnected
+     */
     public function commitTransaction(): void
     {
         $this->logger->debug("SQL: Commit transaction");
@@ -51,6 +63,11 @@ trait TransactionTrait
         $this->isolationLevel = null;
     }
 
+    /**
+     * @throws DatabaseException
+     * @throws TransactionNotStartedException
+     * @throws DbDriverNotConnected
+     */
     public function rollbackTransaction(): void
     {
         $this->logger->debug("SQL: Rollback transaction");
@@ -67,6 +84,9 @@ trait TransactionTrait
         return $this->transactionCount;
     }
 
+    /**
+     * @throws TransactionNotStartedException
+     */
     public function requiresTransaction(): void
     {
         if (!$this->hasActiveTransaction()) {
