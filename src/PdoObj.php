@@ -53,7 +53,8 @@ class PdoObj
             (array)$preOptions
         );
 
-        $this->uri = $this->uri->withScheme($instance->getAttribute(PDO::ATTR_DRIVER_NAME));
+        $driverName = $instance->getAttribute(PDO::ATTR_DRIVER_NAME);
+        $this->uri = $this->uri->withScheme(is_string($driverName) ? $driverName : 'unknown');
 
         $this->setPdoDefaultParams($instance, $postOptions);
 
@@ -118,7 +119,7 @@ class PdoObj
             $pdoAr[] = "port=" . $port;
         }
 
-        parse_str($query, $queryArr);
+        parse_str($query ?? '', $queryArr);
         unset($queryArr[DbPdoDriver::DONT_PARSE_PARAM]);
 
         $pdoAr = array_merge($pdoAr, array_map(function ($k, $v) {
@@ -131,7 +132,9 @@ class PdoObj
     public static function getUriFromPdoConnStr(string $connStr, string $username = "", string $password = ""): Uri
     {
         if (preg_match("~^([^:]+):(/.*)~", $connStr, $matches) !== 0) {
-            return Uri::getInstanceFromString("{$matches[1]}://{$matches[2]}");
+            $uri = Uri::getInstance("{$matches[1]}://{$matches[2]}");
+            assert($uri instanceof Uri);
+            return $uri;
         }
 
         $parts = explode(":", $connStr, 2);
@@ -141,7 +144,7 @@ class PdoObj
         $port = "";
         $database = "";
         $query = [];
-        $params = explode(";", $parts[1]);
+        $params = explode(";", $parts[1] ?? "");
         foreach ($params as $param) {
             $paramParts = explode("=", $param, 2);
             $key = $paramParts[0];
@@ -172,7 +175,9 @@ class PdoObj
         }
 
         $str = "{$scheme}://{$credentials}{$host}{$port}{$database}{$query}";
-        return Uri::getInstanceFromString($str);
+        $uri = Uri::getInstance($str);
+        assert($uri instanceof Uri);
+        return $uri;
     }
 
 }

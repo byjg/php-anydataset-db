@@ -18,7 +18,7 @@ trait TransactionTrait
 
     protected int $transactionCount = 0;
 
-    public function beginTransaction(IsolationLevelEnum $isolationLevel = null, bool $allowJoin = false): void
+    public function beginTransaction(?IsolationLevelEnum $isolationLevel = null, bool $allowJoin = false): void
     {
         if ($this->hasActiveTransaction()) {
             if (!$allowJoin) {
@@ -31,7 +31,7 @@ trait TransactionTrait
         }
 
         $this->logger->debug("SQL: Begin transaction");
-        $isolLevelCommand = $this->getDbHelper()->getIsolationLevelCommand($isolationLevel);
+        $isolLevelCommand = $this->getSqlDialect()->getIsolationLevelCommand($isolationLevel);
         $this->transactionHandler(TransactionStageEnum::begin, $isolLevelCommand);
         $this->transactionCount = 1;
         $this->isolationLevel = $isolationLevel;

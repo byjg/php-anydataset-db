@@ -3,35 +3,27 @@
 namespace ByJG\AnyDataset\Db\Traits;
 
 use ByJG\AnyDataset\Core\Row;
+use ByJG\AnyDataset\Core\RowInterface;
+use ByJG\MicroOrm\PropertyHandler\MapFromDbToInstanceHandler;
+use ByJG\Serializer\ObjectCopy;
+use ByJG\Serializer\Serialize;
+use Override;
+use ReturnTypeWillChange;
+use SplDoublyLinkedList;
 
 trait PreFetchTrait
 {
-    protected int $currentRow = -1;
+    protected int $currentRow = 0;
     protected int $preFetchRows = 0;
-    protected array $rowBuffer = [];
+    protected SplDoublyLinkedList $rowBuffer;
 
     protected function initPreFetch(int $preFetch = 0): void
     {
-        $this->rowBuffer = [];
+        $this->rowBuffer = new SplDoublyLinkedList();
         $this->preFetchRows = $preFetch;
         if ($preFetch > 0) {
             $this->preFetch();
         }
-    }
-
-    public function hasNext(): bool
-    {
-        if (count($this->rowBuffer) > 0) {
-            return true;
-        }
-
-        if ($this->isCursorOpen() && $this->preFetch()) {
-            return true;
-        }
-
-        $this->releaseCursor();
-
-        return false;
     }
 
     protected function preFetch(): bool
@@ -44,14 +36,25 @@ trait PreFetchTrait
             return false;
         }
 
-        $rowArray = $this->fetchRow();
-        if (!empty($rowArray)) {
-            $rowArray = array_change_key_case($rowArray, CASE_LOWER);
-            $singleRow = new Row($rowArray);
+        $rowFetched = $this->fetchRow();
+        if (!empty($rowFetched) && is_array($rowFetched)) {
+            $rowFetched = array_change_key_case($rowFetched);
 
-            // Enfileira o registo
-            $this->rowBuffer[] = $singleRow;
-            // Traz novos até encher o Buffer
+            // Create row based on entityClass if provided
+            if (!empty($this->entityClass)) {
+                $entityObj = new $this->entityClass();
+                // The command below is to get all properties of the class.
+                // This will allow to process all properties, even if they are not in the $fieldValues array.
+                // Particularly useful for processing the selectFunction.
+                $fieldValues = array_merge(Serialize::from($entityObj)->toArray(), $rowFetched);
+                ObjectCopy::copy($fieldValues, $entityObj, $this->entityTransformer);
+                $rowFetched = $entityObj;
+            }
+            $singleRow = new Row($rowFetched);
+
+            // Enqueue the record
+            $this->rowBuffer->push($singleRow);
+            // Fetch new ones until the buffer is full
             return $this->preFetch();
         }
 
@@ -63,10 +66,10 @@ trait PreFetchTrait
     protected function isPreFetchBufferFull(): bool
     {
         if ($this->getPreFetchRows() === 0) {
-            return count($this->rowBuffer) > 0;
+            return $this->rowBuffer->count() > 0;
         }
 
-        return count($this->rowBuffer) >= $this->getPreFetchRows();
+        return $this->rowBuffer->count() >= $this->getPreFetchRows();
     }
 
     abstract public function isCursorOpen(): bool;
@@ -87,26 +90,40 @@ trait PreFetchTrait
 
     public function getPreFetchBufferSize(): int
     {
-        return count($this->rowBuffer);
-    }
-
-    /**
-     * @return Row|null
-     */
-    public function moveNext(): ?Row
-    {
-        if (!$this->hasNext()) {
-            return null;
-        }
-
-        $singleRow = array_shift($this->rowBuffer);
-        $this->currentRow++;
-        $this->preFetch();
-        return $singleRow;
+        return $this->rowBuffer->count();
     }
 
     public function key(): int
     {
         return $this->currentRow;
+    }
+
+    #[ReturnTypeWillChange]
+    #[Override]
+    public function current(): ?RowInterface
+    {
+        if ($this->valid()) {
+            return $this->rowBuffer->bottom() ?? null;
+        }
+
+        return null;
+    }
+
+    #[ReturnTypeWillChange]
+    #[Override]
+    public function next(): void
+    {
+        if (!$this->rowBuffer->isEmpty()) {
+            $this->rowBuffer->shift(); // O(1) operation, no reindexing
+            $this->currentRow++;
+            $this->preFetch();
+        }
+    }
+
+    #[Override]
+    #[ReturnTypeWillChange]
+    public function valid(): bool
+    {
+        return !$this->rowBuffer->isEmpty() || $this->preFetch();
     }
 }

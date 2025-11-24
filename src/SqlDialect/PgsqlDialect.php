@@ -1,12 +1,13 @@
 <?php
 
-namespace ByJG\AnyDataset\Db\Helpers;
+namespace ByJG\AnyDataset\Db\SqlDialect;
 
-use ByJG\AnyDataset\Db\DbDriverInterface;
+use ByJG\AnyDataset\Db\DatabaseExecutor;
 use ByJG\AnyDataset\Db\IsolationLevelEnum;
 use ByJG\AnyDataset\Db\SqlStatement;
+use Override;
 
-class DbPgsqlFunctions extends DbBaseFunctions
+class PgsqlDialect extends BaseSqlDialect
 {
 
     public function __construct()
@@ -17,6 +18,7 @@ class DbPgsqlFunctions extends DbBaseFunctions
         $this->deliTableRight = '"';
     }
 
+    #[Override]
     public function concat(string $str1, ?string $str2 = null): string
     {
         return implode(' || ', func_get_args());
@@ -29,17 +31,19 @@ class DbPgsqlFunctions extends DbBaseFunctions
      * @param int $qty
      * @return string
      */
+    #[Override]
     public function limit(string $sql, int $start, int $qty = 50): string
     {
         if (stripos($sql, ' LIMIT ') === false) {
-            $sql = $sql . " LIMIT x OFFSET y";
+            return $sql . " LIMIT $qty OFFSET $start";
         }
 
-        return preg_replace(
+        $result = preg_replace(
             '~(\s[Ll][Ii][Mm][Ii][Tt])\s.*?\s([Oo][Ff][Ff][Ss][Ee][Tt])\s.*~',
             '$1 ' . $qty . ' $2 ' . $start,
             $sql
         );
+        return $result !== null ? $result : $sql;
     }
 
     /**
@@ -48,6 +52,7 @@ class DbPgsqlFunctions extends DbBaseFunctions
      * @param int $qty
      * @return string
      */
+    #[Override]
     public function top(string $sql, int $qty): string
     {
         return $this->limit($sql, 0, $qty);
@@ -57,6 +62,7 @@ class DbPgsqlFunctions extends DbBaseFunctions
      * Return if the database provider have a top or similar function
      * @return bool
      */
+    #[Override]
     public function hasTop(): bool
     {
         return true;
@@ -66,6 +72,7 @@ class DbPgsqlFunctions extends DbBaseFunctions
      * Return if the database provider have a limit function
      * @return bool
      */
+    #[Override]
     public function hasLimit(): bool
     {
         return true;
@@ -79,6 +86,7 @@ class DbPgsqlFunctions extends DbBaseFunctions
      * @return string
      * @example $db->getDbFunctions()->SQLDate("d/m/Y H:i", "dtcriacao")
      */
+    #[Override]
     public function sqlDate(string $format, ?string $column = null): string
     {
         if (is_null($column)) {
@@ -109,24 +117,28 @@ class DbPgsqlFunctions extends DbBaseFunctions
         );
     }
 
+    #[Override]
     public function getSqlLastInsertId(): string
     {
         return "select lastval() id";
     }
 
+    #[Override]
     public function hasForUpdate(): bool
     {
         return true;
     }
 
-    public function getTableMetadata(DbDriverInterface $dbdataset, string $tableName): array
+    #[Override]
+    public function getTableMetadata(DatabaseExecutor $executor, string $tableName): array
     {
         $tableName = strtolower($tableName);
         $sql = "select column_name, data_type || '(' || coalesce(cast(character_maximum_length as varchar), cast(numeric_precision_radix as varchar) || ',' || numeric_scale) || ')' as type, column_default, is_nullable from INFORMATION_SCHEMA.COLUMNS where table_name = '$tableName' ";
-        return $this->getTableMetadataFromSql($dbdataset, $sql);
+        return $this->getTableMetadataFromSql($executor, $sql);
     }
 
-    protected function parseColumnMetadata($metadata)
+    #[Override]
+    protected function parseColumnMetadata(array $metadata): array
     {
         $return = [];
 
@@ -142,6 +154,7 @@ class DbPgsqlFunctions extends DbBaseFunctions
         return $return;
     }
 
+    #[Override]
     public function getIsolationLevelCommand(?IsolationLevelEnum $isolationLevel = null): string
     {
         return match ($isolationLevel) {
@@ -153,6 +166,7 @@ class DbPgsqlFunctions extends DbBaseFunctions
         };
     }
 
+    #[Override]
     public function getJoinTablesUpdate(array $tables): array
     {
         $joinTables = [];

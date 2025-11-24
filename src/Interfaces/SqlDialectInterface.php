@@ -1,8 +1,12 @@
 <?php
 
-namespace ByJG\AnyDataset\Db;
+namespace ByJG\AnyDataset\Db\Interfaces;
 
-interface DbFunctionsInterface
+use ByJG\AnyDataset\Db\DatabaseExecutor;
+use ByJG\AnyDataset\Db\IsolationLevelEnum;
+use ByJG\AnyDataset\Db\SqlStatement;
+
+interface SqlDialectInterface
 {
 
     /**
@@ -59,31 +63,13 @@ interface DbFunctionsInterface
     public function sqlDate(string $format, ?string $column = null): string;
 
     /**
-     * Format a string date to a string database readable format.
      *
-     * @param string $date
-     * @param string $dateFormat
-     * @return string
-     */
-    public function toDate(string $date, string $dateFormat): string;
-
-    /**
-     * Format a string database readable format to a string date in a free format.
-     *
-     * @param string $date
-     * @param string $dateFormat
-     * @return string
-     */
-    public function fromDate(string $date, string $dateFormat): string;
-
-    /**
-     *
-     * @param DbDriverInterface $dbdataset
-     * @param string $sql
+     * @param DatabaseExecutor $executor
+     * @param string|SqlStatement $sql
      * @param array|null $param
      * @return mixed
      */
-    public function executeAndGetInsertedId(DbDriverInterface $dbdataset, string $sql, ?array $param = null): mixed;
+    public function executeAndGetInsertedId(DatabaseExecutor $executor, string|SqlStatement $sql, ?array $param = null): mixed;
 
     public function getSqlLastInsertId(): string;
 
@@ -103,7 +89,7 @@ interface DbFunctionsInterface
 
     public function hasForUpdate(): bool;
 
-    public function getTableMetadata(DbDriverInterface $dbdataset, string $tableName): array;
+    public function getTableMetadata(DatabaseExecutor $executor, string $tableName): array;
 
     public function getIsolationLevelCommand(?IsolationLevelEnum $isolationLevel = null): string;
 

@@ -1,14 +1,15 @@
 <?php
 
-namespace Test\Helpers;
+namespace Test;
 
-use ByJG\AnyDataset\Db\Helpers\SqlBind;
+use ByJG\AnyDataset\Db\ParameterBinder;
 use ByJG\Util\Uri;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
-class SqlBindTest extends TestCase
+class ParameterBinderTest extends TestCase
 {
-    public function getDataTest()
+    public static function getDataTest()
     {
         $paramIn = [
             'name' => 'John',
@@ -102,16 +103,17 @@ class SqlBindTest extends TestCase
     }
 
     /**
-     * @dataProvider getDataTest()
+     * @dataProvider getDataTest
      */
-    public function testSqlBind($uri, $subject, $expected, $paramsIn, $paramsExpected)
+    #[DataProvider('getDataTest')]
+    public function testParameterBinding($uri, $subject, $expected, $paramsIn, $paramsExpected)
     {
         $this->assertEquals(
             [
                 $expected,
                 $paramsExpected
             ],
-            SqlBind::parseSQL(
+            ParameterBinder::prepareParameterBindings(
                 $uri,
                 $subject,
                 $paramsIn
@@ -119,7 +121,7 @@ class SqlBindTest extends TestCase
         );
     }
 
-    protected function dataTestPostgres()
+    public static function dataTestPostgres()
     {
         return [
             [
@@ -137,9 +139,7 @@ class SqlBindTest extends TestCase
         ];
     }
 
-    /**
-     * @dataProvider dataTestPostgres
-     */
+    #[DataProvider('dataTestPostgres')]
     public function testPostgresTypecast($sql, $paramIn)
     {
         // Test with Postgres type casting (::)
@@ -150,7 +150,7 @@ class SqlBindTest extends TestCase
                 $sql,
                 $paramIn
             ],
-            SqlBind::parseSQL(
+            ParameterBinder::prepareParameterBindings(
                 $uri,
                 $sql,
                 $paramIn

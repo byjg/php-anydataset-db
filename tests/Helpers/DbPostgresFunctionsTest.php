@@ -2,22 +2,25 @@
 
 namespace Test\Helpers;
 
-use ByJG\AnyDataset\Db\Helpers\DbPgsqlFunctions;
+use ByJG\AnyDataset\Db\SqlDialect\PgsqlDialect;
 use ByJG\AnyDataset\Db\SqlStatement;
+use Override;
 use PHPUnit\Framework\TestCase;
 
 class DbPostgresFunctionsTest extends TestCase
 {
     /**
-     * @var DbPgsqlFunctions|null
+     * @var PgsqlDialect|null
      */
-    private ?DbPgsqlFunctions $object;
+    private ?PgsqlDialect $object;
 
+    #[Override]
     protected function setUp(): void
     {
-        $this->object = new DbPgsqlFunctions();
+        $this->object = new PgsqlDialect();
     }
 
+    #[Override]
     protected function tearDown(): void
     {
         $this->object = null;

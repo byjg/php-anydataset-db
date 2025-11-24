@@ -2,45 +2,51 @@
 
 namespace Test;
 
+use ByJG\AnyDataset\Db\DatabaseRouter;
+use ByJG\AnyDataset\Db\Exception\RouteNotFoundException;
+use ByJG\AnyDataset\Db\Exception\RouteNotMatchedException;
 use ByJG\AnyDataset\Db\Factory;
-use ByJG\AnyDataset\Db\Route;
+use ByJG\AnyDataset\Db\Interfaces\DbDriverInterface;
+use Override;
 use PHPUnit\Framework\TestCase;
 
-class RouteTest extends TestCase
+class DatabaseRouterTest extends TestCase
 {
     /**
-     * @var Route
+     * @var DatabaseRouter
      */
     protected $object;
 
     /**
-     * @var \ByJG\AnyDataset\Db\DbDriverInterface
+     * @var DbDriverInterface
      */
     protected $obj1;
 
     /**
-     * @var \ByJG\AnyDataset\Db\DbDriverInterface
+     * @var DbDriverInterface
      */
     protected $obj2;
 
     /**
-     * @var \ByJG\AnyDataset\Db\DbDriverInterface
+     * @var DbDriverInterface
      */
     protected $obj3;
 
+    #[Override]
     public function setUp(): void
     {
-        $this->object = new Route();
+        $this->object = new DatabaseRouter();
 
         $this->obj1 = Factory::getDbInstance('sqlite:///tmp/a.db');
         $this->obj2 = Factory::getDbInstance('sqlite:///tmp/b.db');
         $this->obj3 = Factory::getDbInstance('sqlite:///tmp/c.db');
 
-        $this->object->addDbDriverInterface('route1', 'sqlite:///tmp/a.db');
-        $this->object->addDbDriverInterface('route2', $this->obj2);
-        $this->object->addDbDriverInterface('route3', 'sqlite:///tmp/c.db');
+        $this->object->addDriver('route1', $this->obj1);
+        $this->object->addDriver('route2', $this->obj2);
+        $this->object->addDriver('route3', $this->obj3);
     }
 
+    #[Override]
     public function tearDown(): void
     {
         $this->object = null;
@@ -58,12 +64,12 @@ class RouteTest extends TestCase
     }
 
     /**
-     * @throws \ByJG\AnyDataset\Db\Exception\RouteNotFoundException
-     * @throws \ByJG\AnyDataset\Db\Exception\RouteNotMatchedException
+     * @throws RouteNotFoundException
+     * @throws RouteNotMatchedException
      */
     public function testAddRouteForSelectFail()
     {
-        $this->expectException(\ByJG\AnyDataset\Db\Exception\RouteNotMatchedException::class);
+        $this->expectException(RouteNotMatchedException::class);
         
         $this->object->addRouteForSelect('route3', 'mytable');
         $this->object->addRouteForSelect('route2');
@@ -79,12 +85,12 @@ class RouteTest extends TestCase
     }
 
     /**
-     * @throws \ByJG\AnyDataset\Db\Exception\RouteNotFoundException
-     * @throws \ByJG\AnyDataset\Db\Exception\RouteNotMatchedException
+     * @throws RouteNotFoundException
+     * @throws RouteNotMatchedException
      */
     public function testAddRouteForInsertFail()
     {
-        $this->expectException(\ByJG\AnyDataset\Db\Exception\RouteNotMatchedException::class);
+        $this->expectException(RouteNotMatchedException::class);
 
         $this->object->addRouteForInsert('route3', 'mytable');
         $this->object->addRouteForinsert('route2');
@@ -100,12 +106,12 @@ class RouteTest extends TestCase
     }
 
     /**
-     * @throws \ByJG\AnyDataset\Db\Exception\RouteNotFoundException
-     * @throws \ByJG\AnyDataset\Db\Exception\RouteNotMatchedException
+     * @throws RouteNotFoundException
+     * @throws RouteNotMatchedException
      */
     public function testAddRouteForUpdateFail()
     {
-        $this->expectException(\ByJG\AnyDataset\Db\Exception\RouteNotMatchedException::class);
+        $this->expectException(RouteNotMatchedException::class);
  
         $this->object->addRouteForUpdate('route3', 'mytable');
         $this->object->addRouteForUpdate('route2');
@@ -123,12 +129,12 @@ class RouteTest extends TestCase
     }
 
     /**
-     * @throws \ByJG\AnyDataset\Db\Exception\RouteNotFoundException
-     * @throws \ByJG\AnyDataset\Db\Exception\RouteNotMatchedException
+     * @throws RouteNotFoundException
+     * @throws RouteNotMatchedException
      */
     public function testAddRouteForDeleteFail()
     {
-        $this->expectException(\ByJG\AnyDataset\Db\Exception\RouteNotMatchedException::class);
+        $this->expectException(RouteNotMatchedException::class);
 
         $this->object->addRouteForDelete('route3', 'mytable');
         $this->object->addRouteForDelete('route2');
@@ -174,12 +180,12 @@ class RouteTest extends TestCase
     }
 
     /**
-     * @throws \ByJG\AnyDataset\Db\Exception\RouteNotFoundException
-     * @throws \ByJG\AnyDataset\Db\Exception\RouteNotMatchedException
+     * @throws RouteNotFoundException
+     * @throws RouteNotMatchedException
      */
     public function testAddRouteForFilterFail()
     {
-        $this->expectException(\ByJG\AnyDataset\Db\Exception\RouteNotMatchedException::class);
+        $this->expectException(RouteNotMatchedException::class);
 
         $this->object->addRouteForFilter('route3', 'id', '3');
         $this->object->matchRoute('SELECT field1, fields fRom othertable where id=31');

@@ -24,6 +24,7 @@ Example: Connecting to a MySQL database:
 require 'vendor/autoload.php';
 
 use ByJG\AnyDataset\Db\Factory;
+use ByJG\AnyDataset\Db\DatabaseExecutor;
 use ByJG\Util\Uri;
 
 // Create a connection string
@@ -32,9 +33,13 @@ $connectionString = 'mysql://user:password@localhost/databasename';
 // Create a DbDriver
 $dbDriver = Factory::getDbInstance($connectionString);
 
+// Create a DatabaseExecutor (recommended for executing queries)
+$executor = DatabaseExecutor::using($dbDriver);
+
 // Alternatively, you can use a Uri object
 $uri = new Uri('mysql://user:password@localhost/databasename');
 $dbDriver = Factory::getDbInstance($uri);
+$executor = DatabaseExecutor::using($dbDriver);
 ```
 
 ### Supported Database Types
@@ -72,32 +77,36 @@ $pdo = Factory::getDbInstance('pdo://username:password@hostname/database');
 
 ## 3. Perform a query
 
-Once your database connection is established, you can perform queries using the DbDriver object.
+Once your database connection is established, you can perform queries using the DatabaseExecutor object.
 
 Example: Simple SELECT query:
 
 ```php
 <?php
 use ByJG\AnyDataset\Core\Row;
-use ByJG\AnyDataset\Core\IteratorInterface;
 
 // Define your SQL query
 $sql = "SELECT * FROM your_table WHERE id = :id";
 
-// Execute the query with parameters
-$iterator = $dbDriver->getIterator($sql, [':id' => 1]);
+// Execute the query with parameters using DatabaseExecutor (recommended)
+$iterator = $executor->getIterator($sql, [':id' => 1]);
 
 // Fetch results
 foreach ($iterator as $row) {
     /** @var Row $row */
     $data = $row->toArray();
     print_r($data);
-    
+
     // Access individual fields
     echo "ID: " . $row->get('id') . "\n";
     echo "Name: " . $row->get('name') . "\n";
 }
 ```
+
+:::info Note
+While you can still use `$dbDriver->getIterator()` directly, it is deprecated as of version 6.0
+and will be removed in version 7.0. Please use `DatabaseExecutor` for all query operations.
+:::
 
 ### Using SqlStatement for Reusable Queries
 
@@ -110,9 +119,9 @@ use ByJG\AnyDataset\Db\SqlStatement;
 // Create a reusable SQL statement
 $sql = new SqlStatement("SELECT * FROM your_table WHERE status = :status");
 
-// Execute with different parameters
-$activeUsers = $sql->getIterator($dbDriver, [':status' => 'active']);
-$inactiveUsers = $sql->getIterator($dbDriver, [':status' => 'inactive']);
+// Execute with different parameters using DatabaseExecutor
+$activeUsers = $executor->getIterator($sql, [':status' => 'active']);
+$inactiveUsers = $executor->getIterator($sql, [':status' => 'inactive']);
 ```
 
 ## 4. Insert, Update, or Delete data
@@ -124,10 +133,10 @@ Insert data:
 ```php
 <?php
 $sql = "INSERT INTO your_table (name, age) VALUES (:name, :age)";
-$dbDriver->execute($sql, [':name' => 'John', ':age' => 30]);
+$executor->execute($sql, [':name' => 'John', ':age' => 30]);
 
 // Get the last inserted ID
-$lastId = $dbDriver->executeAndGetId($sql, [':name' => 'Jane', ':age' => 25]);
+$lastId = $executor->executeAndGetId($sql, [':name' => 'Jane', ':age' => 25]);
 echo "Last inserted ID: $lastId";
 ```
 
@@ -136,7 +145,7 @@ Update data:
 ```php
 <?php
 $sql = "UPDATE your_table SET age = :age WHERE name = :name";
-$dbDriver->execute($sql, [':age' => 31, ':name' => 'John']);
+$executor->execute($sql, [':age' => 31, ':name' => 'John']);
 ```
 
 Delete data:
@@ -144,7 +153,7 @@ Delete data:
 ```php
 <?php
 $sql = "DELETE FROM your_table WHERE name = :name";
-$dbDriver->execute($sql, [':name' => 'John']);
+$executor->execute($sql, [':name' => 'John']);
 ```
 
 ## 5. Transactions
@@ -155,21 +164,21 @@ You can use transactions to ensure data consistency:
 <?php
 use ByJG\AnyDataset\Db\IsolationLevelEnum;
 
-// Begin a transaction
-$dbDriver->beginTransaction(IsolationLevelEnum::SERIALIZABLE);
+// Begin a transaction (can be called on either executor or driver)
+$executor->beginTransaction(IsolationLevelEnum::SERIALIZABLE);
 
 try {
     // Perform multiple operations
-    $dbDriver->execute("INSERT INTO users (name) VALUES (:name)", [':name' => 'John']);
-    $userId = $dbDriver->executeAndGetId("INSERT INTO users (name) VALUES (:name)", [':name' => 'Jane']);
-    $dbDriver->execute("INSERT INTO user_roles (user_id, role) VALUES (:user_id, :role)", 
+    $executor->execute("INSERT INTO users (name) VALUES (:name)", [':name' => 'John']);
+    $userId = $executor->executeAndGetId("INSERT INTO users (name) VALUES (:name)", [':name' => 'Jane']);
+    $executor->execute("INSERT INTO user_roles (user_id, role) VALUES (:user_id, :role)",
         [':user_id' => $userId, ':role' => 'admin']);
-    
+
     // Commit the transaction if all operations succeed
-    $dbDriver->commitTransaction();
+    $executor->commitTransaction();
 } catch (\Exception $ex) {
     // Rollback the transaction if any operation fails
-    $dbDriver->rollbackTransaction();
+    $executor->rollbackTransaction();
     throw $ex;
 }
 ```
@@ -182,7 +191,7 @@ To get a single value (first column of the first row):
 
 ```php
 <?php
-$count = $dbDriver->getScalar("SELECT COUNT(*) FROM your_table");
+$count = $executor->getScalar("SELECT COUNT(*) FROM your_table");
 echo "Total records: $count";
 ```
 
@@ -192,7 +201,7 @@ To get all fields of a table:
 
 ```php
 <?php
-$fields = $dbDriver->getAllFields("your_table");
+$fields = $executor->getAllFields("your_table");
 print_r($fields);
 ```
 
@@ -203,7 +212,7 @@ For better performance with large result sets:
 ```php
 <?php
 // Pre-fetch 100 records
-$iterator = $dbDriver->getIterator("SELECT * FROM large_table", preFetch: 100);
+$iterator = $executor->getIterator("SELECT * FROM large_table", null, 100);
 
 foreach ($iterator as $row) {
     // Process each row
@@ -228,6 +237,7 @@ Here's an example of querying data from a MySQL database using ByJG AnyDatasetDB
 require 'vendor/autoload.php';
 
 use ByJG\AnyDataset\Db\Factory;
+use ByJG\AnyDataset\Db\DatabaseExecutor;
 use ByJG\AnyDataset\Db\SqlStatement;
 use ByJG\AnyDataset\Core\Row;
 use ByJG\Cache\Psr16\ArrayCacheEngine;
@@ -236,12 +246,15 @@ use ByJG\Cache\Psr16\ArrayCacheEngine;
 $connectionString = 'mysql://user:password@localhost/databasename';
 $dbDriver = Factory::getDbInstance($connectionString);
 
+// Create a DatabaseExecutor (recommended)
+$executor = DatabaseExecutor::using($dbDriver);
+
 // Create a reusable SQL statement with caching
 $sql = new SqlStatement("SELECT * FROM your_table WHERE age > :age");
 $sql->withCache(new ArrayCacheEngine(), 'age_query', 60);
 
 // Execute the query with parameters
-$iterator = $sql->getIterator($dbDriver, [':age' => 25]);
+$iterator = $executor->getIterator($sql, [':age' => 25]);
 
 // Loop through the results
 foreach ($iterator as $row) {
@@ -250,7 +263,7 @@ foreach ($iterator as $row) {
 }
 
 // Insert a new record
-$dbDriver->execute(
+$executor->execute(
     "INSERT INTO your_table (name, age) VALUES (:name, :age)",
     [':name' => 'Alice', ':age' => 28]
 );
@@ -261,14 +274,18 @@ $dbDriver->disconnect();
 
 ## Conclusion
 
-With ByJG AnyDatasetDB, querying a database is straightforward. The main steps involve connecting 
-to the database, preparing SQL queries, and using getIterator() for SELECT queries or execute() 
-for INSERT, UPDATE, or DELETE operations.
+With ByJG AnyDatasetDB, querying a database is straightforward. The main steps involve:
+
+1. Connecting to the database using `Factory::getDbInstance()`
+2. Creating a `DatabaseExecutor` for query operations
+3. Using `getIterator()` for SELECT queries or `execute()` for INSERT, UPDATE, or DELETE operations
 
 For more advanced features, check out the following documentation:
 
+- [DatabaseExecutor](database-executor.md) - Recommended API for query execution
 - [SQL Statement](sqlstatement.md)
 - [Transactions](transaction.md)
 - [Caching](cache.md)
 - [Load Balancing](load-balance.md)
 - [Pre-fetching](prefetch.md)
+- [Deprecated Features](deprecated-features.md) - Migration guide for older code

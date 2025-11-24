@@ -2,47 +2,59 @@
 
 namespace ByJG\AnyDataset\Db;
 
+use ByJG\AnyDataset\Core\Exception\NotAvailableException;
 use ByJG\AnyDataset\Db\Exception\DbDriverNotConnected;
+use ByJG\AnyDataset\Db\SqlDialect\MysqlDialect;
 use ByJG\Util\Uri;
+use Override;
 use PDO;
 
 class PdoMysql extends DbPdoDriver
 {
 
+    #[Override]
     public static function schema(): array
     {
         return ['mysql', 'mariadb'];
     }
 
-    protected array $mysqlAttr = [
-        "ca" => PDO::MYSQL_ATTR_SSL_CA,
-        "capath" => PDO::MYSQL_ATTR_SSL_CAPATH,
-        "cert" => PDO::MYSQL_ATTR_SSL_CERT,
-        "key" => PDO::MYSQL_ATTR_SSL_KEY,
-        "cipher" => PDO::MYSQL_ATTR_SSL_CIPHER,
-        "verifyssl" => 1014 // PDO::MYSQL_ATTR_SSL_VERIFY_SERVER_CERT (>=7.1)
-    ];
+    #[Override]
+    public function getSqlDialectClass(): string
+    {
+        return MysqlDialect::class;
+    }
 
     /**
      * PdoMysql constructor.
      *
      * @param Uri $connUri
      * @throws DbDriverNotConnected
+     * @throws NotAvailableException
+     * @psalm-suppress InvalidClass
      */
     public function __construct(Uri $connUri)
     {
         $preOptions = [];
 
         $postOptions = [
-            PDO::MYSQL_ATTR_USE_BUFFERED_QUERY => true,
+            class_exists(Pdo\Mysql::class) ? Pdo\Mysql::ATTR_USE_BUFFERED_QUERY : PDO::MYSQL_ATTR_USE_BUFFERED_QUERY => true,
         ];
 
         $executeAfterConnect = [
             "SET NAMES utf8"
         ];
 
+        $validAttributes = [
+            "ca" => class_exists(Pdo\Mysql::class) ? Pdo\Mysql::ATTR_SSL_CA : PDO::MYSQL_ATTR_SSL_CA,
+            "capath" => class_exists(Pdo\Mysql::class) ? Pdo\Mysql::ATTR_SSL_CAPATH : PDO::MYSQL_ATTR_SSL_CAPATH,
+            "cert" => class_exists(Pdo\Mysql::class) ? Pdo\Mysql::ATTR_SSL_CERT : PDO::MYSQL_ATTR_SSL_CERT,
+            "key" => class_exists(Pdo\Mysql::class) ? Pdo\Mysql::ATTR_SSL_KEY : PDO::MYSQL_ATTR_SSL_KEY,
+            "cipher" => class_exists(Pdo\Mysql::class) ? Pdo\Mysql::ATTR_SSL_CIPHER : PDO::MYSQL_ATTR_SSL_CIPHER,
+            "verifyssl" => class_exists(Pdo\Mysql::class) ? Pdo\Mysql::ATTR_SSL_VERIFY_SERVER_CERT : PDO::MYSQL_ATTR_SSL_VERIFY_SERVER_CERT
+        ];
+
         if (!empty($connUri->getQuery())) {
-            foreach ($this->mysqlAttr as $key => $property) {
+            foreach ($validAttributes as $key => $property) {
                 $value = $connUri->getQueryPart($key);
                 if (!empty($value)) {
                     $prepValue = urldecode($value);

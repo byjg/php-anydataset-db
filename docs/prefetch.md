@@ -1,13 +1,14 @@
 ---
-sidebar_position: 13
+sidebar_position: 16
 ---
 
 # Pre-Fetch Records
 
-By default, records are fetched from the database as you iterate over them using methods like `moveNext()`,
-`toArray()`, or `foreach`.
-
-It is possible to pre-fetch a specified number of records before starting the iteration.
+By default, records are fetched from the database one at a time as you iterate over them using methods like
+`toArray()`, `valid()/next()` or a `foreach` loop. However, AnyDataset-DB allows you to pre-fetch a specified number of
+records into
+memory
+before starting the iteration, which can improve performance in certain scenarios.
 
 ## Basic Usage
 
@@ -32,30 +33,93 @@ $iterator = $dbDriver->getIterator(
 
 ## Implementation Details
 
-The pre-fetch functionality is implemented in the `PreFetchTrait` trait, which is used by the `DbIterator` class. When
-you specify a pre-fetch value, the following happens:
+The pre-fetch functionality is implemented in the `PreFetchTrait` trait, which is used by iterator classes like
+`DbIterator` and `Oci8Iterator`. The implementation provides:
 
-1. The `initPreFetch` method initializes the pre-fetch buffer.
-2. The `preFetch` method fetches records from the database and stores them in the buffer until the buffer is full or
-   there are no more records.
-3. The `moveNext` method retrieves records from the buffer and triggers additional pre-fetching when needed.
-4. The `hasNext` method checks if there are more records in the buffer or if more records can be fetched from the
-   database.
+1. A row buffer that stores pre-fetched records in memory
+2. Methods to control the pre-fetch behavior
+3. Automatic cursor management to release database resources when done
 
-You can check the current pre-fetch buffer size with:
+### Key Components
+
+The trait contains these key components:
 
 ```php
+trait PreFetchTrait
+{
+    protected int $currentRow = 0;              // Tracks the current row for iterator position
+    protected int $preFetchRows = 0;            // Number of rows to pre-fetch
+    protected SplDoublyLinkedList $rowBuffer;   // Buffer holding pre-fetched rows using a doubly linked list
+    
+    // Methods for managing pre-fetching
+    protected function initPreFetch(int $preFetch = 0): void { /* ... */ }
+    protected function preFetch(): bool { /* ... */ }
+    protected function isPreFetchBufferFull(): bool { /* ... */ }
+    
+    // Accessor methods
+    public function getPreFetchRows(): int { /* ... */ }
+    public function setPreFetchRows(int $preFetchRows): void { /* ... */ }
+    public function getPreFetchBufferSize(): int { /* ... */ }
+    
+    // Iterator implementation
+    public function current(): ?RowInterface { /* ... */ }
+    public function next(): void { /* ... */ }
+    public function valid(): bool { /* ... */ }
+    public function key(): int { /* ... */ }
+}
+```
+
+### Pre-Fetch Process
+
+When you specify a pre-fetch value, the following happens:
+
+1. `initPreFetch()` initializes the buffer and triggers the initial pre-fetch
+2. `preFetch()` fetches records from the database until:
+   - The buffer contains the requested number of records
+   - There are no more records to fetch
+3. During iteration:
+   - `current()` returns the first record in the buffer
+   - `next()` removes the first record from the buffer and calls `preFetch()` to fetch more if needed
+   - `valid()` checks if there are more records in the buffer or if more can be fetched
+
+### Efficient Buffer Implementation
+
+The implementation uses `SplDoublyLinkedList` instead of a simple array for the row buffer, which provides:
+
+- O(1) time complexity for adding and removing elements from either end
+- More efficient memory usage when dealing with large result sets
+- Better performance for queue-like operations (push/shift) used in pre-fetching
+
+### Cursor Management
+
+The pre-fetch mechanism automatically manages the database cursor:
+
+1. Records are fetched from the cursor when needed
+2. When all records have been fetched, the cursor is automatically released via `releaseCursor()`
+3. If the iterator is destroyed, any open cursor is released in the destructor
+
+You can check if a cursor is still open using:
+
+```php
+$isOpen = $iterator->isCursorOpen();
+```
+
+## Controlling Pre-Fetch Behavior
+
+You can adjust pre-fetch settings during iteration:
+
+```php
+// Get the current pre-fetch count
+$preFetchCount = $iterator->getPreFetchRows();
+
+// Change the pre-fetch count
+$iterator->setPreFetchRows(200);
+
+// Check the current buffer size
 $bufferSize = $iterator->getPreFetchBufferSize();
 ```
 
-And you can get or set the pre-fetch count with:
-
-```php
-$preFetchCount = $iterator->getPreFetchRows();
-$iterator->setPreFetchRows(200); // Change the pre-fetch count
-```
-
-## Use cases for pre-fetch:
+## Use Cases for Pre-Fetch
 
 ### Small tables with a few records
 
@@ -99,13 +163,13 @@ foreach ($iterator as $row) {
 }
 ```
 
-## When not to use pre-fetch
+## When Not to Use Pre-Fetch
 
 Pre-fetching may lead to memory issues in certain scenarios. Avoid using pre-fetch if:
 
-* Records contain too many fields (e.g., dozens of columns).
-* Records include large fields, such as blobs or extensive text data.
-* You're dealing with a very large result set and memory is limited.
+* Records contain too many fields (e.g., dozens of columns)
+* Records include large fields, such as blobs or extensive text data
+* You're dealing with a very large result set and memory is limited
 
 Example of when not to use pre-fetch:
 
@@ -123,7 +187,7 @@ foreach ($iterator as $row) {
 }
 ```
 
-## How it works
+## How It Works: An Example
 
 When you call `getIterator` with a pre-fetch value, the specified number of records is fetched
 from the database and stored in memory. During iteration, records are retrieved from memory,
@@ -132,19 +196,21 @@ and new batches are fetched as needed.
 Example:
 
 * You have a table with 60 records and set the pre-fetch count to 50.
-* Upon obtaining the iterator, the first 50 records are fetched from the database and stored in memory.
-* Each record is retrieved from memory during iteration, while the next batch of records is fetched from the database as
-  needed.
-* After the 60th record, the database cursor is closed, and any remaining records are fetched directly from memory.
+* Upon obtaining the iterator, the first 50 records are fetched and stored in the buffer.
+* As you iterate, the first record is returned from the buffer and removed.
+* After processing 49 records (leaving just one in the buffer), the next pre-fetch operation retrieves the remaining 10
+  records.
+* After the 60th record, the database cursor is automatically closed as there are no more records to fetch.
 
-## Memory Management
+## Memory Optimization
 
-The pre-fetch mechanism automatically manages memory by:
+The pre-fetch mechanism optimizes memory usage by:
 
-1. Releasing records from the buffer after they've been processed
-2. Closing the database cursor when all records have been fetched
-3. Releasing the cursor when the iterator is destroyed
+1. Only storing the pre-fetch count number of records in memory at once
+2. Using an efficient data structure (SplDoublyLinkedList) for the buffer
+3. Removing records from the buffer after they've been processed
+4. Automatically closing the database cursor when all records have been fetched
 
-This ensures efficient memory usage while still providing the performance benefits of pre-fetching.
+This ensures efficient memory usage while still providing performance benefits.
 
 

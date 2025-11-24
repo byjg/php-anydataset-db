@@ -10,3 +10,4 @@ node_modules
 .usdocker
 .phpunit.result.cache
 test.php
+/.claude/settings.local.json

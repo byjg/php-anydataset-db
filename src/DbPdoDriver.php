@@ -2,21 +2,26 @@
 
 namespace ByJG\AnyDataset\Db;
 
+use ByJG\AnyDataset\Core\Exception\DatabaseException;
+use ByJG\AnyDataset\Core\Exception\NotAvailableException;
 use ByJG\AnyDataset\Core\GenericIterator;
 use ByJG\AnyDataset\Db\Exception\DbDriverNotConnected;
-use ByJG\AnyDataset\Db\Helpers\SqlBind;
-use ByJG\AnyDataset\Db\Helpers\SqlHelper;
+use ByJG\AnyDataset\Db\Interfaces\DbDriverInterface;
+use ByJG\AnyDataset\Db\Interfaces\SqlDialectInterface;
 use ByJG\AnyDataset\Db\Traits\DbCacheTrait;
 use ByJG\AnyDataset\Db\Traits\TransactionTrait;
+use ByJG\Serializer\PropertyHandler\PropertyHandlerInterface;
 use ByJG\Util\Uri;
-use DateInterval;
+use ByJG\XmlUtil\Exception\FileException;
+use ByJG\XmlUtil\Exception\XmlUtilException;
 use Exception;
 use InvalidArgumentException;
+use Override;
 use PDO;
 use PDOStatement;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
-use Psr\SimpleCache\CacheInterface;
+use RuntimeException;
 
 abstract class DbPdoDriver implements DbDriverInterface
 {
@@ -27,8 +32,8 @@ abstract class DbPdoDriver implements DbDriverInterface
 
     protected bool $supportMultiRowset = false;
 
-    const DONT_PARSE_PARAM = "dont_parse_param";
-    const UNIX_SOCKET = "unix_socket";
+    const string DONT_PARSE_PARAM = "dont_parse_param";
+    const string UNIX_SOCKET = "unix_socket";
 
     protected PdoObj $pdoObj;
 
@@ -50,7 +55,7 @@ abstract class DbPdoDriver implements DbDriverInterface
      * @param array|null $preOptions
      * @param array|null $postOptions
      * @param array $executeAfterConnect
-     * @throws DbDriverNotConnected
+     * @throws DbDriverNotConnected|NotAvailableException
      */
     public function __construct(Uri $connUri, ?array $preOptions = null, ?array $postOptions = null, array $executeAfterConnect = [])
     {
@@ -65,6 +70,7 @@ abstract class DbPdoDriver implements DbDriverInterface
     /**
      * @throws DbDriverNotConnected
      */
+    #[Override]
     public function reconnect(bool $force = false): bool
     {
         if ($this->isConnected() && !$force) {
@@ -75,11 +81,12 @@ abstract class DbPdoDriver implements DbDriverInterface
         $this->disconnect();
 
         // Connect
-        $this->instance = $this->pdoObj->createInstance($this->preOptions, $this->postOptions, $this->executeAfterConnect);
+        $this->instance = $this->pdoObj->createInstance($this->preOptions, $this->postOptions, $this->executeAfterConnect ?? []);
 
         return true;
     }
 
+    #[Override]
     public function disconnect(): void
     {
         $this->instance = null;
@@ -96,12 +103,16 @@ abstract class DbPdoDriver implements DbDriverInterface
      * @param array|null $params
      * @param array|null &$cacheInfo
      * @return PDOStatement
-     * @throws DbDriverNotConnected
      */
+    #[Override]
     public function prepareStatement(string $sql, ?array $params = null, ?array &$cacheInfo = []): PDOStatement
     {
+        if (is_null($this->getInstance())) {
+            throw new RuntimeException('Database connection is not established');
+        }
+
         if (!$this->getUri()->hasQueryKey(self::DONT_PARSE_PARAM)) {
-            list($sql, $params) = SqlBind::parseSQL($this->pdoObj->getUri(), $sql, $params);
+            list($sql, $params) = ParameterBinder::prepareParameterBindings($this->pdoObj->getUri(), $sql, $params);
         }
 
         if (($cacheInfo['sql'] ?? "") != $sql || empty($cacheInfo['stmt'])) {
@@ -112,11 +123,11 @@ abstract class DbPdoDriver implements DbDriverInterface
 
         if (!empty($params)) {
             foreach ($params as $key => $value) {
-                $stmt->bindValue(":" . SqlBind::keyAdj($key), $value);
+                $stmt->bindValue(":" . ParameterBinder::sanitizeParameterKey($key), $value);
             }
         }
 
-        $this->logger->debug("SQL: $sql\nParams: " . json_encode($params));
+        $this->logger->debug("SQL: $sql\nParams: " . (json_encode($params ?? []) ?: '[]'));
 
         $cacheInfo['sql'] = $sql;
         $cacheInfo['stmt'] = $stmt;
@@ -124,6 +135,7 @@ abstract class DbPdoDriver implements DbDriverInterface
         return $stmt;
     }
 
+    #[Override]
     public function executeCursor(mixed $statement): void
     {
         if (!($statement instanceof PDOStatement)) {
@@ -133,108 +145,120 @@ abstract class DbPdoDriver implements DbDriverInterface
         $statement->execute();
     }
 
+    #[Override]
     public function processMultiRowset(mixed $statement): void
     {
+        if (!($statement instanceof PDOStatement)) {
+            throw new InvalidArgumentException("The statement parameter must be a PDOStatement object");
+        }
+
         if ($this->isSupportMultiRowset()) {
-            // Advance through rowsets to surface any errors from subsequent statements
-            do {
-                // This loop is only to throw an error (if exists)
-                // in case of execute multiple queries
-            } while ($statement->nextRowset());
-        }
-    }
-
-    public function getIterator(mixed $sql, ?array $params = null, ?CacheInterface $cache = null, DateInterval|int $ttl = 60, int $preFetch = 0): GenericIterator
-    {
-        if ($sql instanceof PDOStatement) {
-            return new DbIterator($sql, $preFetch);
-        }
-
-        if (is_string($sql)) {
-            $sql = new SqlStatement($sql);
-            if (!empty($cache)) {
-                $sql->withCache($cache, $this->getQueryKey($cache, $sql->getSql(), $params), $ttl);
+            // Advance through rowsets to surface any errors from later statements
+            // This loop intentionally does nothing but advance - any errors will be thrown automatically
+            while ($statement->nextRowset()) {
+                // Intentionally empty - just consuming rowsets to trigger any errors
             }
-        } elseif (!($sql instanceof SqlStatement)) {
-            throw new InvalidArgumentException("The SQL must be a cursor, string or a SqlStatement object");
         }
-
-        return $sql->getIterator($this, $params, $preFetch);
     }
 
-    public function getScalar(mixed $sql, ?array $array = null): mixed
+    /**
+     * Handles PDOStatement specific statement type
+     *
+     * @param mixed $statement The statement to check and handle
+     * @param int $preFetch Number of rows to prefetch
+     * @param string|null $entityClass Optional entity class name to return rows as objects
+     * @param PropertyHandlerInterface|null $entityTransformer Optional transformation function for customizing entity mapping
+     * @return GenericDbIterator|GenericIterator Returns GenericIterator for the statement
+     */
+    #[Override]
+    public function getDriverIterator(mixed $statement, int $preFetch = 0, ?string $entityClass = null, ?PropertyHandlerInterface $entityTransformer = null): GenericDbIterator|GenericIterator
     {
-        if ($sql instanceof PDOStatement) {
-            $scalar = $sql->fetchColumn();
-            $sql->closeCursor();
-            return $scalar;
+        if ($statement instanceof PDOStatement) {
+            return new DbIterator($statement, $preFetch, $entityClass, $entityTransformer);
         }
 
-        if (is_string($sql)) {
-            $sql = new SqlStatement($sql);
-        } elseif (!($sql instanceof SqlStatement)) {
-            throw new InvalidArgumentException("The SQL must be a cursor, string or a SqlStatement object");
-        }
-
-        return $sql->getScalar($this, $array);
+        throw new InvalidArgumentException('The argument needs to be a PDOStatement object');
     }
 
+    /**
+     * Get an iterator for the provided SQL or execute an existing PDOStatement.
+     *
+     * @param string|SqlStatement $sql PDOStatement, string SQL, or SqlStatement object
+     * @param array|null $params Parameters if $sql is a string
+     * @param int $preFetch Number of rows to prefetch
+     * @return GenericDbIterator|GenericIterator The iterator for the query results
+     * @throws DbDriverNotConnected
+     * @throws FileException
+     * @throws DatabaseException
+     * @throws XmlUtilException
+     * @throws \Psr\SimpleCache\InvalidArgumentException
+     *@deprecated Use DatabaseExecutor::using($driver)->getIterator() instead. This method will be removed in version 7.0.
+     */
+    #[Override]
+    public function getIterator(string|SqlStatement $sql, ?array $params = null, int $preFetch = 0): GenericDbIterator|GenericIterator
+    {
+        return DatabaseExecutor::using($this)->getIterator($sql, $params, $preFetch);
+    }
+
+    /**
+     * @deprecated Use DatabaseExecutor::using($driver)->getScalar() instead. This method will be removed in version 7.0.
+     */
+    #[Override]
+    public function getScalar(string|SqlStatement $sql, ?array $array = null): mixed
+    {
+        return DatabaseExecutor::using($this)->getScalar($sql, $array);
+    }
+
+    /**
+     * @deprecated Use DatabaseExecutor::using($driver)->getAllFields() instead. This method will be removed in version 7.0.
+     */
+    #[Override]
     public function getAllFields(string $tablename): array
     {
-        $fields = array();
-        $statement = $this->getInstance()->query(
-            SqlHelper::createSafeSQL(
-                "select * from @@table where 0=1",
-                [
-                    "@@table" => $tablename
-                ]
-            )
-        );
-        $fieldLength = $statement->columnCount();
-        for ($i = 0; $i < $fieldLength; $i++) {
-            $fld = $statement->getColumnMeta($i);
-            $fields[] = strtolower($fld ["name"]);
-        }
-        return $fields;
+        return DatabaseExecutor::using($this)->getAllFields($tablename);
     }
 
-
-    public function execute(mixed $sql, ?array $array = null): bool
+    /**
+     * @deprecated Use DatabaseExecutor::using($driver)->execute() instead. This method will be removed in version 7.0.
+     */
+    #[Override]
+    public function execute(string|SqlStatement $sql, ?array $array = null): bool
     {
-        if (is_string($sql)) {
-            $sql = new SqlStatement($sql);
-        } elseif (!($sql instanceof SqlStatement)) {
-            throw new InvalidArgumentException("The SQL must be a cursor, string or a SqlStatement object");
-        }
-
-        $sql->execute($this, $array);
-        return true;
+        return DatabaseExecutor::using($this)->execute($sql, $array);
     }
 
-    public function executeAndGetId(string $sql, ?array $array = null): mixed
+    /**
+     * @deprecated Use DatabaseExecutor::using($driver)->executeAndGetId() instead. This method will be removed in version 7.0.
+     */
+    #[Override]
+    public function executeAndGetId(string|SqlStatement $sql, ?array $array = null): mixed
     {
-        return $this->getDbHelper()->executeAndGetInsertedId($this, $sql, $array);
+        return DatabaseExecutor::using($this)->executeAndGetId($sql, $array);
     }
 
     /**
      *
      * @return PDO|null
      */
+    #[Override]
     public function getDbConnection(): ?PDO
     {
         return $this->instance;
     }
 
-    protected ?DbFunctionsInterface $dbHelper = null;
+    protected ?SqlDialectInterface $sqlDialect = null;
 
-    public function getDbHelper(): DbFunctionsInterface
+    #[Override]
+    public function getSqlDialect(): SqlDialectInterface
     {
-        if (empty($this->dbHelper)) {
-            $this->dbHelper = Factory::getDbFunctions($this->pdoObj->getUri());
+        if (empty($this->sqlDialect)) {
+            $helperClass = $this->getSqlDialectClass();
+            $this->sqlDialect = new $helperClass();
         }
-        return $this->dbHelper;
+        return $this->sqlDialect;
     }
 
+    #[Override]
     public function getUri(): Uri
     {
         return $this->pdoObj->getUri();
@@ -243,6 +267,7 @@ abstract class DbPdoDriver implements DbDriverInterface
     /**
      * @return bool
      */
+    #[Override]
     public function isSupportMultiRowset(): bool
     {
         return $this->supportMultiRowset;
@@ -251,12 +276,14 @@ abstract class DbPdoDriver implements DbDriverInterface
     /**
      * @param bool $multipleRowSet
      */
+    #[Override]
     public function setSupportMultiRowset(bool $multipleRowSet): void
     {
         $this->supportMultiRowset = $multipleRowSet;
     }
 
 
+    #[Override]
     public function isConnected(bool $softCheck = false, bool $throwError = false): bool
     {
         if (empty($this->instance)) {
@@ -282,17 +309,22 @@ abstract class DbPdoDriver implements DbDriverInterface
         return true;
     }
 
-    protected function getInstance(): ?PDO
+    protected function getInstance(): PDO
     {
         $this->isConnected(true, true);
+        if ($this->instance === null) {
+            throw new DbDriverNotConnected('PDO instance is null');
+        }
         return $this->instance;
     }
 
+    #[Override]
     public function enableLogger(LoggerInterface $logger): void
     {
         $this->logger = $logger;
     }
 
+    #[Override]
     public function log(string $message, array $context = []): void
     {
         $this->logger->debug($message, $context);
@@ -300,18 +332,20 @@ abstract class DbPdoDriver implements DbDriverInterface
 
     protected function transactionHandler(TransactionStageEnum $action, string $isoLevelCommand = ""): void
     {
+        $instance = $this->getInstance();
+
         switch ($action) {
             case TransactionStageEnum::begin:
                 if (!empty($isoLevelCommand)) {
-                    $this->getInstance()->exec($isoLevelCommand);
+                    $instance->exec($isoLevelCommand);
                 }
-                $this->getInstance()->beginTransaction();
+                $instance->beginTransaction();
                 break;
             case TransactionStageEnum::commit:
-                $this->getInstance()->commit();
+                $instance->commit();
                 break;
             case TransactionStageEnum::rollback:
-                $this->getInstance()->rollBack();
+                $instance->rollBack();
                 break;
         }
     }

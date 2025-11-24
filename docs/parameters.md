@@ -1,39 +1,82 @@
 ---
-sidebar_position: 9
+sidebar_position: 12
 ---
 
 # Passing Parameters to PDODriver
 
-You can pass parameter directly to the PDODriver by adding to the connection string a query parameter with the value.
+You can pass parameters directly to the PDODriver by adding query parameters to the connection string.
 
-e.g.
+## Using PDO Constants
 
 ```php
 <?php
-$uri = Uri::getInstanceFromUri("mysql://root:password@localhost")
-                ->withQueryKeyValue(PDO::MYSQL_ATTR_COMPRESS, 1);
+use ByJG\Util\Uri;
+use ByJG\AnyDataset\Db\Factory;
+use PDO;
+
+$uri = Uri::getInstanceFromString("mysql://root:password@localhost")
+    ->withQueryKeyValue(PDO::MYSQL_ATTR_COMPRESS, 1);
 $db = Factory::getDbInstance($uri);
- ```
+```
 
 ## Special Parameters
 
-AnyDatasetDB has some special parameters:
+AnyDatasetDB has some special parameters defined in the `DbPdoDriver` class:
 
-| Parameter                      | Value     | Description                                                                                                               |
-|--------------------------------|-----------|---------------------------------------------------------------------------------------------------------------------------|
-| DbPdoDriver::DONT_PARSE_PARAM  | any value | Is this parameter is set with any value, anydataset won't try to parse the SQL to find the values to bind the parameters. |
-| DbPdoDriver::UNIX_SOCKET       | path      | PDO will use "unix_socket=" instead of "host=".                                                                           |
-e.g.
+| Parameter                       | Value     | Description                                                                                                        |
+|---------------------------------|-----------|--------------------------------------------------------------------------------------------------------------------|
+| `DbPdoDriver::DONT_PARSE_PARAM` | any value | If this parameter is set with any value, AnyDataset won't parse the SQL to find the values to bind the parameters. |
+| `DbPdoDriver::UNIX_SOCKET`      | path      | PDO will use "unix_socket=" instead of "host=" for the connection.                                                 |
+
+### Example: Skipping SQL parameter parsing
 
 ```php
-$uri = Uri::getInstanceFromString("sqlite://" . $this->host)
+<?php
+use ByJG\Util\Uri;
+use ByJG\AnyDataset\Db\DbPdoDriver;
+use ByJG\AnyDataset\Db\Factory;
+
+$uri = Uri::getInstanceFromString("sqlite:///path/to/database.db")
     ->withQueryKeyValue(DbPdoDriver::DONT_PARSE_PARAM, "");
+
+$db = Factory::getDbInstance($uri);
 ```
 
-If using UNIX_SOCKET:
+### Example: Using UNIX Socket
 
 ```php
-# Note: there is 3 slashes after the protocol, the first one is the separator between the protocol and the host
-$uri = Uri::getInstanceFromString("mysql:///" . $this->dbname)
+<?php
+use ByJG\Util\Uri;
+use ByJG\AnyDataset\Db\DbPdoDriver;
+use ByJG\AnyDataset\Db\Factory;
+
+// Note: there are 3 slashes after the protocol
+// The first one is the separator between the protocol and the host
+$uri = Uri::getInstanceFromString("mysql:///" . $dbname)
     ->withQueryKeyValue(DbPdoDriver::UNIX_SOCKET, "/run/mysql.sock");
+
+$db = Factory::getDbInstance($uri);
+```
+
+## Advanced Constructor Options
+
+When instantiating a database driver directly, you can specify additional options:
+
+```php
+<?php
+use ByJG\Util\Uri;
+use ByJG\AnyDataset\Db\PdoMysql;
+
+$uri = new Uri("mysql://username:password@hostname/database");
+
+// Pre-connection options (applied before connection)
+$preOptions = [PDO::ATTR_PERSISTENT => true];
+
+// Post-connection options (applied after connection)
+$postOptions = [PDO::MYSQL_ATTR_USE_BUFFERED_QUERY => true];
+
+// SQL commands to execute after connection
+$executeAfterConnect = ["SET NAMES 'utf8'", "SET time_zone = '+00:00'"];
+
+$db = new PdoMysql($uri, $preOptions, $postOptions, $executeAfterConnect);
 ```

@@ -2,19 +2,28 @@
 
 namespace ByJG\AnyDataset\Db;
 
+use ByJG\AnyDataset\Db\SqlDialect\OciDialect;
 use ByJG\Util\Uri;
+use Override;
 
 class PdoOci extends PdoLiteral
 {
 
+    #[Override]
     public static function schema(): array
     {
         return ['oracle'];
     }
 
+    #[Override]
+    public function getSqlDialectClass(): string
+    {
+        return OciDialect::class;
+    }
+
     public function __construct(Uri $connUri)
     {
-        parent::__construct($this->createPdoConnStr($connUri), $connUri->getUsername(), $connUri->getPassword(), [], []);
+        parent::__construct($this->createPdoConnStr($connUri), $connUri->getUsername() ?? '', $connUri->getPassword() ?? '', [], []);
     }
 
     protected function createPdoConnStr(Uri $connUri): string

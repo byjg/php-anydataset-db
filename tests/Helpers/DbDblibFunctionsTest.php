@@ -3,21 +3,24 @@
 namespace Test\Helpers;
 
 use ByJG\AnyDataset\Core\Exception\NotAvailableException;
-use ByJG\AnyDataset\Db\Helpers\DbDblibFunctions;
+use ByJG\AnyDataset\Db\SqlDialect\DblibDialect;
+use Override;
 use PHPUnit\Framework\TestCase;
 
 class DbDblibFunctionsTest extends TestCase
 {
     /**
-     * @var DbDblibFunctions|null
+     * @var DblibDialect|null
      */
-    protected ?DbDblibFunctions $object;
+    protected ?DblibDialect $object;
 
+    #[Override]
     protected function setUp(): void
     {
-        $this->object = new DbDblibFunctions();
+        $this->object = new DblibDialect();
     }
 
+    #[Override]
     protected function tearDown(): void
     {
         $this->object = null;

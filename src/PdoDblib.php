@@ -3,13 +3,22 @@
 namespace ByJG\AnyDataset\Db;
 
 use ByJG\AnyDataset\Core\Exception\NotAvailableException;
+use ByJG\AnyDataset\Db\SqlDialect\DblibDialect;
 use ByJG\Util\Uri;
+use Override;
 
 class PdoDblib extends PdoPdo
 {
+    #[Override]
     public static function schema(): array
     {
         return ['dblib'];
+    }
+
+    #[Override]
+    public function getSqlDialectClass(): string
+    {
+        return DblibDialect::class;
     }
 
 
@@ -44,12 +53,12 @@ class PdoDblib extends PdoPdo
     protected function getMssqlUri(Uri $connUri): Uri
     {
         /** @var Uri $uri */
-        $uri = Uri::getInstanceFromString("dblib://");
+        $uri = Uri::getInstance("dblib://");
 
         return $uri
-            ->withUserInfo($connUri->getUsername(), $connUri->getPassword())
+            ->withUserInfo($connUri->getUsername() ?? '', $connUri->getPassword())
             ->withHost($connUri->getScheme())
-            ->withQueryKeyValue("host" , $connUri->getHost() . (!empty($connUri->getPort()) ? "," . $connUri->getPort() : ""))
+            ->withQueryKeyValue("host", $connUri->getHost() . (!empty($connUri->getPort()) ? "," . (string)$connUri->getPort() : ""))
             ->withQueryKeyValue("dbname", ltrim($connUri->getPath(), "/"))
         ;
     }

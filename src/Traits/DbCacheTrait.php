@@ -6,7 +6,7 @@ use Psr\SimpleCache\CacheInterface;
 
 trait DbCacheTrait
 {
-    protected function array_map_assoc($callback, $array)
+    protected function array_map_assoc($callback, $array): array
     {
         $r = array();
         foreach ($array as $key=>$value) {
@@ -15,7 +15,7 @@ trait DbCacheTrait
         return $r;
     }
 
-    protected function getQueryKey(?CacheInterface $cache, $sql, $array)
+    protected function getQueryKey(?CacheInterface $cache, $sql, $array): string|null
     {
         if (empty($cache)) {
             return null;

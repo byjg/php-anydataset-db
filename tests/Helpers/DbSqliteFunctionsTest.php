@@ -3,21 +3,24 @@
 namespace Test\Helpers;
 
 use ByJG\AnyDataset\Core\Exception\NotAvailableException;
-use ByJG\AnyDataset\Db\Helpers\DbSqliteFunctions;
+use ByJG\AnyDataset\Db\SqlDialect\SqliteDialect;
+use Override;
 use PHPUnit\Framework\TestCase;
 
 class DbSqliteFunctionsTest extends TestCase
 {
     /**
-     * @var DbSqliteFunctions|null
+     * @var SqliteDialect|null
      */
-    private ?DbSqliteFunctions $object;
+    private ?SqliteDialect $object;
 
+    #[Override]
     protected function setUp(): void
     {
-        $this->object = new DbSqliteFunctions();
+        $this->object = new SqliteDialect();
     }
 
+    #[Override]
     protected function tearDown(): void
     {
         $this->object = null;

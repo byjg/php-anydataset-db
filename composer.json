@@ -1,6 +1,6 @@
 {
   "name": "byjg/anydataset-db",
-  "description": "Anydataset Database Relational abstraction. Anydataset is an agnostic data source abstraction layer in PHP.",
+  "description": "AnyDataset-DB provides a relational database abstraction layer. It is part of the Anydataset project, an agnostic data source abstraction layer for PHP.",
   "autoload": {
     "psr-4": {
       "ByJG\\AnyDataset\\Db\\": "src/"
@@ -15,28 +15,32 @@
   "prefer-stable": true,
   "minimum-stability": "dev",
   "require": {
-    "php": ">=8.1 <8.4",
+    "php": ">=8.3 <8.6",
     "ext-pdo": "*",
     "psr/cache": "^1.0|^2.0|^3.0",
     "psr/log": "^1.1|^2.0|^3.0",
-    "byjg/uri": "^5.0",
-    "byjg/anydataset-array": "^5.0",
+    "byjg/uri": "^6.0",
+    "byjg/anydataset": "^6.0",
     "ext-json": "*"
   },
   "require-dev": {
-    "phpunit/phpunit": "^9.6",
-    "vimeo/psalm": "^5.9",
-    "byjg/cache-engine": "^5.0"
+    "phpunit/phpunit": "^10.5|^11.5|^12.3",
+    "vimeo/psalm": "^5.9|^6.13",
+    "byjg/cache-engine": "^6.0"
   },
   "suggest": {
     "ext-curl": "*",
     "ext-pdo_mysql": "*",
     "ext-pdo_pgsql": "*",
     "ext-oci8": "*",
-    "byjg/cache-engine": "^5.0"
+    "byjg/cache-engine": "^6.0"
   },
   "provide": {
     "byjg/anydataset-implementation": "1.0"
+  },
+  "scripts": {
+    "test": "vendor/bin/phpunit",
+    "psalm": "vendor/bin/psalm --threads=1"
   },
   "license": "MIT"
 }

@@ -2,6 +2,8 @@
 
 namespace ByJG\AnyDataset\Db;
 
+use ByJG\AnyDataset\Db\Interfaces\DbDriverInterface;
+use ByJG\AnyDataset\Db\Interfaces\SqlDialectInterface;
 use ByJG\Util\Uri;
 use InvalidArgumentException;
 
@@ -15,7 +17,8 @@ class Factory
      */
     public static function registerDbDriver(string $class): void
     {
-        if (!in_array(DbDriverInterface::class, class_implements($class))) {
+        $implements = class_implements($class);
+        if ($implements === false || !in_array(DbDriverInterface::class, $implements)) {
             throw new InvalidArgumentException(
                 "The class '$class' is not a instance of DbDriverInterface"
             );
@@ -34,7 +37,7 @@ class Factory
         }
     }
 
-    public static function getRegisteredDrivers(string $checkDriver = null): array|string
+    public static function getRegisteredDrivers(?string $checkDriver = null): array|string
     {
         if (empty(self::$config)) {
             self::registerAllDrivers();
@@ -84,23 +87,21 @@ class Factory
             $connectionUri = new Uri($connectionUri);
         }
 
-        /** @var string $class */
+        /** @var class-string<DbDriverInterface> $class */
         $class = self::getRegisteredDrivers($connectionUri->getScheme());
 
         return new $class($connectionUri);
     }
 
     /**
-     * Get a IDbFunctions class to execute Database specific operations.
+     * Get a DbFunctions class to execute Database specific operations.
      *
      * @param Uri $connectionUri
-     * @return DbFunctionsInterface
+     * @return SqlDialectInterface
      */
-    public static function getDbFunctions(Uri $connectionUri): DbFunctionsInterface
+    public static function getDbFunctions(Uri $connectionUri): SqlDialectInterface
     {
-        $dbFunc = "\\ByJG\\AnyDataset\\Db\\Helpers\\Db"
-            . ucfirst($connectionUri->getScheme())
-            . "Functions";
-        return new $dbFunc();
+        $driver = self::getDbInstance($connectionUri);
+        return $driver->getSqlDialect();
     }
 }

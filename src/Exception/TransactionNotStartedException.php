@@ -2,7 +2,9 @@
 
 namespace ByJG\AnyDataset\Db\Exception;
 
-class TransactionNotStartedException extends \Exception
+use Exception;
+
+class TransactionNotStartedException extends Exception
 {
 
 }
