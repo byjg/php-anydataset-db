@@ -60,7 +60,7 @@ class PdoDblib extends PdoPdo
         return $uri
             ->withUserInfo($connUri->getUsername() ?? '', $connUri->getPassword())
             ->withHost($connUri->getScheme())
-            ->withQueryKeyValue("host", $connUri->getHost() . (!empty($connUri->getPort()) ? "," . $connUri->getPort() : ""))
+            ->withQueryKeyValue("host", $connUri->getHost() . (!empty($connUri->getPort()) ? "," . strval($connUri->getPort()) : ""))
             ->withQueryKeyValue("dbname", ltrim($connUri->getPath(), "/"))
         ;
     }
