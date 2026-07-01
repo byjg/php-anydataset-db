@@ -17,6 +17,7 @@ use PHPUnit\Framework\TestCase;
 use Test\Models\Info;
 use Test\Models\InfoEntity;
 use Test\Models\UserEntity;
+use Test\Models\UserTypedEntity;
 
 class PdoSqliteTest extends TestCase
 {
@@ -806,6 +807,30 @@ class PdoSqliteTest extends TestCase
         $this->assertEquals(1, $entities[0]->userId);
         $this->assertEquals('John Doe', $entities[0]->userName);
         $this->assertEquals('2017-01-02', $entities[0]->userCreatedDate);
+    }
+
+    /**
+     * Regression: an entity whose typed properties are non-nullable and have no default keeps
+     * them "uninitialized" on `new`. PreFetchTrait serializes an empty instance to enumerate the
+     * fields before hydration, which used to raise "must not be accessed before initialization".
+     */
+    public function testEntityWithUninitializedTypedProperties()
+    {
+        $sqlStatement = (new SqlStatement('select * from users where name = :name'))
+            ->withEntityClass(UserTypedEntity::class);
+
+        $iterator = $this->executor->getIterator($sqlStatement, ['name' => 'John Doe']);
+
+        $entities = [];
+        foreach ($iterator as $singleRow) {
+            $entities[] = $singleRow->entity();
+        }
+
+        $this->assertCount(1, $entities);
+        $this->assertInstanceOf(UserTypedEntity::class, $entities[0]);
+        $this->assertEquals(1, $entities[0]->id);
+        $this->assertEquals('John Doe', $entities[0]->name);
+        $this->assertEquals('2017-01-02', $entities[0]->createdate);
     }
 
     public function testEntityWithComplexTransformer()
