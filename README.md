@@ -1,4 +1,12 @@
+---
+sidebar_key: anydataset-db
+tags: [php, anydataset, databases]
+---
+
 # Database Abstraction Layer
+
+**AnyDataset-DB** provides a relational database abstraction layer. It is part of the Anydataset project, an agnostic
+data source abstraction layer for PHP.
 
 [![Sponsor](https://img.shields.io/badge/Sponsor-%23ea4aaa?logo=githubsponsors&logoColor=white&labelColor=0d1117)](https://github.com/sponsors/byjg)
 [![Build Status](https://github.com/byjg/php-anydataset-db/actions/workflows/phpunit.yml/badge.svg?branch=master)](https://github.com/byjg/php-anydataset-db/actions/workflows/phpunit.yml)
@@ -6,9 +14,6 @@
 [![GitHub source](https://img.shields.io/badge/Github-source-informational?logo=github)](https://github.com/byjg/php-anydataset-db/)
 [![GitHub license](https://img.shields.io/github/license/byjg/php-anydataset-db.svg)](https://opensource.byjg.com/opensource/licensing.html)
 [![GitHub release](https://img.shields.io/github/release/byjg/php-anydataset-db.svg)](https://github.com/byjg/php-anydataset-db/releases/)
-
-**AnyDataset-DB** provides a relational database abstraction layer. It is part of the Anydataset project, an agnostic
-data source abstraction layer for PHP.
 
 Learn more about Anydataset [here](https://opensource.byjg.com/anydataset).
 
