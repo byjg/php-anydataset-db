@@ -6,6 +6,7 @@ use ByJG\AnyDataset\Core\AnyDataset;
 use ByJG\AnyDataset\Core\Exception\DatabaseException;
 use ByJG\AnyDataset\Core\GenericIterator;
 use ByJG\AnyDataset\Db\Exception\DbDriverNotConnected;
+use ByJG\AnyDataset\Db\Interfaces\DatabaseEventObserverInterface;
 use ByJG\AnyDataset\Db\Interfaces\DbDriverInterface;
 use ByJG\AnyDataset\Db\Interfaces\DbTransactionInterface;
 use ByJG\AnyDataset\Db\Interfaces\SqlDialectInterface;
@@ -25,6 +26,11 @@ use Psr\SimpleCache\InvalidArgumentException as PsrInvalidArgumentException;
 class DatabaseExecutor implements DbTransactionInterface
 {
     protected DbDriverInterface $driver;
+
+    /**
+     * @var DatabaseEventObserverInterface[]
+     */
+    protected array $observers = [];
 
     /**
      * @param DbDriverInterface $driver The database driver to use for low-level operations
@@ -64,6 +70,52 @@ class DatabaseExecutor implements DbTransactionInterface
     }
 
     /**
+     * Attach an observer to be notified about queries and commands
+     * executed through this executor.
+     *
+     * @param DatabaseEventObserverInterface $observer
+     * @return static
+     */
+    public function addObserver(DatabaseEventObserverInterface $observer): static
+    {
+        if (!in_array($observer, $this->observers, true)) {
+            $this->observers[] = $observer;
+        }
+        return $this;
+    }
+
+    /**
+     * Detach a previously attached observer.
+     *
+     * @param DatabaseEventObserverInterface $observer
+     * @return static
+     */
+    public function removeObserver(DatabaseEventObserverInterface $observer): static
+    {
+        $this->observers = array_values(
+            array_filter($this->observers, fn($item) => $item !== $observer)
+        );
+        return $this;
+    }
+
+    /**
+     * Notify the attached observers subscribed to the given event type.
+     *
+     * @param DatabaseEventTypeEnum $type
+     * @param SqlStatement $statement
+     * @param mixed $result
+     * @return void
+     */
+    protected function notifyObservers(DatabaseEventTypeEnum $type, SqlStatement $statement, mixed $result = null): void
+    {
+        foreach ($this->observers as $observer) {
+            if (in_array($type, $observer->subscribedEvents(), true)) {
+                $observer->handleEvent(new DatabaseEvent($type, $this, $statement, $result));
+            }
+        }
+    }
+
+    /**
      * Execute a SQL statement and return an iterator over the results
      *
      * @param string|SqlStatement $sql The SQL statement to execute
@@ -94,8 +146,10 @@ class DatabaseExecutor implements DbTransactionInterface
 
         // If no cache is configured, directly execute the query
         if (empty($cache)) {
+            $this->notifyObservers(DatabaseEventTypeEnum::BEFORE_QUERY, $sql);
             $statement = $this->driver->prepareStatement($sqlText, $params);
             $this->driver->executeCursor($statement);
+            $this->notifyObservers(DatabaseEventTypeEnum::AFTER_QUERY, $sql);
             return $this->driver->getDriverIterator($statement, $preFetch, $sql->getEntityClass(), $sql->getEntityTransformer());
         }
 
@@ -126,8 +180,10 @@ class DatabaseExecutor implements DbTransactionInterface
 
         try {
             // Execute the query
+            $this->notifyObservers(DatabaseEventTypeEnum::BEFORE_QUERY, $sql);
             $statement = $this->driver->prepareStatement($sqlText, $params);
             $this->driver->executeCursor($statement);
+            $this->notifyObservers(DatabaseEventTypeEnum::AFTER_QUERY, $sql);
             $iterator = $this->driver->getDriverIterator($statement, preFetch: $preFetch, entityClass: $sql->getEntityClass(), entityTransformer: $sql->getEntityTransformer());
 
             // Cache the results
@@ -258,9 +314,11 @@ class DatabaseExecutor implements DbTransactionInterface
             $sql = $sql->withParams($array);
         }
 
+        $this->notifyObservers(DatabaseEventTypeEnum::BEFORE_EXECUTE, $sql);
         $statement = $this->driver->prepareStatement($sql->getSql(), $sql->getParams());
         $this->driver->executeCursor($statement);
         $this->driver->processMultiRowset($statement);
+        $this->notifyObservers(DatabaseEventTypeEnum::AFTER_EXECUTE, $sql, true);
 
         return true;
     }

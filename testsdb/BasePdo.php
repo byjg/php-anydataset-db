@@ -673,7 +673,7 @@ abstract class BasePdo extends TestCase
     {
         $newUri = $this->executor->getDriver()->getUri()->withQueryKeyValue(DbPdoDriver::DONT_PARSE_PARAM, "");
         $newConn = Factory::getDbInstance($newUri);
-        $it = $newConn->getIterator('select Id, Breed, Name, Age from Dogs where id = :field', ["field" => 1]);
+        $it = DatabaseExecutor::using($newConn)->getIterator('select Id, Breed, Name, Age from Dogs where id = :field', ["field" => 1]);
         $this->assertCount(1, $it->toArray());
         $this->assertFalse($it->isCursorOpen());
     }
@@ -688,7 +688,7 @@ abstract class BasePdo extends TestCase
     {
         $newUri = $this->executor->getDriver()->getUri()->withQueryKeyValue(DbPdoDriver::DONT_PARSE_PARAM, "");
         $newConn = Factory::getDbInstance($newUri);
-        $it = $newConn->getIterator('select Id, Breed, Name, Age from Dogs where id = :field');
+        $it = DatabaseExecutor::using($newConn)->getIterator('select Id, Breed, Name, Age from Dogs where id = :field');
         $this->assertCount(0, $it->toArray());
     }
 
@@ -1000,28 +1000,30 @@ abstract class BasePdo extends TestCase
     {
         $dbDriver1 = $this->createInstance();
         $dbDriver2 = $this->createInstance();
+        $executor1 = DatabaseExecutor::using($dbDriver1);
+        $executor2 = DatabaseExecutor::using($dbDriver2);
 
         // Make sure there is no record in the database
-        $iterator = $dbDriver1->getIterator('select Id, Breed, Name, Age from Dogs where id = 4');
+        $iterator = $executor1->getIterator('select Id, Breed, Name, Age from Dogs where id = 4');
         $row = $iterator->toArray();
         $this->assertEmpty($row);
-        $iterator = $dbDriver2->getIterator('select Id, Breed, Name, Age from Dogs where id = 4');
+        $iterator = $executor2->getIterator('select Id, Breed, Name, Age from Dogs where id = 4');
         $row = $iterator->toArray();
         $this->assertEmpty($row);
 
         // Start a transaction on the first connection
         $dbDriver1->beginTransaction(IsolationLevelEnum::SERIALIZABLE);
-        $idInserted = $dbDriver1->executeAndGetId(
+        $idInserted = $executor1->executeAndGetId(
             "INSERT INTO Dogs (Breed, Name, Age) VALUES ('Cat', 'Doris', 7);"
         );
 
         // Check if the record is there
-        $iterator = $dbDriver1->getIterator('select Id, Breed, Name, Age from Dogs where id = 4');
+        $iterator = $executor1->getIterator('select Id, Breed, Name, Age from Dogs where id = 4');
         $row = $iterator->toArray();
         $this->assertNotEmpty($row);
 
         // Check if the record is not there on the second connection (due to isolation level)
-        $iterator = $dbDriver2->getIterator('select Id, Breed, Name, Age from Dogs where id = 4');
+        $iterator = $executor2->getIterator('select Id, Breed, Name, Age from Dogs where id = 4');
         $row = $iterator->toArray();
         $this->assertEmpty($row);
 
@@ -1029,7 +1031,7 @@ abstract class BasePdo extends TestCase
         $dbDriver1->commitTransaction();
 
         // Check if the second transaction can read
-        $iterator = $dbDriver2->getIterator('select Id, Breed, Name, Age from Dogs where id = 4');
+        $iterator = $executor2->getIterator('select Id, Breed, Name, Age from Dogs where id = 4');
         $row = $iterator->toArray();
         $this->assertNotEmpty($row);
     }

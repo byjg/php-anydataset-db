@@ -64,6 +64,8 @@ $conn = \ByJG\AnyDataset\Db\Factory::getDbInstance("mysql://root:password@10.0.1
 
 - [Database Driver Interface](docs/db-driver-interface.md)
 - [DatabaseExecutor - Recommended API](docs/database-executor.md)
+- [Executor Observers](docs/observers.md)
+- [Journal (Record and Restore Changes)](docs/journal.md)
 - [Passing Parameters to PDODriver](docs/parameters.md)
 - [Generic PDO Driver](docs/generic-pdo-driver.md)
 - [Running Tests](docs/tests.md)

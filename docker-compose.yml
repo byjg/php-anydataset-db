@@ -1,10 +1,13 @@
 services:
-  mssql:
-    container_name: anydataset_db_mssql
-    image: mcr.microsoft.com/mssql/server
+  sqlserver:
+    container_name: anydataset_db_sqlserver
+    # Pinned to 2022: the SQL Server 2025 image (current "latest") crashes on
+    # startup on hybrid CPUs (e.g. Intel P/E-cores) with a topology assert
+    # (sosnumap.cpp: threads-per-core is not uniform). 2019/2022 are not affected.
+    image: mcr.microsoft.com/mssql/server:2022-latest
     environment:
       - ACCEPT_EULA=Y
-      - SA_PASSWORD=Pa55word
+      - MSSQL_SA_PASSWORD=Pa55word
     ports:
       - "1433:1433"
     healthcheck:

@@ -46,10 +46,10 @@ interface DbDriverInterface extends DbTransactionInterface
 | `processMultiRowset(mixed $statement): void`                                                                                                                                   | Processes multiple result sets                      |
 | `getDriverIterator(mixed $statement, int $preFetch = 0, ?string $entityClass = null, ?PropertyHandlerInterface $entityTransformer = null): GenericDbIterator\|GenericIterator` | Creates a driver-specific iterator from a statement |
 
-### High-Level Query Execution (Deprecated)
+### High-Level Query Execution (Removed in 7.0)
 
-:::danger Deprecated
-Deprecated in version 6.0, will be removed in version 7.0.
+:::danger Removed
+Deprecated in version 6.0 and removed in version 7.0.
 Use [DatabaseExecutor](database-executor.md) instead for these operations.
 :::
 
@@ -161,7 +161,7 @@ use ByJG\AnyDataset\Db\Factory;
 // Get a database driver instance
 $dbDriver = Factory::getDbInstance('mysql://user:password@host/database');
 
-// ⚠️ Deprecated: Direct query methods on driver will be removed in version 7.0
+// ⚠️ Removed in version 7.0: direct query methods on the driver no longer exist (6.x only)
 $iterator = $dbDriver->getIterator("SELECT * FROM users WHERE active = :active", [':active' => true]);
 foreach ($iterator as $row) {
     echo $row->get('name') . "\n";
@@ -198,9 +198,9 @@ class MyCustomDriver extends DbPdoDriver
 $db = \ByJG\AnyDataset\Db\Factory::getDbInstance("mycustom://user:pass@host/db");
 ```
 
-## Deprecated Methods
+## Removed Methods
 
-As of version 6.0, the following methods are deprecated and will be removed in version 7.0:
+The following methods were deprecated in version 6.0 and removed in version 7.0:
 
 - `getIterator()` - Use `DatabaseExecutor::using($driver)->getIterator()` instead
 - `getScalar()` - Use `DatabaseExecutor::using($driver)->getScalar()` instead

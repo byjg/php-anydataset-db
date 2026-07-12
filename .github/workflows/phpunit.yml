@@ -48,10 +48,12 @@ jobs:
           --health-retries 5
 
       sqlserver:
-        image: mcr.microsoft.com/mssql/server
+        # Pinned to 2022: the 2025 image ("latest") crashes on startup on hybrid
+        # CPUs with a topology assert (see docker-compose.yml)
+        image: mcr.microsoft.com/mssql/server:2022-latest
         env:
           ACCEPT_EULA: Y
-          SA_PASSWORD: Pa55word
+          MSSQL_SA_PASSWORD: Pa55word
         ports:
           - "1433:1433"
         options: >-

@@ -104,8 +104,8 @@ foreach ($iterator as $row) {
 ```
 
 :::info Note
-While you can still use `$dbDriver->getIterator()` directly, it is deprecated as of version 6.0
-and will be removed in version 7.0. Please use `DatabaseExecutor` for all query operations.
+`$dbDriver->getIterator()` and the other direct query methods on the driver were removed in
+version 7.0. Use `DatabaseExecutor` for all query operations.
 :::
 
 ### Using SqlStatement for Reusable Queries

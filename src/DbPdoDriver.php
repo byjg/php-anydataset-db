@@ -182,62 +182,6 @@ abstract class DbPdoDriver implements DbDriverInterface
     }
 
     /**
-     * Get an iterator for the provided SQL or execute an existing PDOStatement.
-     *
-     * @param string|SqlStatement $sql PDOStatement, string SQL, or SqlStatement object
-     * @param array|null $params Parameters if $sql is a string
-     * @param int $preFetch Number of rows to prefetch
-     * @return GenericDbIterator|GenericIterator The iterator for the query results
-     * @throws DbDriverNotConnected
-     * @throws FileException
-     * @throws DatabaseException
-     * @throws XmlUtilException
-     * @throws \Psr\SimpleCache\InvalidArgumentException
-     *@deprecated Use DatabaseExecutor::using($driver)->getIterator() instead. This method will be removed in version 7.0.
-     */
-    #[Override]
-    public function getIterator(string|SqlStatement $sql, ?array $params = null, int $preFetch = 0): GenericDbIterator|GenericIterator
-    {
-        return DatabaseExecutor::using($this)->getIterator($sql, $params, $preFetch);
-    }
-
-    /**
-     * @deprecated Use DatabaseExecutor::using($driver)->getScalar() instead. This method will be removed in version 7.0.
-     */
-    #[Override]
-    public function getScalar(string|SqlStatement $sql, ?array $array = null): mixed
-    {
-        return DatabaseExecutor::using($this)->getScalar($sql, $array);
-    }
-
-    /**
-     * @deprecated Use DatabaseExecutor::using($driver)->getAllFields() instead. This method will be removed in version 7.0.
-     */
-    #[Override]
-    public function getAllFields(string $tablename): array
-    {
-        return DatabaseExecutor::using($this)->getAllFields($tablename);
-    }
-
-    /**
-     * @deprecated Use DatabaseExecutor::using($driver)->execute() instead. This method will be removed in version 7.0.
-     */
-    #[Override]
-    public function execute(string|SqlStatement $sql, ?array $array = null): bool
-    {
-        return DatabaseExecutor::using($this)->execute($sql, $array);
-    }
-
-    /**
-     * @deprecated Use DatabaseExecutor::using($driver)->executeAndGetId() instead. This method will be removed in version 7.0.
-     */
-    #[Override]
-    public function executeAndGetId(string|SqlStatement $sql, ?array $array = null): mixed
-    {
-        return DatabaseExecutor::using($this)->executeAndGetId($sql, $array);
-    }
-
-    /**
      *
      * @return PDO|null
      */
