@@ -69,6 +69,21 @@ Records all INSERT, UPDATE and DELETE statements with the row values before and 
 
 **Documentation:** [Journal](docs/journal.md)
 
+### 3. Cloudflare D1 Driver
+
+New `DbD1Driver` (`d1://` scheme) talking to the [Cloudflare D1 REST API](https://developers.cloudflare.com/api/resources/d1/subresources/database/methods/query/):
+
+- Connection string: `d1://{account_id}:{api_token}@api.cloudflare.com/{database_id}`
+- Works over any PSR-18 HTTP client; uses `byjg/webrequest` when none is injected
+- Named parameters are translated to the positional `?` placeholders the API expects
+- `executeAndGetId()` reads the generated id from D1's `meta.last_row_id` instead of issuing a
+  second query, which would run on a different connection
+- SQLite semantics via the new `D1Dialect`
+- Routing observability: `isServedByPrimary()`, `getServedByRegion()`, `getServedByColo()`
+  and `getLastMeta()` expose what D1 reports about the last statement
+
+**Documentation:** [Driver: Cloudflare D1](docs/cloudflare-d1.md)
+
 ---
 
 ## Known Limitations
@@ -78,6 +93,11 @@ Records all INSERT, UPDATE and DELETE statements with the row values before and 
   (strict mode fails loudly on them instead).
 - Observers (and therefore the Journal) are bound to a specific executor instance:
   writes made through a different `DatabaseExecutor` are not observed.
+- Cloudflare D1 has no interactive transactions (`beginTransaction()` throws `NotAvailableException`),
+  no multiple rowsets and no `getAllFields()`; the Journal cannot track INSERTs on it.
+- The D1 Sessions API is only available through the Workers binding, so the driver cannot provide
+  sequential consistency (read-your-own-writes) on databases with read replication enabled.
+  See [Driver: Cloudflare D1](docs/cloudflare-d1.md) for the full list.
 
 ---
 

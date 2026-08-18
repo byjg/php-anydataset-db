@@ -42,3 +42,16 @@ export MSSQL_TEST_HOST=localhost     # defaults to localhost
 export MSSQL_PASSWORD=Pa55word            
 export SQLITE_TEST_HOST=/tmp/test.db      # defaults to /tmp/test.db
 ```
+
+### Cloudflare D1
+
+D1 has no local emulator exposing the Cloudflare REST API, so `testsdb/D1Test.php` runs against a
+real (throwaway) D1 database and is skipped unless all three variables below are set. The driver
+itself is fully covered without credentials by `tests/D1DriverTest.php`.
+
+```bash
+export D1_ACCOUNT_ID=your-account-id
+export D1_DATABASE_ID=your-database-uuid
+export D1_API_TOKEN=your-api-token
+export D1_HOST=api.cloudflare.com    # defaults to api.cloudflare.com
+```

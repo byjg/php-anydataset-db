@@ -225,6 +225,7 @@ AnyDataset-DB provides several implementations of the `DbDriverInterface`:
 | `DbOci8Driver`   | oci8   | Oracle driver (using OCI8 extension)                      |
 | `PdoOdbc`        | odbc   | ODBC driver                                               |
 | `PdoPdo`         | pdo    | Generic PDO driver                                        |
+| `DbD1Driver`     | d1     | Cloudflare D1 driver (using the REST API)                 |
 | `DatabaseRouter` | N/A    | Special driver for routing queries to different databases |
 
 ## See Also
