@@ -40,6 +40,7 @@ Supported drivers are listed below:
 | SQL Server (Sqlsrv) | sqlsrv://username:password@hostname:port/database | `getDbInstance()` |
 | Oracle (OCI8)       | oci8://username:password@hostname:port/database   | `getDbInstance()` |
 | Generic PDO         | pdo://username:password@pdo_driver?PDO_PARAMETERS | `getDbInstance()` |
+| Cloudflare D1       | d1://account_id:api_token@api.cloudflare.com/database_id | `getDbInstance()` |
 
 Example usage:
 
@@ -64,6 +65,8 @@ $conn = \ByJG\AnyDataset\Db\Factory::getDbInstance("mysql://root:password@10.0.1
 
 - [Database Driver Interface](docs/db-driver-interface.md)
 - [DatabaseExecutor - Recommended API](docs/database-executor.md)
+- [Executor Observers](docs/observers.md)
+- [Journal (Record and Restore Changes)](docs/journal.md)
 - [Passing Parameters to PDODriver](docs/parameters.md)
 - [Generic PDO Driver](docs/generic-pdo-driver.md)
 - [Running Tests](docs/tests.md)
@@ -78,6 +81,7 @@ $conn = \ByJG\AnyDataset\Db\Factory::getDbInstance("mysql://root:password@10.0.1
 - [PostgreSQL](docs/postgresql.md)
 - [Oracle](docs/oracle.md)
 - [SQLServer](docs/sqlserver.md)
+- [Cloudflare D1](docs/cloudflare-d1.md)
 - [Literal PDO Connection String](docs/literal-pdo-driver.md)
 
 
@@ -98,6 +102,8 @@ flowchart TD
     byjg/anydataset-db --> byjg/uri
     byjg/anydataset-db --> psr/cache
     byjg/anydataset-db --> psr/log
+    byjg/anydataset-db --> psr/http-client
+    byjg/anydataset-db --> psr/http-factory
 ```
 
 ----

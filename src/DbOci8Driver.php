@@ -183,54 +183,6 @@ class DbOci8Driver implements DbDriverInterface
     }
 
     /**
-     * @param string|SqlStatement $sql
-     * @param array|null $params
-     * @param int $preFetch
-     * @return GenericDbIterator|GenericIterator
-     * @throws DatabaseException
-     * @throws DbDriverNotConnected
-     * @throws FileException
-     * @throws XmlUtilException
-     * @throws \Psr\SimpleCache\InvalidArgumentException
-     *@deprecated Use DatabaseExecutor::using($driver)->getIterator() instead. This method will be removed in version 7.0.
-     */
-    #[Override]
-    public function getIterator(string|SqlStatement $sql, ?array $params = null, int $preFetch = 0): GenericDbIterator|GenericIterator
-    {
-        return DatabaseExecutor::using($this)->getIterator($sql, $params, $preFetch);
-    }
-
-    /**
-     * @param string|SqlStatement $sql
-     * @param array|null $array
-     * @return mixed
-     * @throws DatabaseException
-     * @throws DbDriverNotConnected
-     * @throws FileException
-     * @throws XmlUtilException
-     * @throws \Psr\SimpleCache\InvalidArgumentException
-     * @deprecated Use DatabaseExecutor::using($driver)->getScalar() instead. This method will be removed in version 7.0.
-     */
-    #[Override]
-    public function getScalar(string|SqlStatement $sql, ?array $array = null): mixed
-    {
-        return DatabaseExecutor::using($this)->getScalar($sql, $array);
-    }
-
-    /**
-     * @param string $tablename
-     * @return array
-     * @throws DatabaseException
-     * @throws DbDriverNotConnected
-     *@deprecated Use DatabaseExecutor::using($driver)->getAllFields() instead. This method will be removed in version 7.0.
-     */
-    #[Override]
-    public function getAllFields(string $tablename): array
-    {
-        return DatabaseExecutor::using($this)->getAllFields($tablename);
-    }
-
-    /**
      * @param TransactionStageEnum $action
      * @param string $isoLevelCommand
      * @throws DatabaseException
@@ -241,7 +193,7 @@ class DbOci8Driver implements DbDriverInterface
             case TransactionStageEnum::begin:
                 /** @psalm-suppress UndefinedConstant */
                 $this->ociAutoCommit = OCI_NO_AUTO_COMMIT;
-                $this->execute($isoLevelCommand);
+                DatabaseExecutor::using($this)->execute($isoLevelCommand);
                 break;
 
             case TransactionStageEnum::commit:
@@ -281,18 +233,6 @@ class DbOci8Driver implements DbDriverInterface
     }
 
     /**
-     * @param string|SqlStatement $sql
-     * @param array|null $array
-     * @return bool
-     * @deprecated Use DatabaseExecutor::using($driver)->execute() instead. This method will be removed in version 7.0.
-     */
-    #[Override]
-    public function execute(string|SqlStatement $sql, ?array $array = null): bool
-    {
-        return DatabaseExecutor::using($this)->execute($sql, $array);
-    }
-
-    /**
      *
      * @return resource|null
      */
@@ -319,18 +259,6 @@ class DbOci8Driver implements DbDriverInterface
     public function setAttribute(string $name, mixed $value): void
     {
         throw new NotImplementedException('Method not implemented for OCI Driver');
-    }
-
-    /**
-     * @param string|SqlStatement $sql
-     * @param array|null $array
-     * @return mixed
-     * @deprecated Use DatabaseExecutor::using($driver)->executeAndGetId() instead. This method will be removed in version 7.0.
-     */
-    #[Override]
-    public function executeAndGetId(string|SqlStatement $sql, ?array $array = null): mixed
-    {
-        return DatabaseExecutor::using($this)->executeAndGetId($sql, $array);
     }
 
     /**
