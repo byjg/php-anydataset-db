@@ -12,7 +12,7 @@ data source abstraction layer for PHP.
 [![Build Status](https://github.com/byjg/php-anydataset-db/actions/workflows/phpunit.yml/badge.svg?branch=master)](https://github.com/byjg/php-anydataset-db/actions/workflows/phpunit.yml)
 [![Opensource ByJG](https://img.shields.io/badge/opensource-byjg-success.svg)](http://opensource.byjg.com)
 [![GitHub source](https://img.shields.io/badge/Github-source-informational?logo=github)](https://github.com/byjg/php-anydataset-db/)
-[![GitHub license](https://img.shields.io/github/license/byjg/php-anydataset-db.svg)](https://opensource.byjg.com/opensource/licensing.html)
+[![GitHub license](https://img.shields.io/github/license/byjg/php-anydataset-db.svg)](https://opensource.byjg.com/license/)
 [![GitHub release](https://img.shields.io/github/release/byjg/php-anydataset-db.svg)](https://github.com/byjg/php-anydataset-db/releases/)
 
 Learn more about Anydataset [here](https://opensource.byjg.com/anydataset).
@@ -91,19 +91,6 @@ Just type:
 
 ```bash
 composer require "byjg/anydataset-db"
-```
-
-## Dependencies
-
-```mermaid
-flowchart TD
-    byjg/anydataset-db --> byjg/anydataset
-    byjg/anydataset-db --> ext-pdo
-    byjg/anydataset-db --> byjg/uri
-    byjg/anydataset-db --> psr/cache
-    byjg/anydataset-db --> psr/log
-    byjg/anydataset-db --> psr/http-client
-    byjg/anydataset-db --> psr/http-factory
 ```
 
 ----
