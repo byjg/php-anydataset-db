@@ -73,6 +73,10 @@ jobs:
       - name: Install Dependencies
         run: |
           apk add --no-cache ${PHP_VARIANT}-pdo_dblib
+      - name: Install pdo_sqlsrv
+        # PHP 8.6 has no dev package to compile the extension with yet
+        if: matrix.php-version != '8.6'
+        run: sh testsdb/install-db-extensions.sh sqlsrv
       - run: composer install
       - run: composer test
 

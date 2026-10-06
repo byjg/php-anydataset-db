@@ -36,7 +36,7 @@ Oracle Instant Client 23 Basic Lite, `oci8` 3.4.1, `pdo_oci` 1.2.0, Microsoft OD
 installs the three extensions that are not distribution packages - `oci8`, `pdo_oci` and
 `pdo_sqlsrv` - and is the reference for the exact commands. The sections below explain what it
 does and why. It must run as `root`, and it stops with an error if one of the extensions does
-not load.
+not load. Pass `oracle` or `sqlsrv` to install only that one; without arguments it installs both.
 
 There are three ways to run it:
 

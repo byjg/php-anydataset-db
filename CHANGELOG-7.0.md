@@ -187,6 +187,10 @@ While 7.0 is unreleased these resolve to `7.0.x-dev` from each component's
 
 - The build matrix now includes PHP 8.6.
 - The Psalm job runs on PHP 8.5 and installs Psalm from `tools/psalm`.
+- The build installs `pdo_sqlsrv`, so the SQL Server tests also run through the Microsoft driver
+  (not on PHP 8.6, which has no dev package to compile it with yet).
+- Oracle is not tested in CI. Run `testsdb/Oci8Test.php` and `testsdb/PdoOciTest.php` locally;
+  see [Running Tests](docs/tests.md).
 
 ## Housekeeping
 
