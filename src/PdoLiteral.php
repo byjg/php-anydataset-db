@@ -67,6 +67,6 @@ class PdoLiteral extends DbPdoDriver
             $credential = "$username:$password@";
         }
 
-        parent::__construct(new Uri("literal://{$credential}{$parts[0]}?connection=" . urlencode($parts[1] ?? '')), $preOptions, $postOptions, $executeAfterConnect);
+        parent::__construct(new Uri("literal://{$credential}{$parts[0]}?connection=" . rawurlencode($parts[1] ?? '')), $preOptions, $postOptions, $executeAfterConnect);
     }
 }

@@ -222,7 +222,7 @@ AnyDataset-DB provides several implementations of the `DbDriverInterface`:
 | `PdoSqlite`      | sqlite | SQLite driver                                             |
 | `PdoDblib`       | dblib  | SQL Server driver (using FreeTDS)                         |
 | `PdoSqlsrv`      | sqlsrv | SQL Server driver (using Microsoft driver)                |
-| `PdoOci`         | oci    | Oracle driver (using PDO OCI)                             |
+| `PdoOci`         | oci, oracle | Oracle driver (using PDO OCI)                        |
 | `DbOci8Driver`   | oci8   | Oracle driver (using OCI8 extension)                      |
 | `PdoOdbc`        | odbc   | ODBC driver                                               |
 | `PdoPdo`         | pdo    | Generic PDO driver                                        |

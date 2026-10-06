@@ -41,7 +41,24 @@ export PSQL_PASSWORD=newpassword     # use '.' if want have a null password
 export MSSQL_TEST_HOST=localhost     # defaults to localhost
 export MSSQL_PASSWORD=Pa55word            
 export SQLITE_TEST_HOST=/tmp/test.db      # defaults to /tmp/test.db
+export ORACLE_TEST_HOST=localhost    # defaults to 127.0.0.1
+export ORACLE_PASSWORD=password      # use '.' if want have a null password
+export ORACLE_DATABASE=XE            # defaults to XE
 ```
+
+A test class is skipped when its PHP extension is not loaded: `pdo_dblib`, `pdo_sqlsrv`, `oci8`
+(`Oci8Test`) and `pdo_oci` (`PdoOciTest`). See
+[Installing the PHP database extensions](installing-extensions.md) to install them. The PDO OCI
+tests also need `NLS_LANG=.AL32UTF8` in the environment.
+
+With the [shellscript.download](https://shellscript.download) PHP wrappers, one command installs
+`oci8`, `pdo_oci` and `pdo_sqlsrv` and sets that variable:
+
+```bash
+load.sh php-docker -- 8.5 --postinstall testsdb/install-db-extensions.sh
+```
+
+The Oracle tests need the `oracle` service of `docker-compose.yml` running.
 
 ### Cloudflare D1
 

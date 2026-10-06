@@ -26,6 +26,7 @@ database-specific SQL operations based on the current database connection.
 | `getTableMetadata($dbdataset, $tableName)`                                               | Returns metadata about the specified table.                                         | array         |
 | `getIsolationLevelCommand($isolationLevel = null)`                                       | Returns the SQL command to set the transaction isolation level.                     | string        |
 | `getJoinTablesUpdate($tables)`                                                           | Returns the tables to be updated in a JOIN statement.                               | array         |
+| `getPingSql()`                                                                           | Returns the statement used to check that the connection is alive.                   | string        |
 
 ## Use Case
 

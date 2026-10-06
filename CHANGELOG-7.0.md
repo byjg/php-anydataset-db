@@ -55,6 +55,33 @@ were read from the first row of a query that returns no rows.
 
 On Cloudflare D1, `getAllFields()` now throws `NotAvailableException` instead of returning an empty array.
 
+### Added: `SqlDialectInterface::getPingSql()`
+
+`getPingSql(): string` returns the statement the drivers use to check that the connection is alive:
+`SELECT 1`, or `SELECT 1 FROM DUAL` on Oracle. Custom `SqlDialectInterface` implementations that do not
+extend `BaseSqlDialect` must add the method.
+
+### Changed: the PDO OCI driver (`PdoOci`)
+
+`PdoOci` was rebuilt on `DbPdoDriver` and is now covered by `testsdb/PdoOciTest.php`. It could not
+connect before: it registered the scheme `oracle` and used it as the PDO prefix, which is `oci`.
+
+- It answers to both `oci://` and `oracle://`.
+- `getUri()` returns the URI the driver was created with.
+- The `codepage` parameter is sent as the PDO `charset` and defaults to `AL32UTF8`.
+- A trailing `;` is removed from the statement, as the OCI8 driver does.
+- `PdoOci::getTnsString()` was removed; use `DbOci8Driver::getTnsString()`.
+- `isConnected()` and `reconnect()` work on Oracle (they pinged with `SELECT 1`, which Oracle rejects).
+
+See [Installing the PHP database extensions](docs/installing-extensions.md) for `oci8`, `pdo_oci`,
+`pdo_dblib` and `pdo_sqlsrv`, and for the `NLS_LANG` requirement of PDO OCI.
+
+### Fixed: spaces in a `PdoLiteral` connection string
+
+`PdoLiteral` encoded the connection string with `urlencode()`, which turns a space into `+`.
+`byjg/uri` 7.0 reads `+` as a literal plus sign, so the string reached PDO with `+` in place of
+every space. It is now encoded with `rawurlencode()`.
+
 ---
 
 ## New Features

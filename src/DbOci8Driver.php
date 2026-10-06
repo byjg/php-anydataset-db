@@ -384,7 +384,7 @@ class DbOci8Driver implements DbDriverInterface
         }
 
         try {
-            oci_parse($this->conn, "SELECT 1 FROM DUAL"); // Do not use $this->getInstance()
+            oci_parse($this->conn, $this->getSqlDialect()->getPingSql()); // Do not use $this->getInstance()
         } catch (Exception $ex) {
             if ($throwError) {
                 throw new DbDriverNotConnected('DbDriver not connected');

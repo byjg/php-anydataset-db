@@ -94,4 +94,9 @@ interface SqlDialectInterface
     public function getIsolationLevelCommand(?IsolationLevelEnum $isolationLevel = null): string;
 
     public function getJoinTablesUpdate(array $tables): array;
+
+    /**
+     * The cheapest statement the database accepts, used to check that the connection is alive.
+     */
+    public function getPingSql(): string;
 }

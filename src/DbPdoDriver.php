@@ -262,7 +262,7 @@ abstract class DbPdoDriver implements DbDriverInterface
         }
 
         try {
-            $this->instance->query("SELECT 1"); // Do not use $this->getInstance()
+            $this->instance->query($this->getSqlDialect()->getPingSql()); // Do not use $this->getInstance()
         } catch (Exception $ex) {
             if ($throwError) {
                 throw new DbDriverNotConnected('DbDriver not connected');
