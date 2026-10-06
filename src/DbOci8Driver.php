@@ -182,6 +182,21 @@ class DbOci8Driver implements DbDriverInterface
         throw new InvalidArgumentException('Invalid statement type');
     }
 
+    #[Override]
+    public function getStatementFields(mixed $statement): array
+    {
+        if (!is_resource($statement)) {
+            throw new InvalidArgumentException('Invalid statement type');
+        }
+
+        $fields = [];
+        $columnCount = oci_num_fields($statement);
+        for ($i = 1; $i <= $columnCount; $i++) {
+            $fields[] = strtolower((string)oci_field_name($statement, $i));
+        }
+        return $fields;
+    }
+
     /**
      * @param TransactionStageEnum $action
      * @param string $isoLevelCommand

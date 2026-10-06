@@ -181,6 +181,22 @@ abstract class DbPdoDriver implements DbDriverInterface
         throw new InvalidArgumentException('The argument needs to be a PDOStatement object');
     }
 
+    #[Override]
+    public function getStatementFields(mixed $statement): array
+    {
+        if (!($statement instanceof PDOStatement)) {
+            throw new InvalidArgumentException('The argument needs to be a PDOStatement object');
+        }
+
+        $fields = [];
+        $columnCount = $statement->columnCount();
+        for ($i = 0; $i < $columnCount; $i++) {
+            $meta = $statement->getColumnMeta($i);
+            $fields[] = strtolower($meta['name']);
+        }
+        return $fields;
+    }
+
     /**
      *
      * @return PDO|null

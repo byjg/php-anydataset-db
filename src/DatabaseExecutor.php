@@ -15,7 +15,6 @@ use ByJG\XmlUtil\Exception\XmlUtilException;
 use DateInterval;
 use InvalidArgumentException;
 use Override;
-use PDOStatement;
 use Psr\SimpleCache\CacheInterface;
 use Psr\SimpleCache\InvalidArgumentException as PsrInvalidArgumentException;
 
@@ -273,30 +272,7 @@ class DatabaseExecutor implements DbTransactionInterface
         $statement = $this->driver->prepareStatement($sql, []);
         $this->driver->executeCursor($statement);
 
-        // For PDO-based drivers, we can get column metadata directly from the statement
-        if ($statement instanceof PDOStatement) {
-            $fields = [];
-            $columnCount = $statement->columnCount();
-            for ($i = 0; $i < $columnCount; $i++) {
-                $meta = $statement->getColumnMeta($i);
-                $fields[] = strtolower($meta['name']);
-            }
-            return $fields;
-        }
-
-        // For OCI8 and other drivers, we need to use their specific methods
-        // Fall back to getting an iterator and extracting field names
-        $iterator = $this->driver->getDriverIterator($statement);
-
-        // Force a fetch to get the structure
-        $iterator->rewind();
-        if ($iterator->valid()) {
-            $row = $iterator->current();
-            return array_keys($row->toArray());
-        }
-
-        // Final fallback: return empty array
-        return [];
+        return $this->driver->getStatementFields($statement);
     }
 
     /**

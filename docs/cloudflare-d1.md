@@ -139,7 +139,7 @@ and the driver fails loudly rather than pretending otherwise.
   committed atomically on its own.
 - **No multiple rowsets.** `isSupportMultiRowset()` is always `false`.
 - **`getAllFields()` is not available.** It relies on column metadata that the API does not return
-  for an empty result set. Use `$executor->getHelper()->getTableMetadata($executor, 'Dogs')`
+  for an empty result set, so it throws a `NotAvailableException`. Use `$executor->getHelper()->getTableMetadata($executor, 'Dogs')`
   instead, which reads `PRAGMA table_info`.
 - **The Journal does not track INSERTs.** `JournalRecorder` locates the inserted row with
   `SELECT last_insert_rowid()`, which would be a second HTTP request on a different connection and

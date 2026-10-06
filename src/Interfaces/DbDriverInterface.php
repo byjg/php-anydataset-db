@@ -32,6 +32,15 @@ interface DbDriverInterface extends DbTransactionInterface
     public function getDriverIterator(mixed $statement, int $preFetch = 0, ?string $entityClass = null, ?PropertyHandlerInterface $entityTransformer = null): GenericDbIterator|GenericIterator;
 
     /**
+     * Returns the column names of an executed statement, in lower case and in the order
+     * the database returns them. It must work for a statement that produced no rows.
+     *
+     * @param mixed $statement The executed statement (PDOStatement, resource, etc.)
+     * @return string[]
+     */
+    public function getStatementFields(mixed $statement): array;
+
+    /**
      * @return SqlDialectInterface
      */
     /**

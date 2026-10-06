@@ -64,8 +64,8 @@ class D1Test extends BasePdo
     }
 
     /**
-     * DatabaseExecutor discovers the columns from the first row of a "LIMIT 0" query, which a
-     * non-PDO driver cannot answer. Use getHelper()->getTableMetadata() instead (testGetMetadata).
+     * DatabaseExecutor discovers the columns from the metadata of a "LIMIT 0" query, which the D1
+     * API does not return. Use getHelper()->getTableMetadata() instead (testGetMetadata).
      */
     public function testGetAllFields()
     {

@@ -44,6 +44,17 @@ $iterator = $executor->getIterator('SELECT * FROM users');
 
 See [Deprecated Features](docs/deprecated-features.md) for the complete migration checklist.
 
+### Added: `DbDriverInterface::getStatementFields()`
+
+`getStatementFields(mixed $statement): array` returns the column names of an executed statement.
+`DatabaseExecutor::getAllFields()` now delegates to it instead of inspecting the statement type itself.
+Custom `DbDriverInterface` implementations must add the method.
+
+This fixes `getAllFields()` on the OCI8 driver, which always returned an empty array: the columns
+were read from the first row of a query that returns no rows.
+
+On Cloudflare D1, `getAllFields()` now throws `NotAvailableException` instead of returning an empty array.
+
 ---
 
 ## New Features

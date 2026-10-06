@@ -45,6 +45,7 @@ interface DbDriverInterface extends DbTransactionInterface
 | `executeCursor(mixed $statement): void`                                                                                                                                        | Executes a prepared statement                       |
 | `processMultiRowset(mixed $statement): void`                                                                                                                                   | Processes multiple result sets                      |
 | `getDriverIterator(mixed $statement, int $preFetch = 0, ?string $entityClass = null, ?PropertyHandlerInterface $entityTransformer = null): GenericDbIterator\|GenericIterator` | Creates a driver-specific iterator from a statement |
+| `getStatementFields(mixed $statement): array`                                                                                                                                  | Returns the column names of an executed statement   |
 
 ### High-Level Query Execution (Removed in 7.0)
 

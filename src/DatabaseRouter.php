@@ -527,6 +527,18 @@ class DatabaseRouter implements DbDriverInterface
      * @throws RouteNotInitializedException
      */
     #[Override]
+    public function getStatementFields(mixed $statement): array
+    {
+        if ($this->lastMatchedDriver === null) {
+            throw new RouteNotInitializedException('Cannot get statement fields: no database has been selected. Execute a query first to match a route.');
+        }
+        return $this->lastMatchedDriver->getStatementFields($statement);
+    }
+
+    /**
+     * @throws RouteNotInitializedException
+     */
+    #[Override]
     public function processMultiRowset(mixed $statement): void
     {
         if ($this->lastMatchedDriver === null) {

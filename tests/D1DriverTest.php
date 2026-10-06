@@ -477,6 +477,16 @@ class D1DriverTest extends TestCase
         $this->createDriver()->beginTransaction();
     }
 
+    public function testGetAllFieldsIsNotAvailable(): void
+    {
+        $this->client->queueSuccess();
+
+        $this->expectException(NotAvailableException::class);
+        $this->expectExceptionMessage('does not return column metadata');
+
+        $this->createExecutor()->getAllFields('Dogs');
+    }
+
     public function testDefaultHttpClientIsResolvedWhenNoneIsInjected(): void
     {
         // No setHttpClient() here: the driver must fall back to the byjg/webrequest client.
