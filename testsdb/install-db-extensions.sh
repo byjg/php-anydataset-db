@@ -69,7 +69,9 @@ done
 
 EXTENSIONS=""
 apk add --no-cache curl
-apk add --no-cache $BUILD_DEPS
+# A PHP version still in development (8.6 today) is packaged only in Alpine's testing repository
+apk add --no-cache $BUILD_DEPS \
+    || apk add --no-cache --repository https://dl-cdn.alpinelinux.org/alpine/edge/testing $BUILD_DEPS
 
 for target in "$@"; do
     "install_$target"

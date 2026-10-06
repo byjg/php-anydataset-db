@@ -74,7 +74,7 @@ jobs:
         run: |
           apk add --no-cache ${PHP_VARIANT}-pdo_dblib
       - name: Install pdo_sqlsrv
-        # PHP 8.6 has no dev package to compile the extension with yet
+        # pdo_sqlsrv 5.13 does not compile against PHP 8.6 yet
         if: matrix.php-version != '8.6'
         run: sh testsdb/install-db-extensions.sh sqlsrv
       - run: composer install

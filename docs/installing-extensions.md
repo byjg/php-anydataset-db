@@ -27,7 +27,9 @@ php -m | grep -i -E "pdo|oci|sqlsrv"
 :::info Tested with
 Everything below was run on the `byjg/php:8.5-cli` image (Alpine Linux, x86_64, PHP 8.5) with
 Oracle Instant Client 23 Basic Lite, `oci8` 3.4.1, `pdo_oci` 1.2.0, Microsoft ODBC Driver
-18.5.1.1 and `pdo_sqlsrv` 5.13.3. In that image `$PHP_VARIANT` is `php85`.
+18.5.1.1 and `pdo_sqlsrv` 5.13.3. In that image `$PHP_VARIANT` is `php85`. The same versions
+work on PHP 8.3 and 8.4. On PHP 8.6 (release candidate) only `oci8` compiles: `pdo_oci` 1.2.0
+and `pdo_sqlsrv` 5.13.3 fail to build against it.
 :::
 
 ## The install script
