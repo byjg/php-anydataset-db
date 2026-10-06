@@ -1,6 +1,6 @@
 <?php
 
-namespace Test;
+namespace Tests;
 
 use ByJG\AnyDataset\Db\ParameterBinder;
 use ByJG\Util\Uri;
@@ -102,9 +102,6 @@ class ParameterBinderTest extends TestCase
         ];
     }
 
-    /**
-     * @dataProvider getDataTest
-     */
     #[DataProvider('getDataTest')]
     public function testParameterBinding($uri, $subject, $expected, $paramsIn, $paramsExpected)
     {

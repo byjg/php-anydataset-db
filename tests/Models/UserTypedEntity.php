@@ -1,6 +1,6 @@
 <?php
 
-namespace Test\Models;
+namespace Tests\Models;
 
 /**
  * Entity whose typed properties are non-nullable and have no default value. A freshly

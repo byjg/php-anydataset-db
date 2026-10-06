@@ -4,7 +4,7 @@ namespace TestDb;
 
 use ByJG\AnyDataset\Db\Factory;
 
-class PdoOciTest extends BasePdo
+class Oci8Test extends BasePdo
 {
 
     protected $connType = "default";
@@ -17,9 +17,9 @@ class PdoOciTest extends BasePdo
 
     protected function createInstance()
     {
-        if (!extension_loaded('pdo_oci')) {
+        if (!extension_loaded('oci8')) {
             $this->testSkipped = true;
-            $this->markTestSkipped("PDO ORACLE OCI extension is not loaded");
+            $this->markTestSkipped("OCI8 extension is not loaded");
         }
 
         $this->escapeQuote = "''";

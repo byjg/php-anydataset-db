@@ -18,9 +18,9 @@ use Exception;
 use PDOException;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
-use Test\Models\DogEntity;
-use Test\Models\DogEntityComplex;
-use Test\Models\Dogs;
+use Tests\Models\DogEntity;
+use Tests\Models\DogEntityComplex;
+use Tests\Models\Dogs;
 
 abstract class BasePdo extends TestCase
 {

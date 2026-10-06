@@ -1,6 +1,6 @@
 <?php
 
-namespace Test;
+namespace Tests;
 
 use ByJG\AnyDataset\Db\DbPdoDriver;
 use ByJG\AnyDataset\Db\PdoObj;
@@ -82,13 +82,10 @@ class DbPdoUriTest extends TestCase
         ];
     }
 
-    /**
-     * @dataProvider providerUriConnectionString
-     */
     #[DataProvider('providerUriConnectionString')]
     public function testUriFromPdoConnectionString(Uri $expected, string $connStr, string $user = "", string $pass = "")
     {
-        $this->assertEquals($expected, PdoObj::getUriFromPdoConnStr($connStr, $user, $pass));
+        $this->assertEquals((string)$expected, (string)PdoObj::getUriFromPdoConnStr($connStr, $user, $pass));
     }
 
     public static function providerUriConnectionString()

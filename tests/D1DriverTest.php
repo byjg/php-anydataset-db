@@ -1,6 +1,6 @@
 <?php
 
-namespace Test;
+namespace Tests;
 
 use ByJG\AnyDataset\Core\Exception\DatabaseException;
 use ByJG\AnyDataset\Core\Exception\NotAvailableException;
@@ -17,8 +17,8 @@ use DateTime;
 use InvalidArgumentException;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
-use Test\Helpers\D1FakeClient;
-use Test\Models\Dogs;
+use Tests\Helpers\D1FakeClient;
+use Tests\Models\Dogs;
 
 /**
  * Unit tests for the Cloudflare D1 driver. Every HTTP round trip goes through D1FakeClient, so the

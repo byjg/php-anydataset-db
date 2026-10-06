@@ -1,6 +1,6 @@
 <?php
 
-namespace Test\Helpers;
+namespace Tests\Helpers;
 
 use ByJG\WebRequest\Psr7\MemoryStream;
 use ByJG\WebRequest\Psr7\Response;

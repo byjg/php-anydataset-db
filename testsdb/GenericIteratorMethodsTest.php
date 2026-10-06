@@ -9,7 +9,7 @@ use ByJG\AnyDataset\Db\Interfaces\DbDriverInterface;
 use ByJG\AnyDataset\Db\SqlStatement;
 use Override;
 use PHPUnit\Framework\TestCase;
-use Test\Models\Dogs;
+use Tests\Models\Dogs;
 
 class GenericIteratorMethodsTest extends TestCase
 {

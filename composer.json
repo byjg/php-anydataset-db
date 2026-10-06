@@ -8,7 +8,7 @@
   },
     "autoload-dev": {
       "psr-4": {
-        "Test\\": "tests/",
+        "Tests\\": "tests/",
         "TestDb\\": "testsdb/"
       }
     },
