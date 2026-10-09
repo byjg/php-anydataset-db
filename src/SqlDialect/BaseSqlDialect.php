@@ -243,6 +243,12 @@ abstract class BaseSqlDialect implements SqlDialectInterface
     }
 
     #[Override]
+    public function getPingSql(): string
+    {
+        return "SELECT 1";
+    }
+
+    #[Override]
     public function getJoinTablesUpdate(array $tables): array
     {
         return [

@@ -1,5 +1,5 @@
 ---
-sidebar_position: 22
+sidebar_position: 24
 ---
 
 # Driver: Microsoft SQL Server
@@ -8,6 +8,8 @@ There are two Drivers to connect to Microsoft SQL Server.
 
 - **Dblib**: This driver is based on the Sybase protocol. It is a good driver, but it is not maintained anymore.
 - **SqlSrv**: This driver is the official driver from Microsoft. It is maintained and has more features than Dblib.
+
+Both are available on Linux. See [Installing the PHP database extensions](installing-extensions.md).
 
 ## Dblib
 

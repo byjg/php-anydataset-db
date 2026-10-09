@@ -1,6 +1,6 @@
 <?php
 
-namespace Test;
+namespace Tests;
 
 use ByJG\AnyDataset\Db\DatabaseRouter;
 use ByJG\AnyDataset\Db\Exception\RouteNotFoundException;

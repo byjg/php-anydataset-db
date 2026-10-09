@@ -1,6 +1,6 @@
 <?php
 
-namespace Test\Helpers;
+namespace Tests\Helpers;
 
 use ByJG\AnyDataset\Core\Exception\NotAvailableException;
 use ByJG\AnyDataset\Db\SqlDialect\DblibDialect;

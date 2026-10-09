@@ -45,11 +45,12 @@ interface DbDriverInterface extends DbTransactionInterface
 | `executeCursor(mixed $statement): void`                                                                                                                                        | Executes a prepared statement                       |
 | `processMultiRowset(mixed $statement): void`                                                                                                                                   | Processes multiple result sets                      |
 | `getDriverIterator(mixed $statement, int $preFetch = 0, ?string $entityClass = null, ?PropertyHandlerInterface $entityTransformer = null): GenericDbIterator\|GenericIterator` | Creates a driver-specific iterator from a statement |
+| `getStatementFields(mixed $statement): array`                                                                                                                                  | Returns the column names of an executed statement   |
 
-### High-Level Query Execution (Deprecated)
+### High-Level Query Execution (Removed in 7.0)
 
-:::danger Deprecated
-Deprecated in version 6.0, will be removed in version 7.0.
+:::danger Removed
+Deprecated in version 6.0 and removed in version 7.0.
 Use [DatabaseExecutor](database-executor.md) instead for these operations.
 :::
 
@@ -161,7 +162,7 @@ use ByJG\AnyDataset\Db\Factory;
 // Get a database driver instance
 $dbDriver = Factory::getDbInstance('mysql://user:password@host/database');
 
-// ⚠️ Deprecated: Direct query methods on driver will be removed in version 7.0
+// ⚠️ Removed in version 7.0: direct query methods on the driver no longer exist (6.x only)
 $iterator = $dbDriver->getIterator("SELECT * FROM users WHERE active = :active", [':active' => true]);
 foreach ($iterator as $row) {
     echo $row->get('name') . "\n";
@@ -198,9 +199,9 @@ class MyCustomDriver extends DbPdoDriver
 $db = \ByJG\AnyDataset\Db\Factory::getDbInstance("mycustom://user:pass@host/db");
 ```
 
-## Deprecated Methods
+## Removed Methods
 
-As of version 6.0, the following methods are deprecated and will be removed in version 7.0:
+The following methods were deprecated in version 6.0 and removed in version 7.0:
 
 - `getIterator()` - Use `DatabaseExecutor::using($driver)->getIterator()` instead
 - `getScalar()` - Use `DatabaseExecutor::using($driver)->getScalar()` instead
@@ -221,10 +222,11 @@ AnyDataset-DB provides several implementations of the `DbDriverInterface`:
 | `PdoSqlite`      | sqlite | SQLite driver                                             |
 | `PdoDblib`       | dblib  | SQL Server driver (using FreeTDS)                         |
 | `PdoSqlsrv`      | sqlsrv | SQL Server driver (using Microsoft driver)                |
-| `PdoOci`         | oci    | Oracle driver (using PDO OCI)                             |
+| `PdoOci`         | oci, oracle | Oracle driver (using PDO OCI)                        |
 | `DbOci8Driver`   | oci8   | Oracle driver (using OCI8 extension)                      |
 | `PdoOdbc`        | odbc   | ODBC driver                                               |
 | `PdoPdo`         | pdo    | Generic PDO driver                                        |
+| `DbD1Driver`     | d1     | Cloudflare D1 driver (using the REST API)                 |
 | `DatabaseRouter` | N/A    | Special driver for routing queries to different databases |
 
 ## See Also

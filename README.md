@@ -10,9 +10,10 @@ data source abstraction layer for PHP.
 
 [![Sponsor](https://img.shields.io/badge/Sponsor-%23ea4aaa?logo=githubsponsors&logoColor=white&labelColor=0d1117)](https://github.com/sponsors/byjg)
 [![Build Status](https://github.com/byjg/php-anydataset-db/actions/workflows/phpunit.yml/badge.svg?branch=master)](https://github.com/byjg/php-anydataset-db/actions/workflows/phpunit.yml)
-[![Opensource ByJG](https://img.shields.io/badge/opensource-byjg-success.svg)](http://opensource.byjg.com)
+[![Opensource ByJG](https://img.shields.io/badge/opensource-byjg-success.svg)](https://opensource.byjg.com)
+[![Install MCP Server](https://img.shields.io/badge/Install-MCP_Server-8A2BE2?logo=modelcontextprotocol&logoColor=white)](https://opensource.byjg.com/docs/ai/mcpserver-byjg-docs/)
 [![GitHub source](https://img.shields.io/badge/Github-source-informational?logo=github)](https://github.com/byjg/php-anydataset-db/)
-[![GitHub license](https://img.shields.io/github/license/byjg/php-anydataset-db.svg)](https://opensource.byjg.com/opensource/licensing.html)
+[![GitHub license](https://img.shields.io/github/license/byjg/php-anydataset-db.svg)](https://opensource.byjg.com/license/)
 [![GitHub release](https://img.shields.io/github/release/byjg/php-anydataset-db.svg)](https://github.com/byjg/php-anydataset-db/releases/)
 
 Learn more about Anydataset [here](https://opensource.byjg.com/anydataset).
@@ -40,6 +41,7 @@ Supported drivers are listed below:
 | SQL Server (Sqlsrv) | sqlsrv://username:password@hostname:port/database | `getDbInstance()` |
 | Oracle (OCI8)       | oci8://username:password@hostname:port/database   | `getDbInstance()` |
 | Generic PDO         | pdo://username:password@pdo_driver?PDO_PARAMETERS | `getDbInstance()` |
+| Cloudflare D1       | d1://account_id:api_token@api.cloudflare.com/database_id | `getDbInstance()` |
 
 Example usage:
 
@@ -64,9 +66,12 @@ $conn = \ByJG\AnyDataset\Db\Factory::getDbInstance("mysql://root:password@10.0.1
 
 - [Database Driver Interface](docs/db-driver-interface.md)
 - [DatabaseExecutor - Recommended API](docs/database-executor.md)
+- [Executor Observers](docs/observers.md)
+- [Journal (Record and Restore Changes)](docs/journal.md)
 - [Passing Parameters to PDODriver](docs/parameters.md)
 - [Generic PDO Driver](docs/generic-pdo-driver.md)
 - [Running Tests](docs/tests.md)
+- [Installing the PHP database extensions](docs/installing-extensions.md)
 - [Getting an Iterator from an existing PDO Statement](docs/pdostatement.md)
 - [Pre Fetch records](docs/prefetch.md)
 - [Logging](docs/logging.md)
@@ -78,10 +83,11 @@ $conn = \ByJG\AnyDataset\Db\Factory::getDbInstance("mysql://root:password@10.0.1
 - [PostgreSQL](docs/postgresql.md)
 - [Oracle](docs/oracle.md)
 - [SQLServer](docs/sqlserver.md)
+- [Cloudflare D1](docs/cloudflare-d1.md)
 - [Literal PDO Connection String](docs/literal-pdo-driver.md)
 
 
-## Install
+## Installation
 
 Just type:
 
@@ -89,16 +95,14 @@ Just type:
 composer require "byjg/anydataset-db"
 ```
 
-## Dependencies
+## Running Tests
 
-```mermaid
-flowchart TD
-    byjg/anydataset-db --> byjg/anydataset
-    byjg/anydataset-db --> ext-pdo
-    byjg/anydataset-db --> byjg/uri
-    byjg/anydataset-db --> psr/cache
-    byjg/anydataset-db --> psr/log
+```bash
+docker compose up -d
+vendor/bin/phpunit
 ```
 
+More details, including the database suites, are in [Running Unit tests](docs/tests.md).
+
 ----
-[Open source ByJG](http://opensource.byjg.com)
+[Open source ByJG](https://opensource.byjg.com)

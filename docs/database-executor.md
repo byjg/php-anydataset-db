@@ -15,7 +15,7 @@ The `DatabaseExecutor` class offers several benefits:
 - **Separation of Concerns**: Drivers handle connections; executors handle queries
 - **Cleaner Architecture**: High-level operations are decoupled from driver implementation
 - **Easier Testing**: Mock drivers for testing without database connections
-- **Future-Proof**: Direct driver methods for queries are deprecated and will be removed in version 7.0
+- **The Only Query API**: The direct driver methods for queries were removed in version 7.0
 
 ## Creating a DatabaseExecutor
 
@@ -260,13 +260,13 @@ foreach ($admins as $admin) {
 
 If you're currently using the driver methods directly, migrating is straightforward:
 
-### Old Way (Deprecated)
+### Old Way (Removed in 7.0)
 
 ```php
 <?php
 $dbDriver = Factory::getDbInstance('mysql://user:password@host/database');
 
-// Direct driver usage (deprecated in 6.0, removed in 7.0)
+// Direct driver usage (deprecated in 6.0, removed in 7.0 - throws Error)
 $iterator = $dbDriver->getIterator('SELECT * FROM users');
 $count = $dbDriver->getScalar('SELECT COUNT(*) FROM users');
 $dbDriver->execute('UPDATE users SET active = 1');

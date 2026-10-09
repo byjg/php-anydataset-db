@@ -1,8 +1,9 @@
 <?php
 
-namespace Test;
+namespace Tests;
 
 use ByJG\AnyDataset\Db\DbPdoDriver;
+use ByJG\AnyDataset\Db\PdoLiteral;
 use ByJG\AnyDataset\Db\PdoObj;
 use ByJG\Util\Uri;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -82,13 +83,25 @@ class DbPdoUriTest extends TestCase
         ];
     }
 
-    /**
-     * @dataProvider providerUriConnectionString
-     */
+    public function testLiteralConnectionStringKeepsSpaces()
+    {
+        $file = sys_get_temp_dir() . "/anydataset literal test.db";
+        @unlink($file);
+
+        try {
+            $driver = new PdoLiteral("sqlite:$file");
+
+            $this->assertSame($file, $driver->getUri()->getQueryPart("connection"));
+            $this->assertFileExists($file);
+        } finally {
+            @unlink($file);
+        }
+    }
+
     #[DataProvider('providerUriConnectionString')]
     public function testUriFromPdoConnectionString(Uri $expected, string $connStr, string $user = "", string $pass = "")
     {
-        $this->assertEquals($expected, PdoObj::getUriFromPdoConnStr($connStr, $user, $pass));
+        $this->assertEquals((string)$expected, (string)PdoObj::getUriFromPdoConnStr($connStr, $user, $pass));
     }
 
     public static function providerUriConnectionString()

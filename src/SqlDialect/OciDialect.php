@@ -230,4 +230,10 @@ class OciDialect extends BaseSqlDialect
             default => "",
         };
     }
+
+    #[Override]
+    public function getPingSql(): string
+    {
+        return "SELECT 1 FROM DUAL";
+    }
 }

@@ -1,0 +1,200 @@
+# Changelog - Version 7.0
+
+> **Status: in development.** This document tracks changes landing on the `7.0` branch.
+> Nothing here is released yet, and the contents may still change.
+
+## Overview
+
+Version 7.0 completes the architectural refactoring started in 6.0: the query methods deprecated
+on the drivers are now **removed**, making `DatabaseExecutor` the single API for executing queries
+and commands.
+
+On top of that, 7.0 introduces a generic observer mechanism for the `DatabaseExecutor` and,
+built on it, a Journal that records INSERT/UPDATE/DELETE operations with old and new values —
+designed for restoring database state between functional tests.
+
+---
+
+## Breaking Changes
+
+### Removed: Direct Query Methods on Drivers
+
+The following methods — deprecated since 6.0 — were removed from `DbDriverInterface`,
+all drivers (`DbPdoDriver` and subclasses, `DbOci8Driver`) and `DatabaseRouter`:
+
+| Removed Method | Replacement |
+|---|---|
+| `$dbDriver->getIterator($sql, $params)` | `DatabaseExecutor::using($dbDriver)->getIterator($sql, $params)` |
+| `$dbDriver->getScalar($sql, $params)` | `DatabaseExecutor::using($dbDriver)->getScalar($sql, $params)` |
+| `$dbDriver->execute($sql, $params)` | `DatabaseExecutor::using($dbDriver)->execute($sql, $params)` |
+| `$dbDriver->executeAndGetId($sql, $params)` | `DatabaseExecutor::using($dbDriver)->executeAndGetId($sql, $params)` |
+| `$dbDriver->getAllFields($table)` | `DatabaseExecutor::using($dbDriver)->getAllFields($table)` |
+
+Transaction methods (`beginTransaction`, `commitTransaction`, `rollbackTransaction`, etc.) and
+low-level methods (`prepareStatement`, `executeCursor`, `getDriverIterator`, etc.) remain on the driver.
+
+**Migration:**
+
+```php
+<?php
+// 6.x (deprecated) - no longer works in 7.0
+$iterator = $dbDriver->getIterator('SELECT * FROM users');
+
+// 7.0
+$executor = DatabaseExecutor::using($dbDriver);
+$iterator = $executor->getIterator('SELECT * FROM users');
+```
+
+See [Deprecated Features](docs/deprecated-features.md) for the complete migration checklist.
+
+### Added: `DbDriverInterface::getStatementFields()`
+
+`getStatementFields(mixed $statement): array` returns the column names of an executed statement.
+`DatabaseExecutor::getAllFields()` now delegates to it instead of inspecting the statement type itself.
+Custom `DbDriverInterface` implementations must add the method.
+
+This fixes `getAllFields()` on the OCI8 driver, which always returned an empty array: the columns
+were read from the first row of a query that returns no rows.
+
+On Cloudflare D1, `getAllFields()` now throws `NotAvailableException` instead of returning an empty array.
+
+### Added: `SqlDialectInterface::getPingSql()`
+
+`getPingSql(): string` returns the statement the drivers use to check that the connection is alive:
+`SELECT 1`, or `SELECT 1 FROM DUAL` on Oracle. Custom `SqlDialectInterface` implementations that do not
+extend `BaseSqlDialect` must add the method.
+
+### Changed: the PDO OCI driver (`PdoOci`)
+
+`PdoOci` was rebuilt on `DbPdoDriver` and is now covered by `testsdb/PdoOciTest.php`. It could not
+connect before: it registered the scheme `oracle` and used it as the PDO prefix, which is `oci`.
+
+- It answers to both `oci://` and `oracle://`.
+- `getUri()` returns the URI the driver was created with.
+- The `codepage` parameter is sent as the PDO `charset` and defaults to `AL32UTF8`.
+- A trailing `;` is removed from the statement, as the OCI8 driver does.
+- `PdoOci::getTnsString()` was removed; use `DbOci8Driver::getTnsString()`.
+- `isConnected()` and `reconnect()` work on Oracle (they pinged with `SELECT 1`, which Oracle rejects).
+
+See [Installing the PHP database extensions](docs/installing-extensions.md) for `oci8`, `pdo_oci`,
+`pdo_dblib` and `pdo_sqlsrv`, and for the `NLS_LANG` requirement of PDO OCI.
+
+### Fixed: spaces in a `PdoLiteral` connection string
+
+`PdoLiteral` encoded the connection string with `urlencode()`, which turns a space into `+`.
+`byjg/uri` 7.0 reads `+` as a literal plus sign, so the string reached PDO with `+` in place of
+every space. It is now encoded with `rawurlencode()`.
+
+---
+
+## New Features
+
+### 1. Executor Observers
+Generic event mechanism to observe queries and commands executed through the `DatabaseExecutor`:
+- New `DatabaseEventObserverInterface` attachable with `DatabaseExecutor::addObserver()` / removable with `removeObserver()`
+- Events: `BEFORE_QUERY`, `AFTER_QUERY`, `BEFORE_EXECUTE`, `AFTER_EXECUTE` (`DatabaseEventTypeEnum`)
+- Each notification carries a `DatabaseEvent` with the `SqlStatement` (SQL and parameters), the executor and the result
+- Enables decoupled auditing, metrics and query logging
+- Queries answered from the cache do not fire query events
+- No measurable overhead when no observer is attached
+
+**Documentation:** [Executor Observers](docs/observers.md)
+
+### 2. Journal (Record and Restore Changes)
+Records all INSERT, UPDATE and DELETE statements with the row values before and after each operation:
+- `JournalRecorder` watches all tables or a specific set (`forAllTables()` / `forTables()`)
+- Configurable primary keys: `withPrimaryKey($table, $column)` and `withDefaultPrimaryKey($column)` (default `id`)
+- `JournalRestorer` replays the journal in reverse, restoring the previous database state
+- Optional strict mode (`->strict()`) throws a `JournalException` on statements that cannot be journaled/restored, instead of skipping them silently
+- Designed for functional tests (record on setUp, restore on tearDown)
+
+**Documentation:** [Journal](docs/journal.md)
+
+### 3. Cloudflare D1 Driver
+
+New `DbD1Driver` (`d1://` scheme) talking to the [Cloudflare D1 REST API](https://developers.cloudflare.com/api/resources/d1/subresources/database/methods/query/):
+
+- Connection string: `d1://{account_id}:{api_token}@api.cloudflare.com/{database_id}`
+- Works over any PSR-18 HTTP client; uses `byjg/webrequest` when none is injected
+- Named parameters are translated to the positional `?` placeholders the API expects
+- `executeAndGetId()` reads the generated id from D1's `meta.last_row_id` instead of issuing a
+  second query, which would run on a different connection
+- SQLite semantics via the new `D1Dialect`
+- Routing observability: `isServedByPrimary()`, `getServedByRegion()`, `getServedByColo()`
+  and `getLastMeta()` expose what D1 reports about the last statement
+
+**Documentation:** [Driver: Cloudflare D1](docs/cloudflare-d1.md)
+
+---
+
+## Known Limitations
+
+- The Journal recognizes only single-table DML statements; multi-statement SQL,
+  `INSERT ... SELECT`, multi-table UPDATEs and CTEs are not journaled
+  (strict mode fails loudly on them instead).
+- Observers (and therefore the Journal) are bound to a specific executor instance:
+  writes made through a different `DatabaseExecutor` are not observed.
+- Cloudflare D1 has no interactive transactions (`beginTransaction()` throws `NotAvailableException`),
+  no multiple rowsets and no `getAllFields()`; the Journal cannot track INSERTs on it.
+- The D1 Sessions API is only available through the Workers binding, so the driver cannot provide
+  sequential consistency (read-your-own-writes) on databases with read replication enabled.
+  See [Driver: Cloudflare D1](docs/cloudflare-d1.md) for the full list.
+
+---
+
+## Upgrade Path from 6.x to 7.0
+
+1. Migrate every direct driver query call to `DatabaseExecutor` (see the table above).
+   Code already using `DatabaseExecutor` — the recommended API since 6.0 — needs no changes.
+2. Update the composer constraint:
+
+```json
+{
+  "require": {
+    "byjg/anydataset-db": "^7.0"
+  }
+}
+```
+
+## Requirements
+
+- PHP 8.3, 8.4, 8.5 and 8.6 are now supported: `"php": ">=8.3 <8.7"`.
+  The previous `<8.6` upper bound excluded PHP 8.6, since `<8.6` is exclusive.
+
+### ByJG dependencies
+
+- `byjg/anydataset` is now `^7.0`.
+- `byjg/cache-engine` is now `^7.0`.
+- `byjg/uri` is now `^7.0`.
+- `byjg/webrequest` is now `^7.0`.
+
+While 7.0 is unreleased these resolve to `7.0.x-dev` from each component's
+`7.0` branch, via `minimum-stability: dev` with `prefer-stable: true`.
+
+## Toolchain
+
+- PHPUnit updated to `^12.5`.
+- Psalm is installed as `psalm/phar` instead of `vimeo/psalm`.
+
+  `vimeo/psalm` lists the PHP versions it supports and no published release includes
+  8.6, so as a dev dependency it made `composer install` fail on the 8.6 build job
+  before any test ran. `psalm/phar` requires only `php ^8.2` and bundles its own
+  dependencies, so it installs on every PHP version in the matrix and cannot conflict
+  with the project's. Psalm itself still refuses to *run* on 8.6, which is why the
+  Psalm job uses 8.5. `composer psalm` runs it.
+
+- PHPUnit 13 is deliberately **not** used. It requires PHP `>=8.4.1`, breaking the
+  8.3 floor.
+
+## Continuous Integration
+
+- The build matrix now includes PHP 8.6.
+- The Psalm job runs on PHP 8.5.
+- The build installs `pdo_sqlsrv`, so the SQL Server tests also run through the Microsoft driver
+  (not on PHP 8.6: `pdo_sqlsrv` 5.13 does not compile against it yet).
+- Oracle is not tested in CI. Run `testsdb/Oci8Test.php` and `testsdb/PdoOciTest.php` locally;
+  see [Running Tests](docs/tests.md).
+
+## Housekeeping
+
+- `phpunit.xml.dist` renamed to `phpunit.xml`.

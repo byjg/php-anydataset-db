@@ -15,9 +15,9 @@ do
   sleep 5;
 done
 
-if [ "$n" -gt "$max" ]
+if [ -z "$(docker ps -q -f health=healthy -f name=anydataset_db_$1)" ]
 then
-  echo "$mysql was not health after $(( max * 5 ))"
+  echo "$1 was not healthy after $(( max * 5 ))s"
   exit 2
 fi
 

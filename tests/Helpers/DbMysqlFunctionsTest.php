@@ -1,6 +1,6 @@
 <?php
 
-namespace Test\Helpers;
+namespace Tests\Helpers;
 
 use ByJG\AnyDataset\Db\SqlDialect\MysqlDialect;
 use ByJG\AnyDataset\Db\SqlStatement;

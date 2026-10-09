@@ -2,17 +2,21 @@
 
 namespace ByJG\AnyDataset\Db;
 
+use ByJG\AnyDataset\Core\Exception\NotAvailableException;
+use ByJG\AnyDataset\Db\Exception\DbDriverNotConnected;
 use ByJG\AnyDataset\Db\SqlDialect\OciDialect;
 use ByJG\Util\Uri;
 use Override;
+use PDOStatement;
 
-class PdoOci extends PdoLiteral
+class PdoOci extends DbPdoDriver
 {
+    protected Uri $connUri;
 
     #[Override]
     public static function schema(): array
     {
-        return ['oracle'];
+        return ['oci', 'oracle'];
     }
 
     #[Override]
@@ -21,35 +25,50 @@ class PdoOci extends PdoLiteral
         return OciDialect::class;
     }
 
+    /**
+     * PdoOci constructor.
+     *
+     * Ex.
+     *
+     *    oci://username:password@host:1521/servicename?protocol=TCP&codepage=AL32UTF8
+     *
+     * @param Uri $connUri
+     * @throws DbDriverNotConnected
+     * @throws NotAvailableException
+     */
     public function __construct(Uri $connUri)
     {
-        parent::__construct($this->createPdoConnStr($connUri), $connUri->getUsername() ?? '', $connUri->getPassword() ?? '', [], []);
+        $this->connUri = $connUri;
+
+        parent::__construct($this->getOciUri($connUri));
     }
 
-    protected function createPdoConnStr(Uri $connUri): string
+    #[Override]
+    public function getUri(): Uri
     {
-        return $connUri->getScheme(). ":dbname=" . self::getTnsString($connUri);
+        return $this->connUri;
     }
 
     /**
-     *
-     * @param Uri $connUri
-     * @return string
+     * Oracle rejects a statement that ends with a semicolon.
      */
-    public static function getTnsString(Uri $connUri): string
+    #[Override]
+    public function prepareStatement(string $sql, ?array $params = null, ?array &$cacheInfo = []): PDOStatement
     {
-        $protocol = $connUri->getQueryPart("protocol");
-        $protocol = ($protocol == "") ? 'TCP' : $protocol;
+        return parent::prepareStatement(rtrim($sql, ' ;'), $params, $cacheInfo);
+    }
 
-        $port = $connUri->getPort() ?? 1521;
+    protected function getOciUri(Uri $connUri): Uri
+    {
+        $codePage = $connUri->getQueryPart("codepage");
 
-        $svcName = preg_replace('~^/~', '', $connUri->getPath());
+        $uri = Uri::getInstance("pdo://");
 
-        $host = $connUri->getHost();
-
-        return "(DESCRIPTION = " .
-            "    (ADDRESS = (PROTOCOL = $protocol)(HOST = $host)(PORT = $port)) " .
-            "        (CONNECT_DATA = (SERVICE_NAME = $svcName)) " .
-            ")";
+        return $uri
+            ->withUserInfo($connUri->getUsername() ?? '', $connUri->getPassword())
+            ->withHost("oci")
+            ->withQueryKeyValue("dbname", DbOci8Driver::getTnsString($connUri))
+            ->withQueryKeyValue("charset", empty($codePage) ? 'AL32UTF8' : $codePage)
+        ;
     }
 }
