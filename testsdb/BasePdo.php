@@ -876,9 +876,9 @@ abstract class BasePdo extends TestCase
     {
         $this->assertFalse($this->executor->hasActiveTransaction());
         $this->assertNull($this->executor->activeIsolationLevel());
-        $this->executor->beginTransaction(IsolationLevelEnum::SERIALIZABLE);
+        $this->executor->beginTransaction(IsolationLevelEnum::Serializable);
         $this->assertTrue($this->executor->hasActiveTransaction());
-        $this->assertEquals(IsolationLevelEnum::SERIALIZABLE, $this->executor->activeIsolationLevel());
+        $this->assertEquals(IsolationLevelEnum::Serializable, $this->executor->activeIsolationLevel());
 
         $idInserted = $this->executor->executeAndGetId(
             "INSERT INTO Dogs (Breed, Name, Age) VALUES ('Cat', 'Doris', 7);"
@@ -902,9 +902,9 @@ abstract class BasePdo extends TestCase
     {
         $this->assertFalse($this->executor->hasActiveTransaction());
         $this->assertNull($this->executor->activeIsolationLevel());
-        $this->executor->beginTransaction(IsolationLevelEnum::REPEATABLE_READ);
+        $this->executor->beginTransaction(IsolationLevelEnum::RepeatableRead);
         $this->assertTrue($this->executor->hasActiveTransaction());
-        $this->assertEquals(IsolationLevelEnum::REPEATABLE_READ, $this->executor->activeIsolationLevel());
+        $this->assertEquals(IsolationLevelEnum::RepeatableRead, $this->executor->activeIsolationLevel());
 
         $idInserted = $this->executor->executeAndGetId(
             "INSERT INTO Dogs (Breed, Name, Age) VALUES ('Cat', 'Doris', 7);"
@@ -939,14 +939,14 @@ abstract class BasePdo extends TestCase
         $this->assertNull($this->executor->activeIsolationLevel());
         $this->assertEquals(0, $this->executor->remainingCommits());
 
-        $this->executor->beginTransaction(IsolationLevelEnum::READ_COMMITTED);
+        $this->executor->beginTransaction(IsolationLevelEnum::ReadCommitted);
         $this->assertTrue($this->executor->hasActiveTransaction());
-        $this->assertEquals(IsolationLevelEnum::READ_COMMITTED, $this->executor->activeIsolationLevel());
+        $this->assertEquals(IsolationLevelEnum::ReadCommitted, $this->executor->activeIsolationLevel());
         $this->assertEquals(1, $this->executor->remainingCommits());
 
         $this->executor->requiresTransaction();
         $this->assertTrue($this->executor->hasActiveTransaction());
-        $this->assertEquals(IsolationLevelEnum::READ_COMMITTED, $this->executor->activeIsolationLevel());
+        $this->assertEquals(IsolationLevelEnum::ReadCommitted, $this->executor->activeIsolationLevel());
         $this->assertEquals(1, $this->executor->remainingCommits());
 
         $this->executor->commitTransaction();
@@ -963,7 +963,7 @@ abstract class BasePdo extends TestCase
 
     public function testBeginTransactionTwice()
     {
-        $this->executor->beginTransaction(IsolationLevelEnum::READ_UNCOMMITTED);
+        $this->executor->beginTransaction(IsolationLevelEnum::ReadUncommitted);
         $this->expectException(TransactionStartedException::class);
         try {
             $this->executor->beginTransaction();
@@ -977,18 +977,18 @@ abstract class BasePdo extends TestCase
 
     public function testJoinTransaction()
     {
-        $this->executor->beginTransaction(IsolationLevelEnum::READ_UNCOMMITTED);
+        $this->executor->beginTransaction(IsolationLevelEnum::ReadUncommitted);
         $this->assertEquals(1, $this->executor->remainingCommits());
-        $this->assertEquals(IsolationLevelEnum::READ_UNCOMMITTED, $this->executor->activeIsolationLevel());
+        $this->assertEquals(IsolationLevelEnum::ReadUncommitted, $this->executor->activeIsolationLevel());
 
-        $this->executor->beginTransaction(IsolationLevelEnum::READ_UNCOMMITTED, true);
+        $this->executor->beginTransaction(IsolationLevelEnum::ReadUncommitted, true);
         $this->assertEquals(2, $this->executor->remainingCommits());
-        $this->assertEquals(IsolationLevelEnum::READ_UNCOMMITTED, $this->executor->activeIsolationLevel());
+        $this->assertEquals(IsolationLevelEnum::ReadUncommitted, $this->executor->activeIsolationLevel());
 
         $this->executor->commitTransaction();
         $this->assertEquals(1, $this->executor->remainingCommits());
         $this->assertTrue($this->executor->hasActiveTransaction());
-        $this->assertEquals(IsolationLevelEnum::READ_UNCOMMITTED, $this->executor->activeIsolationLevel());
+        $this->assertEquals(IsolationLevelEnum::ReadUncommitted, $this->executor->activeIsolationLevel());
 
         $this->executor->commitTransaction();
         $this->assertEquals(0, $this->executor->remainingCommits());
@@ -1012,7 +1012,7 @@ abstract class BasePdo extends TestCase
         $this->assertEmpty($row);
 
         // Start a transaction on the first connection
-        $dbDriver1->beginTransaction(IsolationLevelEnum::SERIALIZABLE);
+        $dbDriver1->beginTransaction(IsolationLevelEnum::Serializable);
         $idInserted = $executor1->executeAndGetId(
             "INSERT INTO Dogs (Breed, Name, Age) VALUES ('Cat', 'Doris', 7);"
         );

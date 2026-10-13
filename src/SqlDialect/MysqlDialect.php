@@ -159,10 +159,10 @@ class MysqlDialect extends BaseSqlDialect
     public function getIsolationLevelCommand(?IsolationLevelEnum $isolationLevel = null): string
     {
         return match ($isolationLevel) {
-            IsolationLevelEnum::READ_UNCOMMITTED => "SET SESSION TRANSACTION ISOLATION LEVEL READ UNCOMMITTED",
-            IsolationLevelEnum::READ_COMMITTED => "SET SESSION TRANSACTION ISOLATION LEVEL READ COMMITTED",
-            IsolationLevelEnum::REPEATABLE_READ => "SET SESSION TRANSACTION ISOLATION LEVEL REPEATABLE READ",
-            IsolationLevelEnum::SERIALIZABLE => "SET SESSION TRANSACTION ISOLATION LEVEL SERIALIZABLE",
+            IsolationLevelEnum::ReadUncommitted => "SET SESSION TRANSACTION ISOLATION LEVEL READ UNCOMMITTED",
+            IsolationLevelEnum::ReadCommitted => "SET SESSION TRANSACTION ISOLATION LEVEL READ COMMITTED",
+            IsolationLevelEnum::RepeatableRead => "SET SESSION TRANSACTION ISOLATION LEVEL REPEATABLE READ",
+            IsolationLevelEnum::Serializable => "SET SESSION TRANSACTION ISOLATION LEVEL SERIALIZABLE",
             default => "",
         };
     }

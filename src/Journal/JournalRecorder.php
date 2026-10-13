@@ -40,8 +40,8 @@ class JournalRecorder implements DatabaseEventObserverInterface
     protected bool $strict = false;
 
     /**
-     * Stack of pending operations captured on BEFORE_EXECUTE and
-     * consumed on AFTER_EXECUTE.
+     * Stack of pending operations captured on BeforeExecute and
+     * consumed on AfterExecute.
      *
      * @var array<int, array{dml: ParsedDml, oldRows: array<int, array<string, mixed>>}|null>
      */
@@ -145,15 +145,15 @@ class JournalRecorder implements DatabaseEventObserverInterface
     #[\Override]
     public function subscribedEvents(): array
     {
-        return [DatabaseEventTypeEnum::BEFORE_EXECUTE, DatabaseEventTypeEnum::AFTER_EXECUTE];
+        return [DatabaseEventTypeEnum::BeforeExecute, DatabaseEventTypeEnum::AfterExecute];
     }
 
     #[\Override]
     public function handleEvent(DatabaseEvent $event): void
     {
-        if ($event->getType() === DatabaseEventTypeEnum::BEFORE_EXECUTE) {
+        if ($event->getType() === DatabaseEventTypeEnum::BeforeExecute) {
             $this->beforeExecute($event);
-        } elseif ($event->getType() === DatabaseEventTypeEnum::AFTER_EXECUTE) {
+        } elseif ($event->getType() === DatabaseEventTypeEnum::AfterExecute) {
             $this->afterExecute($event);
         }
     }
@@ -188,7 +188,7 @@ class JournalRecorder implements DatabaseEventObserverInterface
         }
 
         $oldRows = [];
-        if ($dml->getOperation() !== JournalOperationEnum::INSERT) {
+        if ($dml->getOperation() !== JournalOperationEnum::Insert) {
             try {
                 $oldRows = $this->fetchRows(
                     $event,
@@ -239,9 +239,9 @@ class JournalRecorder implements DatabaseEventObserverInterface
 
         try {
             $newRows = match ($dml->getOperation()) {
-                JournalOperationEnum::INSERT => $this->captureInsertedRows($event, $dml),
-                JournalOperationEnum::UPDATE => $this->captureUpdatedRows($event, $dml, $oldRows),
-                JournalOperationEnum::DELETE => [],
+                JournalOperationEnum::Insert => $this->captureInsertedRows($event, $dml),
+                JournalOperationEnum::Update => $this->captureUpdatedRows($event, $dml, $oldRows),
+                JournalOperationEnum::Delete => [],
             };
         } catch (Throwable $ex) {
             $event->getExecutor()->getDriver()->log(
@@ -252,7 +252,7 @@ class JournalRecorder implements DatabaseEventObserverInterface
 
         // Without the new values an INSERT cannot be reverted. An UPDATE/DELETE is
         // still restorable from the old rows, so only the INSERT is fatal in strict mode.
-        if ($this->strict && $dml->getOperation() === JournalOperationEnum::INSERT && empty($newRows)) {
+        if ($this->strict && $dml->getOperation() === JournalOperationEnum::Insert && empty($newRows)) {
             throw new JournalException(
                 "Journal strict mode: the inserted values could not be captured, so the INSERT " .
                 "cannot be reverted. NOTE: the statement WAS executed. SQL: {$statement->getSql()}"

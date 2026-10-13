@@ -165,7 +165,7 @@ You can use transactions to ensure data consistency:
 use ByJG\AnyDataset\Db\IsolationLevelEnum;
 
 // Begin a transaction (can be called on either executor or driver)
-$executor->beginTransaction(IsolationLevelEnum::SERIALIZABLE);
+$executor->beginTransaction(IsolationLevelEnum::Serializable);
 
 try {
     // Perform multiple operations

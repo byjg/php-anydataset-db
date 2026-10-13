@@ -87,12 +87,23 @@ every space. It is now encoded with `rawurlencode()`.
 
 ---
 
+### Enum cases renamed to PascalCase
+
+Enum cases follow the ByJG standard and are written in PascalCase. The backed values did not
+change, so `->value`, `from()`, `tryFrom()` and stored data are not affected; only code that
+names a case (or reads `->name`) has to be updated.
+
+| Enum | Before (6.x) | After (7.0) |
+|---|---|---|
+| `IsolationLevelEnum` | `READ_UNCOMMITTED`, `READ_COMMITTED`, `REPEATABLE_READ`, `SERIALIZABLE` | `ReadUncommitted`, `ReadCommitted`, `RepeatableRead`, `Serializable` |
+| `TransactionStageEnum` | `begin`, `commit`, `rollback` | `Begin`, `Commit`, `Rollback` |
+
 ## New Features
 
 ### 1. Executor Observers
 Generic event mechanism to observe queries and commands executed through the `DatabaseExecutor`:
 - New `DatabaseEventObserverInterface` attachable with `DatabaseExecutor::addObserver()` / removable with `removeObserver()`
-- Events: `BEFORE_QUERY`, `AFTER_QUERY`, `BEFORE_EXECUTE`, `AFTER_EXECUTE` (`DatabaseEventTypeEnum`)
+- Events: `BeforeQuery`, `AfterQuery`, `BeforeExecute`, `AfterExecute` (`DatabaseEventTypeEnum`)
 - Each notification carries a `DatabaseEvent` with the `SqlStatement` (SQL and parameters), the executor and the result
 - Enables decoupled auditing, metrics and query logging
 - Queries answered from the cache do not fire query events

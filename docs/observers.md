@@ -14,10 +14,10 @@ The events are defined by the `DatabaseEventTypeEnum`:
 
 | Event            | Fired                                                                  |
 |------------------|------------------------------------------------------------------------|
-| `BEFORE_QUERY`   | Before a query (`getIterator`/`getScalar`) is executed on the database |
-| `AFTER_QUERY`    | After a query was executed on the database                             |
-| `BEFORE_EXECUTE` | Before a command (`execute`/`executeAndGetId`) is executed             |
-| `AFTER_EXECUTE`  | After a command was executed                                           |
+| `BeforeQuery`   | Before a query (`getIterator`/`getScalar`) is executed on the database |
+| `AfterQuery`    | After a query was executed on the database                             |
+| `BeforeExecute` | Before a command (`execute`/`executeAndGetId`) is executed             |
+| `AfterExecute`  | After a command was executed                                           |
 
 Notes:
 
@@ -45,12 +45,12 @@ class QueryTimer implements DatabaseEventObserverInterface
 
     public function subscribedEvents(): array
     {
-        return [DatabaseEventTypeEnum::BEFORE_QUERY, DatabaseEventTypeEnum::AFTER_QUERY];
+        return [DatabaseEventTypeEnum::BeforeQuery, DatabaseEventTypeEnum::AfterQuery];
     }
 
     public function handleEvent(DatabaseEvent $event): void
     {
-        if ($event->getType() === DatabaseEventTypeEnum::BEFORE_QUERY) {
+        if ($event->getType() === DatabaseEventTypeEnum::BeforeQuery) {
             $this->start[] = microtime(true);
             return;
         }

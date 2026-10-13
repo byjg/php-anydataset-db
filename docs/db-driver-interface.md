@@ -131,7 +131,7 @@ $sqlStatement = new SqlStatement(
 $iterator = $executor->getIterator($sqlStatement, [':role' => 'admin']);
 
 // Transaction example (can use either executor or driver)
-$executor->beginTransaction(IsolationLevelEnum::SERIALIZABLE);
+$executor->beginTransaction(IsolationLevelEnum::Serializable);
 try {
     $executor->execute("INSERT INTO users (name, email) VALUES (:name, :email)", [
         ':name' => 'John Doe',

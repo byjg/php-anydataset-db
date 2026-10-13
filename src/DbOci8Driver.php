@@ -205,13 +205,13 @@ class DbOci8Driver implements DbDriverInterface
     protected function transactionHandler(TransactionStageEnum $action, string $isoLevelCommand = ""): void
     {
         switch ($action) {
-            case TransactionStageEnum::begin:
+            case TransactionStageEnum::Begin:
                 /** @psalm-suppress UndefinedConstant */
                 $this->ociAutoCommit = OCI_NO_AUTO_COMMIT;
                 DatabaseExecutor::using($this)->execute($isoLevelCommand);
                 break;
 
-            case TransactionStageEnum::commit:
+            case TransactionStageEnum::Commit:
                 /** @psalm-suppress UndefinedConstant */
                 if ($this->ociAutoCommit == OCI_COMMIT_ON_SUCCESS) {
                     throw new DatabaseException('No transaction for commit');
@@ -230,7 +230,7 @@ class DbOci8Driver implements DbDriverInterface
                 }
                 break;
 
-            case TransactionStageEnum::rollback:
+            case TransactionStageEnum::Rollback:
                 /** @psalm-suppress UndefinedConstant */
                 if ($this->ociAutoCommit == OCI_COMMIT_ON_SUCCESS) {
                     throw new DatabaseException('No transaction for rollback');

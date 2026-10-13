@@ -305,16 +305,16 @@ abstract class DbPdoDriver implements DbDriverInterface
         $instance = $this->getInstance();
 
         switch ($action) {
-            case TransactionStageEnum::begin:
+            case TransactionStageEnum::Begin:
                 if (!empty($isoLevelCommand)) {
                     $instance->exec($isoLevelCommand);
                 }
                 $instance->beginTransaction();
                 break;
-            case TransactionStageEnum::commit:
+            case TransactionStageEnum::Commit:
                 $instance->commit();
                 break;
-            case TransactionStageEnum::rollback:
+            case TransactionStageEnum::Rollback:
                 $instance->rollBack();
                 break;
         }

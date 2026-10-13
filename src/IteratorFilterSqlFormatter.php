@@ -79,25 +79,25 @@ class IteratorFilterSqlFormatter extends IteratorFilterFormatter
         };
 
         switch ($relation) {
-            case Relation::EQUAL:
+            case Relation::Equal:
                 return " $name = " . $paramStr($paramName, $value) . ' ';
-            case Relation::GREATER_THAN:
+            case Relation::GreaterThan:
                 return " $name > " . $paramStr($paramName, $value) . ' ';
-            case Relation::LESS_THAN:
+            case Relation::LessThan:
                 return " $name < " . $paramStr($paramName, $value) . ' ';
-            case Relation::GREATER_OR_EQUAL_THAN:
+            case Relation::GreaterThanOrEqualTo:
                 return " $name >= " . $paramStr($paramName, $value) . ' ';
-            case Relation::LESS_OR_EQUAL_THAN:
+            case Relation::LessThanOrEqualTo:
                 return " $name <= " . $paramStr($paramName, $value) . ' ';
-            case Relation::NOT_EQUAL:
+            case Relation::NotEqual:
                 return " $name <> " . $paramStr($paramName, $value) . ' ';
-            case Relation::STARTS_WITH:
+            case Relation::StartsWith:
                 $strValue = is_array($value) ? implode(',', $value) : (string)$value;
                 return " $name  like  " . $paramStr($paramName, $strValue . "%") . ' ';
-            case Relation::CONTAINS:
+            case Relation::Contains:
                 $strValue = is_array($value) ? implode(',', $value) : (string)$value;
                 return " $name  like  " . $paramStr($paramName, "%" . $strValue . "%") . ' ';
-            case Relation::IN:
+            case Relation::In:
                 if (!is_array($value)) {
                     $value = [$value];
                 }
@@ -106,7 +106,7 @@ class IteratorFilterSqlFormatter extends IteratorFilterFormatter
                     $this->params["$paramName$i"] = $v;
                 }
                 return " $name IN ($placeholders) ";
-            case Relation::NOT_IN:
+            case Relation::NotIn:
                 if (!is_array($value)) {
                     $value = [$value];
                 }
@@ -115,9 +115,9 @@ class IteratorFilterSqlFormatter extends IteratorFilterFormatter
                     $this->params["$paramName$i"] = $v;
                 }
                 return " $name NOT IN ($placeholders) ";
-            case Relation::IS_NULL:
+            case Relation::IsNull:
                 return " $name IS NULL ";
-            case Relation::IS_NOT_NULL:
+            case Relation::IsNotNull:
                 return " $name IS NOT NULL ";
         }
 

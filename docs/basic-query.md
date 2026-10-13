@@ -131,7 +131,7 @@ $dbDriver = Factory::getDbInstance('mysql://username:password@host/database');
 $executor = DatabaseExecutor::using($dbDriver);
 
 // Transactions can be called on either executor or driver
-$executor->beginTransaction(IsolationLevelEnum::SERIALIZABLE);
+$executor->beginTransaction(IsolationLevelEnum::Serializable);
 
 // ... Do your queries using executor
 $executor->execute('INSERT INTO ...');
@@ -149,7 +149,7 @@ use ByJG\AnyDataset\Db\IsolationLevelEnum;
 $dbDriver = Factory::getDbInstance('mysql://username:password@host/database');
 
 // Transaction methods on driver are NOT deprecated
-$dbDriver->beginTransaction(IsolationLevelEnum::SERIALIZABLE);
+$dbDriver->beginTransaction(IsolationLevelEnum::Serializable);
 
 // ... Do your queries (use DatabaseExecutor for queries)
 

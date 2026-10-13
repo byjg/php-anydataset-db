@@ -145,10 +145,10 @@ class DatabaseExecutor implements DbTransactionInterface
 
         // If no cache is configured, directly execute the query
         if (empty($cache)) {
-            $this->notifyObservers(DatabaseEventTypeEnum::BEFORE_QUERY, $sql);
+            $this->notifyObservers(DatabaseEventTypeEnum::BeforeQuery, $sql);
             $statement = $this->driver->prepareStatement($sqlText, $params);
             $this->driver->executeCursor($statement);
-            $this->notifyObservers(DatabaseEventTypeEnum::AFTER_QUERY, $sql);
+            $this->notifyObservers(DatabaseEventTypeEnum::AfterQuery, $sql);
             return $this->driver->getDriverIterator($statement, $preFetch, $sql->getEntityClass(), $sql->getEntityTransformer());
         }
 
@@ -179,10 +179,10 @@ class DatabaseExecutor implements DbTransactionInterface
 
         try {
             // Execute the query
-            $this->notifyObservers(DatabaseEventTypeEnum::BEFORE_QUERY, $sql);
+            $this->notifyObservers(DatabaseEventTypeEnum::BeforeQuery, $sql);
             $statement = $this->driver->prepareStatement($sqlText, $params);
             $this->driver->executeCursor($statement);
-            $this->notifyObservers(DatabaseEventTypeEnum::AFTER_QUERY, $sql);
+            $this->notifyObservers(DatabaseEventTypeEnum::AfterQuery, $sql);
             $iterator = $this->driver->getDriverIterator($statement, preFetch: $preFetch, entityClass: $sql->getEntityClass(), entityTransformer: $sql->getEntityTransformer());
 
             // Cache the results
@@ -290,11 +290,11 @@ class DatabaseExecutor implements DbTransactionInterface
             $sql = $sql->withParams($array);
         }
 
-        $this->notifyObservers(DatabaseEventTypeEnum::BEFORE_EXECUTE, $sql);
+        $this->notifyObservers(DatabaseEventTypeEnum::BeforeExecute, $sql);
         $statement = $this->driver->prepareStatement($sql->getSql(), $sql->getParams());
         $this->driver->executeCursor($statement);
         $this->driver->processMultiRowset($statement);
-        $this->notifyObservers(DatabaseEventTypeEnum::AFTER_EXECUTE, $sql, true);
+        $this->notifyObservers(DatabaseEventTypeEnum::AfterExecute, $sql, true);
 
         return true;
     }

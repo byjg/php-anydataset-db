@@ -36,7 +36,7 @@ class DatabaseEvent
 
     /**
      * The result of the operation (only for AFTER_* events).
-     * For AFTER_EXECUTE it is `true` (execute) or the operation result when available.
+     * For AfterExecute it is `true` (execute) or the operation result when available.
      */
     public function getResult(): mixed
     {

@@ -76,7 +76,7 @@ class JournalTest extends TestCase
 
         $this->assertEquals(1, $recorder->count());
         $entry = $recorder->getEntries()[0];
-        $this->assertEquals(JournalOperationEnum::INSERT, $entry->getOperation());
+        $this->assertEquals(JournalOperationEnum::Insert, $entry->getOperation());
         $this->assertEquals('users', $entry->getTable());
         $this->assertEquals([], $entry->getOldRows());
         $this->assertCount(1, $entry->getNewRows());
@@ -97,7 +97,7 @@ class JournalTest extends TestCase
 
         $this->assertEquals(1, $recorder->count());
         $entry = $recorder->getEntries()[0];
-        $this->assertEquals(JournalOperationEnum::UPDATE, $entry->getOperation());
+        $this->assertEquals(JournalOperationEnum::Update, $entry->getOperation());
         $this->assertEquals('users', $entry->getTable());
         $this->assertCount(1, $entry->getOldRows());
         $this->assertCount(1, $entry->getNewRows());
@@ -145,7 +145,7 @@ class JournalTest extends TestCase
 
         $this->assertEquals(1, $recorder->count());
         $entry = $recorder->getEntries()[0];
-        $this->assertEquals(JournalOperationEnum::DELETE, $entry->getOperation());
+        $this->assertEquals(JournalOperationEnum::Delete, $entry->getOperation());
         $this->assertCount(1, $entry->getOldRows());
         $this->assertEquals('Jane Doe', $entry->getOldRows()[0]['name']);
         $this->assertEquals([], $entry->getNewRows());

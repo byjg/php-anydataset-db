@@ -178,10 +178,10 @@ class DblibDialect extends BaseSqlDialect
     public function getIsolationLevelCommand(?IsolationLevelEnum $isolationLevel = null): string
     {
         return match ($isolationLevel) {
-            IsolationLevelEnum::READ_UNCOMMITTED => "SET TRANSACTION ISOLATION LEVEL READ UNCOMMITTED",
-            IsolationLevelEnum::READ_COMMITTED => "SET TRANSACTION ISOLATION LEVEL READ COMMITTED",
-            IsolationLevelEnum::REPEATABLE_READ => "SET TRANSACTION ISOLATION LEVEL REPEATABLE READ",
-            IsolationLevelEnum::SERIALIZABLE => "SET TRANSACTION ISOLATION LEVEL SERIALIZABLE",
+            IsolationLevelEnum::ReadUncommitted => "SET TRANSACTION ISOLATION LEVEL READ UNCOMMITTED",
+            IsolationLevelEnum::ReadCommitted => "SET TRANSACTION ISOLATION LEVEL READ COMMITTED",
+            IsolationLevelEnum::RepeatableRead => "SET TRANSACTION ISOLATION LEVEL REPEATABLE READ",
+            IsolationLevelEnum::Serializable => "SET TRANSACTION ISOLATION LEVEL SERIALIZABLE",
             default => "",
         };
     }

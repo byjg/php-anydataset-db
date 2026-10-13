@@ -54,7 +54,7 @@ class DmlParser
         }
 
         return new ParsedDml(
-            JournalOperationEnum::INSERT,
+            JournalOperationEnum::Insert,
             self::stripDelimiters($matches['table']),
             null,
             $insertValues
@@ -69,7 +69,7 @@ class DmlParser
         }
 
         return new ParsedDml(
-            JournalOperationEnum::UPDATE,
+            JournalOperationEnum::Update,
             self::stripDelimiters($matches['table']),
             empty($matches['where']) ? null : trim($matches['where'])
         );
@@ -83,7 +83,7 @@ class DmlParser
         }
 
         return new ParsedDml(
-            JournalOperationEnum::DELETE,
+            JournalOperationEnum::Delete,
             self::stripDelimiters($matches['table']),
             empty($matches['where']) ? null : trim($matches['where'])
         );

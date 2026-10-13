@@ -102,31 +102,31 @@ class D1Test extends BasePdo
     public function testCommitTransaction()
     {
         $this->expectException(NotAvailableException::class);
-        $this->executor->beginTransaction(IsolationLevelEnum::SERIALIZABLE);
+        $this->executor->beginTransaction(IsolationLevelEnum::Serializable);
     }
 
     public function testRollbackTransaction()
     {
         $this->expectException(NotAvailableException::class);
-        $this->executor->beginTransaction(IsolationLevelEnum::REPEATABLE_READ);
+        $this->executor->beginTransaction(IsolationLevelEnum::RepeatableRead);
     }
 
     public function testRequiresTransaction()
     {
         $this->expectException(NotAvailableException::class);
-        $this->executor->beginTransaction(IsolationLevelEnum::READ_COMMITTED);
+        $this->executor->beginTransaction(IsolationLevelEnum::ReadCommitted);
     }
 
     public function testBeginTransactionTwice()
     {
         $this->expectException(NotAvailableException::class);
-        $this->executor->beginTransaction(IsolationLevelEnum::READ_UNCOMMITTED);
+        $this->executor->beginTransaction(IsolationLevelEnum::ReadUncommitted);
     }
 
     public function testJoinTransaction()
     {
         $this->expectException(NotAvailableException::class);
-        $this->executor->beginTransaction(IsolationLevelEnum::READ_UNCOMMITTED);
+        $this->executor->beginTransaction(IsolationLevelEnum::ReadUncommitted);
     }
 
     public function testTwoDifferentTransactions()

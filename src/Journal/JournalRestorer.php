@@ -45,9 +45,9 @@ class JournalRestorer
 
         foreach (array_reverse($recorder->getEntries()) as $entry) {
             match ($entry->getOperation()) {
-                JournalOperationEnum::INSERT => $this->revertInsert($executor, $recorder, $entry),
-                JournalOperationEnum::UPDATE => $this->revertUpdate($executor, $recorder, $entry),
-                JournalOperationEnum::DELETE => $this->revertDelete($executor, $entry),
+                JournalOperationEnum::Insert => $this->revertInsert($executor, $recorder, $entry),
+                JournalOperationEnum::Update => $this->revertUpdate($executor, $recorder, $entry),
+                JournalOperationEnum::Delete => $this->revertDelete($executor, $entry),
             };
         }
 

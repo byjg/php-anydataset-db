@@ -22,10 +22,10 @@ class ObserverSpy implements DatabaseEventObserverInterface
     public function __construct(?array $subscribed = null)
     {
         $this->subscribed = $subscribed ?? [
-            DatabaseEventTypeEnum::BEFORE_QUERY,
-            DatabaseEventTypeEnum::AFTER_QUERY,
-            DatabaseEventTypeEnum::BEFORE_EXECUTE,
-            DatabaseEventTypeEnum::AFTER_EXECUTE,
+            DatabaseEventTypeEnum::BeforeQuery,
+            DatabaseEventTypeEnum::AfterQuery,
+            DatabaseEventTypeEnum::BeforeExecute,
+            DatabaseEventTypeEnum::AfterExecute,
         ];
     }
 
@@ -89,7 +89,7 @@ class DatabaseExecutorObserverTest extends TestCase
         $this->executor->execute("insert into users (name) values (:name)", ['name' => 'John']);
 
         $this->assertEquals(
-            [DatabaseEventTypeEnum::BEFORE_EXECUTE, DatabaseEventTypeEnum::AFTER_EXECUTE],
+            [DatabaseEventTypeEnum::BeforeExecute, DatabaseEventTypeEnum::AfterExecute],
             $spy->eventTypes()
         );
 
@@ -108,7 +108,7 @@ class DatabaseExecutorObserverTest extends TestCase
         $this->executor->getIterator("select * from users where id = :id", ['id' => 1]);
 
         $this->assertEquals(
-            [DatabaseEventTypeEnum::BEFORE_QUERY, DatabaseEventTypeEnum::AFTER_QUERY],
+            [DatabaseEventTypeEnum::BeforeQuery, DatabaseEventTypeEnum::AfterQuery],
             $spy->eventTypes()
         );
         $this->assertEquals("select * from users where id = :id", $spy->events[0]->getStatement()->getSql());
@@ -126,10 +126,10 @@ class DatabaseExecutorObserverTest extends TestCase
         // The insert fires execute events; fetching the generated id fires query events.
         $this->assertEquals(
             [
-                DatabaseEventTypeEnum::BEFORE_EXECUTE,
-                DatabaseEventTypeEnum::AFTER_EXECUTE,
-                DatabaseEventTypeEnum::BEFORE_QUERY,
-                DatabaseEventTypeEnum::AFTER_QUERY,
+                DatabaseEventTypeEnum::BeforeExecute,
+                DatabaseEventTypeEnum::AfterExecute,
+                DatabaseEventTypeEnum::BeforeQuery,
+                DatabaseEventTypeEnum::AfterQuery,
             ],
             $spy->eventTypes()
         );
@@ -137,13 +137,13 @@ class DatabaseExecutorObserverTest extends TestCase
 
     public function testObserverReceivesOnlySubscribedEvents()
     {
-        $spy = new ObserverSpy([DatabaseEventTypeEnum::AFTER_EXECUTE]);
+        $spy = new ObserverSpy([DatabaseEventTypeEnum::AfterExecute]);
         $this->executor->addObserver($spy);
 
         $this->executor->execute("insert into users (name) values ('John')");
         $this->executor->getIterator("select * from users");
 
-        $this->assertEquals([DatabaseEventTypeEnum::AFTER_EXECUTE], $spy->eventTypes());
+        $this->assertEquals([DatabaseEventTypeEnum::AfterExecute], $spy->eventTypes());
     }
 
     public function testRemoveObserverStopsNotifications()
@@ -168,21 +168,21 @@ class DatabaseExecutorObserverTest extends TestCase
         $this->executor->execute("insert into users (name) values ('John')");
 
         $this->assertEquals(
-            [DatabaseEventTypeEnum::BEFORE_EXECUTE, DatabaseEventTypeEnum::AFTER_EXECUTE],
+            [DatabaseEventTypeEnum::BeforeExecute, DatabaseEventTypeEnum::AfterExecute],
             $spy->eventTypes()
         );
     }
 
     public function testMultipleObservers()
     {
-        $spy1 = new ObserverSpy([DatabaseEventTypeEnum::BEFORE_EXECUTE]);
-        $spy2 = new ObserverSpy([DatabaseEventTypeEnum::AFTER_EXECUTE]);
+        $spy1 = new ObserverSpy([DatabaseEventTypeEnum::BeforeExecute]);
+        $spy2 = new ObserverSpy([DatabaseEventTypeEnum::AfterExecute]);
         $this->executor->addObserver($spy1);
         $this->executor->addObserver($spy2);
 
         $this->executor->execute("insert into users (name) values ('John')");
 
-        $this->assertEquals([DatabaseEventTypeEnum::BEFORE_EXECUTE], $spy1->eventTypes());
-        $this->assertEquals([DatabaseEventTypeEnum::AFTER_EXECUTE], $spy2->eventTypes());
+        $this->assertEquals([DatabaseEventTypeEnum::BeforeExecute], $spy1->eventTypes());
+        $this->assertEquals([DatabaseEventTypeEnum::AfterExecute], $spy2->eventTypes());
     }
 }

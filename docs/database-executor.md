@@ -150,7 +150,7 @@ The `DatabaseExecutor` provides transaction methods that delegate to the underly
 use ByJG\AnyDataset\Db\IsolationLevelEnum;
 
 // Begin transaction
-$executor->beginTransaction(IsolationLevelEnum::SERIALIZABLE);
+$executor->beginTransaction(IsolationLevelEnum::Serializable);
 
 try {
     // Perform multiple operations
@@ -223,7 +223,7 @@ $totalUsers = $executor->getScalar('SELECT COUNT(*) FROM users');
 echo "Total users: $totalUsers\n";
 
 // Transaction example
-$executor->beginTransaction(IsolationLevelEnum::READ_COMMITTED);
+$executor->beginTransaction(IsolationLevelEnum::ReadCommitted);
 
 try {
     // Insert new user

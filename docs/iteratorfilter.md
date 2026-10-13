@@ -13,7 +13,7 @@ It is a standard feature across all AnyDataset implementations.
 <?php
 // Create the IteratorFilter instance
 $filter = new \ByJG\AnyDataset\Core\IteratorFilter();
-$filter->addRelation('field', \ByJG\AnyDataset\Enum\Relation::EQUAL, 10);
+$filter->addRelation('field', \ByJG\AnyDataset\Enum\Relation::Equal, 10);
 
 // Generate the SQL
 $param = [];
@@ -54,5 +54,5 @@ $literal = new MyLiteral();
 
 // Using the IteratorFilter:
 $filter = new \ByJG\AnyDataset\Core\IteratorFilter();
-$filter->addRelation('field', \ByJG\AnyDataset\Core\Enum\Relation::EQUAL, $literal);
+$filter->addRelation('field', \ByJG\AnyDataset\Core\Enum\Relation::Equal, $literal);
 ```

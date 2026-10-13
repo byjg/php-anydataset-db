@@ -175,7 +175,7 @@ class SqliteDialect extends BaseSqlDialect
     public function getIsolationLevelCommand(?IsolationLevelEnum $isolationLevel = null): string
     {
         return match ($isolationLevel) {
-            IsolationLevelEnum::READ_UNCOMMITTED => "PRAGMA read_uncommitted = true;",
+            IsolationLevelEnum::ReadUncommitted => "PRAGMA read_uncommitted = true;",
             default => "",
         };
     }

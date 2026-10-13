@@ -224,9 +224,9 @@ class OciDialect extends BaseSqlDialect
     public function getIsolationLevelCommand(?IsolationLevelEnum $isolationLevel = null): string
     {
         return match ($isolationLevel) {
-            IsolationLevelEnum::READ_UNCOMMITTED => "SET TRANSACTION READ WRITE",
-            IsolationLevelEnum::READ_COMMITTED, IsolationLevelEnum::REPEATABLE_READ => "SET TRANSACTION ISOLATION LEVEL READ COMMITTED",
-            IsolationLevelEnum::SERIALIZABLE => "SET TRANSACTION ISOLATION LEVEL SERIALIZABLE",
+            IsolationLevelEnum::ReadUncommitted => "SET TRANSACTION READ WRITE",
+            IsolationLevelEnum::ReadCommitted, IsolationLevelEnum::RepeatableRead => "SET TRANSACTION ISOLATION LEVEL READ COMMITTED",
+            IsolationLevelEnum::Serializable => "SET TRANSACTION ISOLATION LEVEL SERIALIZABLE",
             default => "",
         };
     }

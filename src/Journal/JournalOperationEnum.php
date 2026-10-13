@@ -4,7 +4,7 @@ namespace ByJG\AnyDataset\Db\Journal;
 
 enum JournalOperationEnum: string
 {
-    case INSERT = 'insert';
-    case UPDATE = 'update';
-    case DELETE = 'delete';
+    case Insert = 'insert';
+    case Update = 'update';
+    case Delete = 'delete';
 }
