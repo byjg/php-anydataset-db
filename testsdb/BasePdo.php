@@ -11,6 +11,9 @@ use ByJG\AnyDataset\Db\Exception\TransactionStartedException;
 use ByJG\AnyDataset\Db\Factory;
 use ByJG\AnyDataset\Db\Interfaces\DbDriverInterface;
 use ByJG\AnyDataset\Db\IsolationLevelEnum;
+use ByJG\AnyDataset\Db\Metadata\ColumnMetadata;
+use ByJG\AnyDataset\Db\Metadata\ForeignKeyMetadata;
+use ByJG\AnyDataset\Db\Metadata\IndexMetadata;
 use ByJG\AnyDataset\Db\SqlStatement;
 use ByJG\Cache\Psr16\ArrayCacheEngine;
 use ByJG\Serializer\PropertyHandler\PropertyNameMapper;
@@ -35,6 +38,11 @@ abstract class BasePdo extends TestCase
     protected string $escapeQuote = "''";
 
     protected int $floatSize = 10;
+
+    /**
+     * Whether "Id INTEGER NOT NULL PRIMARY KEY", with no identity clause, is filled in by the database.
+     */
+    protected bool $integerPrimaryKeyIsAutoIncrement = false;
 
     protected bool $testSkipped = false;
 
@@ -799,10 +807,8 @@ abstract class BasePdo extends TestCase
     public function testGetMetadata()
     {
         $metadata = $this->executor->getHelper()->getTableMetadata($this->executor, 'Dogs');
-
-        foreach ($metadata as $key => $field) {
-            unset($metadata[$key]['dbType']);
-        }
+        $this->assertContainsOnlyInstancesOf(ColumnMetadata::class, $metadata);
+        $metadata = $this->metadataToArray($metadata);
 
         $this->assertEquals($this->getExpectedMetadata(), $metadata);
     }
@@ -817,6 +823,9 @@ abstract class BasePdo extends TestCase
                 'phpType' => 'integer',
                 'length' => null,
                 'precision' => null,
+                'primaryKey' => true,
+                'autoIncrement' => true,
+                'generated' => false,
             ],
             'breed' => [
                 'name' => 'Breed',
@@ -825,6 +834,9 @@ abstract class BasePdo extends TestCase
                 'phpType' => 'string',
                 'length' => 50,
                 'precision' => null,
+                'primaryKey' => false,
+                'autoIncrement' => false,
+                'generated' => false,
             ],
             'name' => [
                 'name' => 'Name',
@@ -833,6 +845,9 @@ abstract class BasePdo extends TestCase
                 'phpType' => 'string',
                 'length' => 50,
                 'precision' => null,
+                'primaryKey' => false,
+                'autoIncrement' => false,
+                'generated' => false,
             ],
             'age' => [
                 'name' => 'Age',
@@ -841,6 +856,9 @@ abstract class BasePdo extends TestCase
                 'phpType' => 'integer',
                 'length' => null,
                 'precision' => null,
+                'primaryKey' => false,
+                'autoIncrement' => false,
+                'generated' => false,
             ],
             'weight' => [
                 'name' => 'Weight',
@@ -849,8 +867,135 @@ abstract class BasePdo extends TestCase
                 'phpType' => 'float',
                 'length' => $this->floatSize,
                 'precision' => 2,
+                'primaryKey' => false,
+                'autoIncrement' => false,
+                'generated' => false,
             ],
         ];
+    }
+
+    /**
+     * MetaOwner (unique index on Email) and MetaPet (foreign key to MetaOwner, composite
+     * index on Kind, Name), in SQL every database accepts. Dropped again by dropKeyTables().
+     */
+    protected function createKeyTables(): void
+    {
+        $this->executor->execute("CREATE TABLE MetaOwner (Id INTEGER NOT NULL PRIMARY KEY, Email VARCHAR(100) NOT NULL)");
+        $this->executor->execute("CREATE UNIQUE INDEX ux_metaowner_email ON MetaOwner (Email)");
+        $this->executor->execute(
+            "CREATE TABLE MetaPet (Id INTEGER NOT NULL PRIMARY KEY, OwnerId INTEGER NOT NULL, Kind VARCHAR(20), Name VARCHAR(50), "
+            . "CONSTRAINT fk_metapet_owner FOREIGN KEY (OwnerId) REFERENCES MetaOwner (Id))"
+        );
+        $this->executor->execute("CREATE INDEX ix_metapet_kind_name ON MetaPet (Kind, Name)");
+    }
+
+    protected function dropKeyTables(): void
+    {
+        $this->executor->execute("DROP TABLE MetaPet");
+        $this->executor->execute("DROP TABLE MetaOwner");
+    }
+
+    /**
+     * The metadata objects as arrays, without dbType, which each database spells its own way.
+     */
+    protected function metadataToArray(array $metadata): array
+    {
+        return array_map(fn (object $item) => array_diff_key(get_object_vars($item), ['dbType' => true]), $metadata);
+    }
+
+    /**
+     * Each database folds unquoted names to its own case; the tests compare them in lower case.
+     */
+    protected function lowerCaseNames(array $metadata): array
+    {
+        array_walk_recursive($metadata, function (&$value) {
+            if (is_string($value)) {
+                $value = strtolower($value);
+            }
+        });
+        return $metadata;
+    }
+
+    protected function getExpectedMetaPetIndexes(): array
+    {
+        return [
+            ['name' => 'ix_metapet_kind_name', 'columns' => ['kind', 'name'], 'unique' => false],
+        ];
+    }
+
+    public function testGetTableIndexes()
+    {
+        $this->createKeyTables();
+        try {
+            $helper = $this->executor->getHelper();
+            $this->assertContainsOnlyInstancesOf(IndexMetadata::class, $helper->getTableIndexes($this->executor, 'MetaPet'));
+
+            $this->assertEquals(
+                [['name' => 'ux_metaowner_email', 'columns' => ['email'], 'unique' => true]],
+                $this->lowerCaseNames($this->metadataToArray($helper->getTableIndexes($this->executor, 'MetaOwner')))
+            );
+            $this->assertEquals(
+                $this->getExpectedMetaPetIndexes(),
+                $this->lowerCaseNames($this->metadataToArray($helper->getTableIndexes($this->executor, 'MetaPet')))
+            );
+        } finally {
+            $this->dropKeyTables();
+        }
+    }
+
+    public function testGetTableForeignKeys()
+    {
+        $this->createKeyTables();
+        try {
+            $helper = $this->executor->getHelper();
+            $this->assertContainsOnlyInstancesOf(ForeignKeyMetadata::class, $helper->getTableForeignKeys($this->executor, 'MetaPet'));
+
+            $this->assertEquals(
+                [['columns' => ['ownerid'], 'parentTable' => 'metaowner', 'parentColumns' => ['id']]],
+                $this->lowerCaseNames($this->metadataToArray($helper->getTableForeignKeys($this->executor, 'MetaPet')))
+            );
+            $this->assertEquals([], $helper->getTableForeignKeys($this->executor, 'MetaOwner'));
+        } finally {
+            $this->dropKeyTables();
+        }
+    }
+
+    public function testGetTableMetadataPrimaryKeyWithoutIdentity()
+    {
+        $this->createKeyTables();
+        try {
+            $metadata = $this->executor->getHelper()->getTableMetadata($this->executor, 'MetaPet');
+
+            $this->assertTrue($metadata['id']->primaryKey);
+            $this->assertSame($this->integerPrimaryKeyIsAutoIncrement, $metadata['id']->autoIncrement);
+            $this->assertFalse($metadata['ownerid']->primaryKey);
+            $this->assertFalse($metadata['ownerid']->autoIncrement);
+        } finally {
+            $this->dropKeyTables();
+        }
+    }
+
+    /**
+     * The column definition of a column computed as A + B.
+     */
+    protected function getGeneratedColumnDefinition(): string
+    {
+        return "Total INTEGER GENERATED ALWAYS AS (A + B) STORED";
+    }
+
+    public function testGetTableMetadataGeneratedColumn()
+    {
+        $this->executor->execute("CREATE TABLE MetaSum (Id INTEGER NOT NULL PRIMARY KEY, A INTEGER, B INTEGER, " . $this->getGeneratedColumnDefinition() . ")");
+        try {
+            $metadata = $this->executor->getHelper()->getTableMetadata($this->executor, 'MetaSum');
+
+            $this->assertSame(['id', 'a', 'b', 'total'], array_keys($metadata));
+            $this->assertTrue($metadata['total']->generated);
+            $this->assertFalse($metadata['a']->generated);
+            $this->assertFalse($metadata['id']->generated);
+        } finally {
+            $this->executor->execute("DROP TABLE MetaSum");
+        }
     }
 
     public function testDisconnect()

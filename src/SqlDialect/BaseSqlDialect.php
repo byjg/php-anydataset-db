@@ -7,6 +7,9 @@ use ByJG\AnyDataset\Db\DatabaseExecutor;
 use ByJG\AnyDataset\Db\Exception\DbDriverNotConnected;
 use ByJG\AnyDataset\Db\Interfaces\SqlDialectInterface;
 use ByJG\AnyDataset\Db\IsolationLevelEnum;
+use ByJG\AnyDataset\Db\Metadata\ColumnMetadata;
+use ByJG\AnyDataset\Db\Metadata\ForeignKeyMetadata;
+use ByJG\AnyDataset\Db\Metadata\IndexMetadata;
 use ByJG\AnyDataset\Db\SqlStatement;
 use ByJG\XmlUtil\Exception\FileException;
 use ByJG\XmlUtil\Exception\XmlUtilException;
@@ -183,6 +186,7 @@ abstract class BaseSqlDialect implements SqlDialectInterface
     }
 
     /**
+     * @return array<string, ColumnMetadata>
      * @throws XmlUtilException
      * @throws DatabaseException
      * @throws DbDriverNotConnected
@@ -199,9 +203,137 @@ abstract class BaseSqlDialect implements SqlDialectInterface
      * Parse column metadata from database-specific format into standardized format
      *
      * @param array<array-key, array<string, mixed>> $metadata Raw metadata from database
-     * @return array<string, array{name: string, dbType: string, required: bool, default: mixed, phpType: string, length: int|null, precision: int|null}>
+     * @return array<string, ColumnMetadata>
      */
     abstract protected function parseColumnMetadata(array $metadata): array;
+
+    /**
+     * @param string|null $declaredType The type parsed for phpType, length and precision, when it is not $dbType
+     */
+    protected function newColumnMetadata(
+        string $name,
+        string $dbType,
+        bool $required,
+        mixed $default,
+        bool $primaryKey,
+        bool $autoIncrement,
+        bool $generated,
+        ?string $declaredType = null
+    ): ColumnMetadata {
+        $type = $this->parseTypeMetadata($declaredType ?? $dbType);
+
+        return new ColumnMetadata(
+            name: $name,
+            dbType: $dbType,
+            required: $required,
+            default: $default,
+            phpType: $type['phpType'],
+            length: $type['length'],
+            precision: $type['precision'],
+            primaryKey: $primaryKey,
+            autoIncrement: $autoIncrement,
+            generated: $generated,
+        );
+    }
+
+    /**
+     * @throws Exception
+     */
+    #[Override]
+    public function getTableIndexes(DatabaseExecutor $executor, string $tableName): array
+    {
+        throw new Exception("Not implemented");
+    }
+
+    /**
+     * Runs a query returning one row per index column, in index order, with the
+     * fields index_name, column_name and is_unique, and groups it by index.
+     *
+     * @return list<IndexMetadata>
+     * @throws XmlUtilException
+     * @throws DatabaseException
+     * @throws DbDriverNotConnected
+     * @throws FileException
+     * @throws InvalidArgumentException
+     */
+    protected function getTableIndexesFromSql(DatabaseExecutor $executor, string $sql, array $params = []): array
+    {
+        return $this->groupIndexRows($executor->getIterator($sql, $params)->toArray());
+    }
+
+    /**
+     * @param array<array-key, array<string, mixed>> $rows index_name, column_name and is_unique, in index order
+     * @return list<IndexMetadata>
+     */
+    protected function groupIndexRows(array $rows): array
+    {
+        // Kept apart from the array keys, which PHP turns into int for a numeric name
+        $names = [];
+        $columns = [];
+        $unique = [];
+        foreach ($rows as $row) {
+            $name = (string)$row['index_name'];
+            $names[$name] = $name;
+            $columns[$name][] = (string)$row['column_name'];
+            $unique[$name] = (bool)$row['is_unique'];
+        }
+        ksort($names);
+
+        $indexes = [];
+        foreach ($names as $key => $name) {
+            $indexes[] = new IndexMetadata($name, $columns[$key], $unique[$key]);
+        }
+        return $indexes;
+    }
+
+    /**
+     * @throws Exception
+     */
+    #[Override]
+    public function getTableForeignKeys(DatabaseExecutor $executor, string $tableName): array
+    {
+        throw new Exception("Not implemented");
+    }
+
+    /**
+     * Runs a query returning one row per foreign key column, in key order, with the fields
+     * constraint_name, column_name, parent_table and parent_column, and groups it by key.
+     *
+     * @return list<ForeignKeyMetadata>
+     * @throws XmlUtilException
+     * @throws DatabaseException
+     * @throws DbDriverNotConnected
+     * @throws FileException
+     * @throws InvalidArgumentException
+     */
+    protected function getTableForeignKeysFromSql(DatabaseExecutor $executor, string $sql, array $params = []): array
+    {
+        return $this->groupForeignKeyRows($executor->getIterator($sql, $params)->toArray());
+    }
+
+    /**
+     * @param array<array-key, array<string, mixed>> $rows constraint_name, column_name, parent_table and parent_column, in key order
+     * @return list<ForeignKeyMetadata>
+     */
+    protected function groupForeignKeyRows(array $rows): array
+    {
+        $columns = [];
+        $parentTable = [];
+        $parentColumns = [];
+        foreach ($rows as $row) {
+            $name = (string)$row['constraint_name'];
+            $columns[$name][] = (string)$row['column_name'];
+            $parentTable[$name] = (string)$row['parent_table'];
+            $parentColumns[$name][] = (string)$row['parent_column'];
+        }
+        ksort($columns);
+
+        $foreignKeys = [];
+        foreach ($columns as $name => $keyColumns) {
+            $foreignKeys[] = new ForeignKeyMetadata($keyColumns, $parentTable[$name], $parentColumns[$name]);
+        }
+        return $foreignKeys;
+    }
 
     protected function parseTypeMetadata(string $type): array
     {

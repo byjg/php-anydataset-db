@@ -2,6 +2,7 @@
 
 namespace ByJG\AnyDataset\Db\SqlDialect;
 
+use ByJG\AnyDataset\Core\Exception\NotImplementedException;
 use Override;
 
 class GenericPdoDialect extends BaseSqlDialect
@@ -89,7 +90,6 @@ class GenericPdoDialect extends BaseSqlDialect
     #[Override]
     protected function parseColumnMetadata(array $metadata): array
     {
-        /** @var array<string, array{name: string, dbType: string, required: bool, default: mixed, phpType: string, length: int|null, precision: int|null}> */
-        return $metadata;
+        throw new NotImplementedException('Table metadata is not available for a generic PDO connection');
     }
 }

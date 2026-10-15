@@ -4,6 +4,7 @@ namespace TestDb;
 
 use ByJG\AnyDataset\Db\DatabaseExecutor;
 use ByJG\AnyDataset\Db\Factory;
+use ByJG\AnyDataset\Db\Metadata\ColumnMetadata;
 use PDOException;
 
 class PdoPostgresTest extends BasePdo
@@ -60,10 +61,8 @@ class PdoPostgresTest extends BasePdo
     public function testGetMetadata()
     {
         $metadata = $this->executor->getHelper()->getTableMetadata($this->executor, 'Dogs');
-
-        foreach ($metadata as $key => $field) {
-            unset($metadata[$key]['dbType']);
-        }
+        $this->assertContainsOnlyInstancesOf(ColumnMetadata::class, $metadata);
+        $metadata = $this->metadataToArray($metadata);
 
         $this->assertEquals([
             'id' => [
@@ -73,6 +72,9 @@ class PdoPostgresTest extends BasePdo
                 'phpType' => 'integer',
                 'length' => null,
                 'precision' => null,
+                'primaryKey' => true,
+                'autoIncrement' => true,
+                'generated' => false,
             ],
             'breed' => [
                 'name' => 'breed',
@@ -81,6 +83,9 @@ class PdoPostgresTest extends BasePdo
                 'phpType' => 'string',
                 'length' => 50,
                 'precision' => null,
+                'primaryKey' => false,
+                'autoIncrement' => false,
+                'generated' => false,
             ],
             'name' => [
                 'name' => 'name',
@@ -89,6 +94,9 @@ class PdoPostgresTest extends BasePdo
                 'phpType' => 'string',
                 'length' => 50,
                 'precision' => null,
+                'primaryKey' => false,
+                'autoIncrement' => false,
+                'generated' => false,
             ],
             'age' => [
                 'name' => 'age',
@@ -97,6 +105,9 @@ class PdoPostgresTest extends BasePdo
                 'phpType' => 'integer',
                 'length' => null,
                 'precision' => null,
+                'primaryKey' => false,
+                'autoIncrement' => false,
+                'generated' => false,
             ],
             'weight' => [
                 'name' => 'weight',
@@ -105,7 +116,23 @@ class PdoPostgresTest extends BasePdo
                 'phpType' => 'float',
                 'length' => 10,
                 'precision' => 2,
+                'primaryKey' => false,
+                'autoIncrement' => false,
+                'generated' => false,
             ],
         ], $metadata);
+    }
+
+    public function testGetMetadataOfAColumnWithoutLength()
+    {
+        // The type used to be NULL for a type with neither a length nor a precision
+        $this->executor->execute("CREATE TABLE MetaTime (Id INTEGER NOT NULL PRIMARY KEY, CreatedAt TIMESTAMP)");
+        try {
+            $metadata = $this->executor->getHelper()->getTableMetadata($this->executor, 'MetaTime');
+
+            $this->assertSame('timestamp without time zone', $metadata['createdat']->dbType);
+        } finally {
+            $this->executor->execute("DROP TABLE MetaTime");
+        }
     }
 }

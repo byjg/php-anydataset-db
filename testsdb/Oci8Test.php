@@ -3,6 +3,7 @@
 namespace TestDb;
 
 use ByJG\AnyDataset\Db\Factory;
+use ByJG\AnyDataset\Db\Metadata\ColumnMetadata;
 
 class Oci8Test extends BasePdo
 {
@@ -71,10 +72,8 @@ class Oci8Test extends BasePdo
     public function testGetMetadata()
     {
         $metadata = $this->executor->getHelper()->getTableMetadata($this->executor, 'Dogs');
-
-        foreach ($metadata as $key => $field) {
-            unset($metadata[$key]['dbType']);
-        }
+        $this->assertContainsOnlyInstancesOf(ColumnMetadata::class, $metadata);
+        $metadata = $this->metadataToArray($metadata);
         $this->assertStringContainsString('.nextval', $metadata['id']['default']);
         $metadata['id']['default'] = null;
 
@@ -92,6 +91,11 @@ class Oci8Test extends BasePdo
         $expected['age']["phpType"] = "float";
 
         return $expected;
+    }
+
+    protected function getGeneratedColumnDefinition(): string
+    {
+        return "Total INTEGER GENERATED ALWAYS AS (A + B) VIRTUAL";
     }
 
     public function testTwoDifferentTransactions()

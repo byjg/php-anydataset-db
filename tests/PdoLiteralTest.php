@@ -11,6 +11,7 @@ use TestDb\BasePdo;
 
 class PdoLiteralTest extends BasePdo
 {
+    protected bool $integerPrimaryKeyIsAutoIncrement = true;
 
     #[Override]
     protected function createInstance()

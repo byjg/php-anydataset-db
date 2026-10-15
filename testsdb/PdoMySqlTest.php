@@ -41,6 +41,17 @@ class PdoMySqlTest extends BasePdo
         $this->executor->execute('drop table Dogs;');
     }
 
+    /**
+     * MySQL creates an index for a foreign key that has none, named after the constraint.
+     */
+    protected function getExpectedMetaPetIndexes(): array
+    {
+        return [
+            ['name' => 'fk_metapet_owner', 'columns' => ['ownerid'], 'unique' => false],
+            ['name' => 'ix_metapet_kind_name', 'columns' => ['kind', 'name'], 'unique' => false],
+        ];
+    }
+
     public function testGetDate() {
         $data = $this->executor->getScalar("SELECT CONVERT('2018-07-26 20:02:03', date) ");
         $this->assertEquals("2018-07-26", $data);

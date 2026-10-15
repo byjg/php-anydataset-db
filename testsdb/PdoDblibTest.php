@@ -38,6 +38,11 @@ class PdoDblibTest extends BasePdo
         // $this->executor->execute("ALTER DATABASE tempdb SET READ_COMMITTED_SNAPSHOT ON");
     }
 
+    protected function getGeneratedColumnDefinition(): string
+    {
+        return "Total AS (A + B)";
+    }
+
     public function deleteDatabase()
     {
         $this->executor->execute('drop table Dogs;');

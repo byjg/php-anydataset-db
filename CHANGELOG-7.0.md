@@ -64,6 +64,35 @@ On Cloudflare D1, `getAllFields()` now throws `NotAvailableException` instead of
 `SELECT 1`, or `SELECT 1 FROM DUAL` on Oracle. Custom `SqlDialectInterface` implementations that do not
 extend `BaseSqlDialect` must add the method.
 
+### Changed: table metadata returns objects, and gains keys, indexes and foreign keys
+
+`SqlDialectInterface::getTableMetadata()` returns `array<string, ColumnMetadata>` (still keyed by the
+lower-case column name) instead of an array of arrays. Each `ColumnMetadata` has the same fields as the
+old array, as read-only public properties, plus two new ones:
+
+- `primaryKey`: the column is part of the primary key.
+- `autoIncrement`: the database fills in the value (`auto_increment`, `IDENTITY`, `SERIAL`/identity,
+  or SQLite's single-column `INTEGER PRIMARY KEY`, which is an alias of the rowid).
+- `generated`: the database computes the value from an expression (a generated, computed or virtual
+  column), so it cannot be written. On SQLite the metadata now comes from `PRAGMA table_xinfo`, because
+  `table_info` leaves generated columns out.
+
+On PostgreSQL, `dbType` was empty, with a `strtolower()` deprecation, for a type with neither a length
+nor a precision, such as `timestamp`; it is now the type name (`timestamp without time zone`).
+
+Two methods are added to the interface, implemented for MySQL, SQLite (and D1), PostgreSQL,
+SQL Server and Oracle:
+
+- `getTableIndexes($executor, $table)` returns a `list<IndexMetadata>` (`name`, `columns`, `unique`),
+  ordered by name, without the index of the primary key.
+- `getTableForeignKeys($executor, $table)` returns a `list<ForeignKeyMetadata>`
+  (`columns`, `parentTable`, `parentColumns`).
+
+Code reading `$metadata['id']['required']` becomes `$metadata['id']->required`. Custom
+`SqlDialectInterface` implementations that do not extend `BaseSqlDialect` must add the two methods;
+those that do extend it must return `ColumnMetadata` from `parseColumnMetadata()`
+(`newColumnMetadata()` builds it).
+
 ### Changed: the PDO OCI driver (`PdoOci`)
 
 `PdoOci` was rebuilt on `DbPdoDriver` and is now covered by `testsdb/PdoOciTest.php`. It could not
