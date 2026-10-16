@@ -75,12 +75,12 @@ class DbPostgresFunctionsTest extends TestCase
 
     public function testSqlDate()
     {
-        $this->assertEquals("TO_CHAR(column,'DD/Mon/YYYY')", $this->object->sqlDate('d/M/Y', 'column'));
-        $this->assertEquals("TO_CHAR(column,'DD/MM/YYYY HH24:MI')", $this->object->sqlDate('d/m/Y H:i', 'column'));
+        $this->assertEquals("TO_CHAR(column,'FMDD/FMMonth/YYYY')", $this->object->sqlDate('d/M/Y', 'column'));
+        $this->assertEquals("TO_CHAR(column,'FMDD/MM/YYYY HH24:MI')", $this->object->sqlDate('d/m/Y H:i', 'column'));
         $this->assertEquals("TO_CHAR(column,'HH24:MI')", $this->object->sqlDate('H:i', 'column'));
-        $this->assertEquals("TO_CHAR(column,'DD MM YYYY HH24 MI')", $this->object->sqlDate('d m Y H i', 'column'));
-        $this->assertEquals("TO_CHAR(column,'Mon Q')", $this->object->sqlDate('M q', 'column'));
-        $this->assertEquals("TO_CHAR(current_timestamp,'DD/MM/YY HH:MI')", $this->object->sqlDate('d/m/y h:i'));
+        $this->assertEquals("TO_CHAR(column,'FMDD MM YYYY HH24 MI')", $this->object->sqlDate('d m Y H i', 'column'));
+        $this->assertEquals("TO_CHAR(column,'FMMonth Q')", $this->object->sqlDate('M q', 'column'));
+        $this->assertEquals("TO_CHAR(current_timestamp,'FMDD/MM/YY HH:MI')", $this->object->sqlDate('d/m/y h:i'));
     }
 
     public function testDelimiterField()

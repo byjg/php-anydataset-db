@@ -101,12 +101,13 @@ class OciDialect extends BaseSqlDialect
         $pattern = [
             'Y' => "YYYY",
             'y' => "YY",
-            'M' => "Mon",
+            // FM toggles Oracle's fill mode: closed again so it applies to this element only
+            'M' => "FMMonthFM",
             'm' => "MM",
             'Q' => "Q",
             'q' => "Q",
             'D' => "DD",
-            'd' => "DD",
+            'd' => "FMDDFM",
             'h' => "HH",
             'H' => "HH24",
             'i' => "MI",

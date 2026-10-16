@@ -108,6 +108,31 @@ connect before: it registered the scheme `oracle` and used it as the PDO prefix,
 See [Installing the PHP database extensions](docs/installing-extensions.md) for `oci8`, `pdo_oci`,
 `pdo_dblib` and `pdo_sqlsrv`, and for the `NLS_LANG` requirement of PDO OCI.
 
+### Fixed: `sqlDate()` follows the documented format letters
+
+The letters of `sqlDate()` are documented in `docs/helper.md` (`D` day with a leading zero, `d`
+without, `M` month name, `m` month number, `y` two-digit year, `h` 12-hour hour). Several dialects
+did not follow them:
+
+- SQL Server used patterns `FORMAT()` does not know (`YYYY`, `YY`), so `sqlDate('Y-m-d')` gave
+  `YYYY-10-16`, and `m`, `d`, `M` and `h` gave another field. It now uses the .NET specifiers
+  (`yyyy`, `MM`, `d`, `MMMM`, `hh`, `tt`).
+- PostgreSQL and Oracle gave `d` with a leading zero and `M` as the abbreviated month (`Mar`):
+  `d` is now `5`, and `M` is `March`.
+- MySQL gave `M` as the abbreviated month: it is now `March`.
+
+SQLite is unchanged: its `strftime()` has no month names nor a two-digit year, and its day
+without zero and 12-hour hour only exist in recent versions. A date formatted with `M` or `d`
+on the other databases reads differently than before.
+
+### Fixed: the scheme aliases of the PDO drivers
+
+`PdoPgsql` declares `postgres` and `postgresql` next to `pgsql`, and `PdoMysql` declares
+`mariadb` next to `mysql`, but a connection through an alias always failed:
+`Extension 'pdo_postgres' is not loaded`. `PdoObj` takes the PDO driver and the extension to
+check from the scheme. `DbPdoDriver` now passes `PdoObj` the driver's main scheme (the first of
+`schema()`), so `getUri()` of such a driver returns the URI with that scheme.
+
 ### Fixed: spaces in a `PdoLiteral` connection string
 
 `PdoLiteral` encoded the connection string with `urlencode()`, which turns a space into `+`.

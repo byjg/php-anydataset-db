@@ -95,29 +95,34 @@ class DblibDialect extends BaseSqlDialect
             $column = "getdate()";
         }
 
+        // .NET custom format specifiers (FORMAT() uses them)
         $pattern = [
-            'Y' => "YYYY",
-            'y' => "YY",
-            'M' => "MM",
-            'm' => "M",
+            'Y' => "yyyy",
+            'y' => "yy",
+            'M' => "MMMM",
+            'm' => "MM",
             'Q' => "",
             'q' => "",
             'D' => "dd",
-            'd' => "dd",
-            'h' => "H",
+            'd' => "d",
+            'h' => "hh",
             'H' => "HH",
             'i' => "mm",
             's' => "ss",
-            'a' => "",
-            'A' => "",
+            'a' => "tt",
+            'A' => "tt",
         ];
 
-        $preparedSql = $this->prepareSqlDate($format, $pattern, '');
+        $preparedSql = implode('', $this->prepareSqlDate($format, $pattern, ''));
+        // One specifier alone is a .NET *standard* format ("d" is the short date): "%" makes it custom
+        if (strlen($preparedSql) === 1) {
+            $preparedSql = '%' . $preparedSql;
+        }
 
         return sprintf(
             "FORMAT(%s, '%s')",
             $column,
-            implode('', $preparedSql)
+            $preparedSql
         );
     }
 

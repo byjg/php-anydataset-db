@@ -11,6 +11,19 @@ use TestDb\BasePdo;
 
 class PdoLiteralTest extends BasePdo
 {
+    /**
+     * strftime() has no month names nor a two-digit year, and its day without zero and 12-hour
+     * clock only exist in recent SQLite versions: sqlDate() keeps to what every version has.
+     */
+    #[\Override]
+    protected function expectedSqlDates(): array
+    {
+        return [
+            'D/m/Y H:i:s' => '05/03/2026 14:07:09',
+            'Y-m-D' => '2026-03-05',
+        ];
+    }
+
     protected bool $integerPrimaryKeyIsAutoIncrement = true;
 
     #[Override]

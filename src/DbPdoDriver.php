@@ -49,6 +49,25 @@ abstract class DbPdoDriver implements DbDriverInterface
     protected LoggerInterface $logger;
 
     /**
+     * The URI with the driver's main scheme (the first of schema()) when it was given one of the
+     * others: "postgres://" becomes "pgsql://", "mariadb://" becomes "mysql://". PdoObj takes the
+     * PDO driver and the extension to check from the scheme, so an alias would ask for a
+     * "pdo_postgres" that does not exist.
+     */
+    protected static function withMainScheme(Uri $connUri): Uri
+    {
+        $schemes = (array)static::schema();
+        $scheme = strtolower($connUri->getScheme());
+        if (empty($schemes) || $scheme === $schemes[0] || !in_array($scheme, $schemes, true)) {
+            return $connUri;
+        }
+
+        $mainSchemeUri = $connUri->withScheme((string)$schemes[0]);
+        assert($mainSchemeUri instanceof Uri);
+        return $mainSchemeUri;
+    }
+
+    /**
      * DbPdoDriver constructor.
      *
      * @param Uri $connUri
@@ -60,7 +79,7 @@ abstract class DbPdoDriver implements DbDriverInterface
     public function __construct(Uri $connUri, ?array $preOptions = null, ?array $postOptions = null, array $executeAfterConnect = [])
     {
         $this->logger = new NullLogger();
-        $this->pdoObj = new PdoObj($connUri);
+        $this->pdoObj = new PdoObj(static::withMainScheme($connUri));
         $this->preOptions = $preOptions;
         $this->postOptions = $postOptions;
         $this->executeAfterConnect = $executeAfterConnect;

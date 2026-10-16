@@ -7,6 +7,18 @@ use ByJG\AnyDataset\Db\Metadata\ColumnMetadata;
 
 class Oci8Test extends BasePdo
 {
+    #[\Override]
+    protected function dateLiteral(): string
+    {
+        return "TIMESTAMP '2026-03-05 14:07:09'";
+    }
+
+    #[\Override]
+    protected function selectScalarSql(string $expression): string
+    {
+        return "SELECT $expression FROM dual";
+    }
+
 
     protected $connType = "default";
 

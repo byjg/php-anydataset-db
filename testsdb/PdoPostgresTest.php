@@ -9,6 +9,16 @@ use PDOException;
 
 class PdoPostgresTest extends BasePdo
 {
+    #[\Override]
+    protected function dateLiteral(): string
+    {
+        return "TIMESTAMP '2026-03-05 14:07:09'";
+    }
+
+    /**
+     * The URI scheme of the connection; PdoPostgresAliasTest runs the same tests with an alias.
+     */
+    protected string $scheme = 'pgsql';
 
     protected function createInstance()
     {
@@ -24,13 +34,13 @@ class PdoPostgresTest extends BasePdo
             $password = "";
         }
 
-        $dbDriver = Factory::getDbInstance("pgsql://postgres:$password@$host");
+        $dbDriver = Factory::getDbInstance("{$this->scheme}://postgres:$password@$host");
         $executor = DatabaseExecutor::using($dbDriver);
         $exists = $executor->getScalar('select count(1) from pg_catalog.pg_database where datname = \'test\'');
         if ($exists == 0) {
             $executor->execute('CREATE DATABASE test');
         }
-        return Factory::getDbInstance("pgsql://postgres:$password@$host/test");
+        return Factory::getDbInstance("{$this->scheme}://postgres:$password@$host/test");
     }
 
     protected function createDatabase()

@@ -8,6 +8,10 @@ use PDOException;
 
 class PdoMySqlTest extends BasePdo
 {
+    /**
+     * The URI scheme of the connection; PdoMariaDbAliasTest runs the same tests with an alias.
+     */
+    protected string $scheme = 'mysql';
 
     protected function createInstance()
     {
@@ -25,9 +29,9 @@ class PdoMySqlTest extends BasePdo
             $password = "";
         }
 
-        $dbDriver = Factory::getDbInstance("mysql://root:$password@$host");
+        $dbDriver = Factory::getDbInstance("{$this->scheme}://root:$password@$host");
         DatabaseExecutor::using($dbDriver)->execute('CREATE DATABASE IF NOT EXISTS test');
-        return Factory::getDbInstance("mysql://root:$password@$host/test");
+        return Factory::getDbInstance("{$this->scheme}://root:$password@$host/test");
     }
 
     protected function createDatabase()

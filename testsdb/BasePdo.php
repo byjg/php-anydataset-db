@@ -800,6 +800,44 @@ abstract class BasePdo extends TestCase
         );
     }
 
+    /**
+     * 2026-03-05 14:07:09 as a date in this database's SQL.
+     */
+    protected function dateLiteral(): string
+    {
+        return "'2026-03-05 14:07:09'";
+    }
+
+    protected function selectScalarSql(string $expression): string
+    {
+        return "SELECT $expression";
+    }
+
+    /**
+     * What sqlDate() of each format returns for dateLiteral(), following the letters documented
+     * in docs/helper.md (D day with zero, d without, M month name, y two-digit year, h 12-hour).
+     *
+     * @return array<string, string>
+     */
+    protected function expectedSqlDates(): array
+    {
+        return [
+            'D/m/Y H:i:s' => '05/03/2026 14:07:09',
+            'd' => '5',
+            'd M Y' => '5 March 2026',
+            'y' => '26',
+            'h A' => '02 PM',
+        ];
+    }
+
+    public function testSqlDateFormatsADateWithTheDocumentedLetters()
+    {
+        foreach ($this->expectedSqlDates() as $format => $expected) {
+            $sql = $this->selectScalarSql($this->executor->getHelper()->sqlDate($format, $this->dateLiteral()));
+            $this->assertSame($expected, (string)$this->executor->getScalar($sql), "sqlDate('$format')");
+        }
+    }
+
     public function testGetDate() {
         throw new NotImplementedException("Needs to be implemented for each database");
     }

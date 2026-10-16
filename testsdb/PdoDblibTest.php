@@ -9,6 +9,12 @@ use PDOException;
 
 class PdoDblibTest extends BasePdo
 {
+    #[\Override]
+    protected function dateLiteral(): string
+    {
+        return "CAST('2026-03-05 14:07:09' AS DATETIME2)";
+    }
+
 
     protected function createInstance()
     {

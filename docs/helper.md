@@ -108,6 +108,11 @@ $concat = $dialect->concat("'This is '", "field1", "'concatenated'");
 $date = $dialect->sqlDate("d-m-Y H:i", "some_field_date");
 $date2 = $dialect->sqlDate(BaseDialect::DMYH, "some_field_date"); // Same as above
 
+// MySQL, PostgreSQL, SQL Server and Oracle support every letter above except Q/q, which only
+// PostgreSQL and Oracle have, and a/p, which is AM/PM everywhere. SQLite's strftime() has no
+// month names and no two-digit year: there M is the month number and y the four-digit year,
+// d keeps the leading zero, and h is the 24-hour hour.
+
 
 // This will return the fields with proper field delimiter
 // based on the current connection

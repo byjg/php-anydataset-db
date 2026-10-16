@@ -96,7 +96,7 @@ class MysqlDialect extends BaseSqlDialect
         $pattern = [
             'Y' => "%Y",
             'y' => "%y",
-            'M' => "%b",
+            'M' => "%M",
             'm' => "%m",
             'Q' => "",
             'q' => "",
