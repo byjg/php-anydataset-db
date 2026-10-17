@@ -1187,10 +1187,10 @@ abstract class BasePdo extends TestCase
         $executor2 = DatabaseExecutor::using($dbDriver2);
 
         // Make sure there is no record in the database
-        $iterator = $executor1->getIterator('select Id, Breed, Name, Age from Dogs where id = 4');
+        $iterator = $executor1->getIterator("select Id, Breed, Name, Age from Dogs where Name = 'Doris'");
         $row = $iterator->toArray();
         $this->assertEmpty($row);
-        $iterator = $executor2->getIterator('select Id, Breed, Name, Age from Dogs where id = 4');
+        $iterator = $executor2->getIterator("select Id, Breed, Name, Age from Dogs where Name = 'Doris'");
         $row = $iterator->toArray();
         $this->assertEmpty($row);
 
@@ -1200,13 +1200,14 @@ abstract class BasePdo extends TestCase
             "INSERT INTO Dogs (Breed, Name, Age) VALUES ('Cat', 'Doris', 7);"
         );
 
-        // Check if the record is there
-        $iterator = $executor1->getIterator('select Id, Breed, Name, Age from Dogs where id = 4');
+        // Check if the record is there, by the id the database gave it: an identity is unique, not
+        // consecutive (Oracle caches 20 values at a time and can skip them)
+        $iterator = $executor1->getIterator("select Id, Breed, Name, Age from Dogs where id = $idInserted");
         $row = $iterator->toArray();
         $this->assertNotEmpty($row);
 
         // Check if the record is not there on the second connection (due to isolation level)
-        $iterator = $executor2->getIterator('select Id, Breed, Name, Age from Dogs where id = 4');
+        $iterator = $executor2->getIterator("select Id, Breed, Name, Age from Dogs where id = $idInserted");
         $row = $iterator->toArray();
         $this->assertEmpty($row);
 
@@ -1214,7 +1215,7 @@ abstract class BasePdo extends TestCase
         $dbDriver1->commitTransaction();
 
         // Check if the second transaction can read
-        $iterator = $executor2->getIterator('select Id, Breed, Name, Age from Dogs where id = 4');
+        $iterator = $executor2->getIterator("select Id, Breed, Name, Age from Dogs where id = $idInserted");
         $row = $iterator->toArray();
         $this->assertNotEmpty($row);
     }
