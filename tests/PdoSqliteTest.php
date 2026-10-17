@@ -1,6 +1,6 @@
 <?php
 
-namespace Test;
+namespace Tests;
 
 use ByJG\AnyDataset\Db\DatabaseExecutor;
 use ByJG\AnyDataset\Db\Factory;
@@ -14,10 +14,10 @@ use Override;
 use PDO;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
-use Test\Models\Info;
-use Test\Models\InfoEntity;
-use Test\Models\UserEntity;
-use Test\Models\UserTypedEntity;
+use Tests\Models\Info;
+use Tests\Models\InfoEntity;
+use Tests\Models\UserEntity;
+use Tests\Models\UserTypedEntity;
 
 class PdoSqliteTest extends TestCase
 {
@@ -647,7 +647,6 @@ class PdoSqliteTest extends TestCase
 
 
     /**
-     * @dataProvider dataProviderPreFetch
      * @return void
      * @psalm-suppress UndefinedMethod
      */

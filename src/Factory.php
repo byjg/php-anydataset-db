@@ -64,6 +64,7 @@ class Factory
         self::registerDbDriver(PdoPdo::class);
         self::registerDbDriver(PdoOci::class);
         self::registerDbDriver(DbOci8Driver::class);
+        self::registerDbDriver(DbD1Driver::class);
     }
 
     /**

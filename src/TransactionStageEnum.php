@@ -4,9 +4,9 @@ namespace ByJG\AnyDataset\Db;
 
 enum TransactionStageEnum
 {
-    case begin;
+    case Begin;
 
-    case commit;
+    case Commit;
 
-    case rollback;
+    case Rollback;
 }

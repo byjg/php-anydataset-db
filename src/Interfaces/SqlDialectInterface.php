@@ -4,6 +4,9 @@ namespace ByJG\AnyDataset\Db\Interfaces;
 
 use ByJG\AnyDataset\Db\DatabaseExecutor;
 use ByJG\AnyDataset\Db\IsolationLevelEnum;
+use ByJG\AnyDataset\Db\Metadata\ColumnMetadata;
+use ByJG\AnyDataset\Db\Metadata\ForeignKeyMetadata;
+use ByJG\AnyDataset\Db\Metadata\IndexMetadata;
 use ByJG\AnyDataset\Db\SqlStatement;
 
 interface SqlDialectInterface
@@ -89,9 +92,34 @@ interface SqlDialectInterface
 
     public function hasForUpdate(): bool;
 
+    /**
+     * The columns of a table, keyed by the lower-case column name.
+     *
+     * @return array<string, ColumnMetadata>
+     */
     public function getTableMetadata(DatabaseExecutor $executor, string $tableName): array;
+
+    /**
+     * The indexes of a table, ordered by name, without the one backing the primary key
+     * (getTableMetadata() reports that one as primaryKey).
+     *
+     * @return list<IndexMetadata>
+     */
+    public function getTableIndexes(DatabaseExecutor $executor, string $tableName): array;
+
+    /**
+     * The foreign keys of a table.
+     *
+     * @return list<ForeignKeyMetadata>
+     */
+    public function getTableForeignKeys(DatabaseExecutor $executor, string $tableName): array;
 
     public function getIsolationLevelCommand(?IsolationLevelEnum $isolationLevel = null): string;
 
     public function getJoinTablesUpdate(array $tables): array;
+
+    /**
+     * The cheapest statement the database accepts, used to check that the connection is alive.
+     */
+    public function getPingSql(): string;
 }

@@ -95,29 +95,34 @@ class DblibDialect extends BaseSqlDialect
             $column = "getdate()";
         }
 
+        // .NET custom format specifiers (FORMAT() uses them)
         $pattern = [
-            'Y' => "YYYY",
-            'y' => "YY",
-            'M' => "MM",
-            'm' => "M",
+            'Y' => "yyyy",
+            'y' => "yy",
+            'M' => "MMMM",
+            'm' => "MM",
             'Q' => "",
             'q' => "",
             'D' => "dd",
-            'd' => "dd",
-            'h' => "H",
+            'd' => "d",
+            'h' => "hh",
             'H' => "HH",
             'i' => "mm",
             's' => "ss",
-            'a' => "",
-            'A' => "",
+            'a' => "tt",
+            'A' => "tt",
         ];
 
-        $preparedSql = $this->prepareSqlDate($format, $pattern, '');
+        $preparedSql = implode('', $this->prepareSqlDate($format, $pattern, ''));
+        // One specifier alone is a .NET *standard* format ("d" is the short date): "%" makes it custom
+        if (strlen($preparedSql) === 1) {
+            $preparedSql = '%' . $preparedSql;
+        }
 
         return sprintf(
             "FORMAT(%s, '%s')",
             $column,
-            implode('', $preparedSql)
+            $preparedSql
         );
     }
 
@@ -147,8 +152,51 @@ class DblibDialect extends BaseSqlDialect
     #[Override]
     public function getTableMetadata(DatabaseExecutor $executor, string $tableName): array
     {
-        $sql = "select * from INFORMATION_SCHEMA.COLUMNS where TABLE_NAME = '$tableName'";
+        $sql = "select c.*,
+                       COLUMNPROPERTY(OBJECT_ID(QUOTENAME(c.TABLE_SCHEMA) + '.' + QUOTENAME(c.TABLE_NAME)), c.COLUMN_NAME, 'IsIdentity') as is_auto_increment,
+                       COLUMNPROPERTY(OBJECT_ID(QUOTENAME(c.TABLE_SCHEMA) + '.' + QUOTENAME(c.TABLE_NAME)), c.COLUMN_NAME, 'IsComputed') as is_generated,
+                       case when exists (
+                           select 1 from INFORMATION_SCHEMA.TABLE_CONSTRAINTS tc
+                             join INFORMATION_SCHEMA.KEY_COLUMN_USAGE kcu
+                               on kcu.CONSTRAINT_SCHEMA = tc.CONSTRAINT_SCHEMA and kcu.CONSTRAINT_NAME = tc.CONSTRAINT_NAME
+                            where tc.CONSTRAINT_TYPE = 'PRIMARY KEY' and tc.TABLE_SCHEMA = c.TABLE_SCHEMA
+                              and tc.TABLE_NAME = c.TABLE_NAME and kcu.COLUMN_NAME = c.COLUMN_NAME
+                       ) then 1 else 0 end as is_primary_key
+                  from INFORMATION_SCHEMA.COLUMNS c where c.TABLE_NAME = '$tableName'";
         return $this->getTableMetadataFromSql($executor, $sql);
+    }
+
+    #[Override]
+    public function getTableIndexes(DatabaseExecutor $executor, string $tableName): array
+    {
+        return $this->getTableIndexesFromSql(
+            $executor,
+            "select i.name as index_name, col.name as column_name, cast(i.is_unique as int) as is_unique
+               from sys.indexes i
+               join sys.index_columns ic on ic.object_id = i.object_id and ic.index_id = i.index_id
+               join sys.columns col on col.object_id = ic.object_id and col.column_id = ic.column_id
+              where i.object_id = OBJECT_ID(:tablename) and i.is_primary_key = 0 and ic.is_included_column = 0
+              order by i.name, ic.key_ordinal",
+            ['tablename' => $tableName]
+        );
+    }
+
+    #[Override]
+    public function getTableForeignKeys(DatabaseExecutor $executor, string $tableName): array
+    {
+        return $this->getTableForeignKeysFromSql(
+            $executor,
+            "select fk.name as constraint_name, col.name as column_name,
+                    parent.name as parent_table, parent_col.name as parent_column
+               from sys.foreign_keys fk
+               join sys.foreign_key_columns fkc on fkc.constraint_object_id = fk.object_id
+               join sys.columns col on col.object_id = fkc.parent_object_id and col.column_id = fkc.parent_column_id
+               join sys.tables parent on parent.object_id = fkc.referenced_object_id
+               join sys.columns parent_col on parent_col.object_id = fkc.referenced_object_id and parent_col.column_id = fkc.referenced_column_id
+              where fk.parent_object_id = OBJECT_ID(:tablename)
+              order by fk.name, fkc.constraint_column_id",
+            ['tablename' => $tableName]
+        );
     }
 
     #[Override]
@@ -163,12 +211,16 @@ class DblibDialect extends BaseSqlDialect
                 $dataType = strtolower($value['data_type']) . '(' . $value["numeric_precision"] . ',' . $value['numeric_precision_radix'] . ')';
             }
 
-            $return[strtolower($value['column_name'])] = [
-                    'name' => $value['column_name'],
-                    'dbType' => strtolower($value['data_type']),
-                    'required' => $value['is_nullable'] == 'NO',
-                    'default' => $value['column_default'],
-                ] + $this->parseTypeMetadata($dataType);
+            $return[strtolower($value['column_name'])] = $this->newColumnMetadata(
+                    name: (string)$value['column_name'],
+                    dbType: strtolower($value['data_type']),
+                    required: $value['is_nullable'] == 'NO',
+                    default: $value['column_default'],
+                    primaryKey: $value['is_primary_key'] == 1,
+                    autoIncrement: $value['is_auto_increment'] == 1,
+                    generated: $value['is_generated'] == 1,
+                    declaredType: $dataType
+                );
         }
 
         return $return;
@@ -178,10 +230,10 @@ class DblibDialect extends BaseSqlDialect
     public function getIsolationLevelCommand(?IsolationLevelEnum $isolationLevel = null): string
     {
         return match ($isolationLevel) {
-            IsolationLevelEnum::READ_UNCOMMITTED => "SET TRANSACTION ISOLATION LEVEL READ UNCOMMITTED",
-            IsolationLevelEnum::READ_COMMITTED => "SET TRANSACTION ISOLATION LEVEL READ COMMITTED",
-            IsolationLevelEnum::REPEATABLE_READ => "SET TRANSACTION ISOLATION LEVEL REPEATABLE READ",
-            IsolationLevelEnum::SERIALIZABLE => "SET TRANSACTION ISOLATION LEVEL SERIALIZABLE",
+            IsolationLevelEnum::ReadUncommitted => "SET TRANSACTION ISOLATION LEVEL READ UNCOMMITTED",
+            IsolationLevelEnum::ReadCommitted => "SET TRANSACTION ISOLATION LEVEL READ COMMITTED",
+            IsolationLevelEnum::RepeatableRead => "SET TRANSACTION ISOLATION LEVEL REPEATABLE READ",
+            IsolationLevelEnum::Serializable => "SET TRANSACTION ISOLATION LEVEL SERIALIZABLE",
             default => "",
         };
     }

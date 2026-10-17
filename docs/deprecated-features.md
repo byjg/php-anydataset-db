@@ -1,13 +1,13 @@
 ---
-sidebar_position: 18
+sidebar_position: 20
 ---
 
 # Deprecated Features
 
-This document lists features that are deprecated in version 6.0 and will be removed in version 7.0. Please update your
-code to use the recommended alternatives.
+This document lists features that were deprecated in version 6.0 and **removed in version 7.0**. If you are
+upgrading from 6.x, update your code to use the recommended alternatives before moving to 7.0.
 
-## Deprecated: Direct Query Methods on DbDriverInterface
+## Removed: Direct Query Methods on DbDriverInterface
 
 **Deprecated in:** Version 6.0
 **Removed in:** Version 7.0
@@ -127,8 +127,8 @@ DatabaseExecutor::using($dbDriver)->getIterator($sql, $params);
 
 ### Version 7.0
 
-In version 7.0, the deprecated methods will be removed from `DbDriverInterface`. Code that hasn't been migrated will
-throw errors.
+In version 7.0, the deprecated methods were removed from `DbDriverInterface`, the drivers and `DatabaseRouter`.
+Code that hasn't been migrated will throw errors (call to undefined method).
 
 ## Renamed Classes and Methods (Version 6.0)
 

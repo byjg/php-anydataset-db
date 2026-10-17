@@ -6,7 +6,7 @@ sidebar_position: 2
 
 :::info
 As of version 6.0, the recommended approach is to use `DatabaseExecutor` for all query operations.
-Direct calls to driver methods like `$dbDriver->getIterator()` are deprecated and will be removed in version 7.0.
+Direct calls to driver methods like `$dbDriver->getIterator()` were removed in version 7.0.
 See [DatabaseExecutor documentation](database-executor.md) for more details.
 :::
 
@@ -35,7 +35,7 @@ foreach ($iterator as $row) {
 <?php
 $dbDriver = \ByJG\AnyDataset\Db\Factory::getDbInstance('mysql://username:password@host/database');
 
-// ⚠️ Deprecated: Direct driver method calls will be removed in version 7.0
+// ⚠️ Removed in version 7.0: direct driver method calls no longer exist (6.x only)
 $iterator = $dbDriver->getIterator('select * from table where field = :param', ['param' => 'value']);
 foreach ($iterator as $row) {
     // Do Something
@@ -70,7 +70,7 @@ $executor->execute(
 <?php
 $dbDriver = \ByJG\AnyDataset\Db\Factory::getDbInstance('mysql://username:password@host/database');
 
-// ⚠️ Deprecated: Direct driver method calls will be removed in version 7.0
+// ⚠️ Removed in version 7.0: direct driver method calls no longer exist (6.x only)
 $dbDriver->execute(
     'update table set other = :value where field = :param',
     [
@@ -107,7 +107,7 @@ $id = $executor->executeAndGetId(
 <?php
 $dbDriver = \ByJG\AnyDataset\Db\Factory::getDbInstance('mysql://username:password@host/database');
 
-// ⚠️ Deprecated: Direct driver method calls will be removed in version 7.0
+// ⚠️ Removed in version 7.0: direct driver method calls no longer exist (6.x only)
 $id = $dbDriver->executeAndGetId(
     'insert into table (field1, field2) values (:param1, :param2)',
     [
@@ -131,7 +131,7 @@ $dbDriver = Factory::getDbInstance('mysql://username:password@host/database');
 $executor = DatabaseExecutor::using($dbDriver);
 
 // Transactions can be called on either executor or driver
-$executor->beginTransaction(IsolationLevelEnum::SERIALIZABLE);
+$executor->beginTransaction(IsolationLevelEnum::Serializable);
 
 // ... Do your queries using executor
 $executor->execute('INSERT INTO ...');
@@ -149,7 +149,7 @@ use ByJG\AnyDataset\Db\IsolationLevelEnum;
 $dbDriver = Factory::getDbInstance('mysql://username:password@host/database');
 
 // Transaction methods on driver are NOT deprecated
-$dbDriver->beginTransaction(IsolationLevelEnum::SERIALIZABLE);
+$dbDriver->beginTransaction(IsolationLevelEnum::Serializable);
 
 // ... Do your queries (use DatabaseExecutor for queries)
 

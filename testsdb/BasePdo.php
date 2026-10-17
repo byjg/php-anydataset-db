@@ -11,6 +11,9 @@ use ByJG\AnyDataset\Db\Exception\TransactionStartedException;
 use ByJG\AnyDataset\Db\Factory;
 use ByJG\AnyDataset\Db\Interfaces\DbDriverInterface;
 use ByJG\AnyDataset\Db\IsolationLevelEnum;
+use ByJG\AnyDataset\Db\Metadata\ColumnMetadata;
+use ByJG\AnyDataset\Db\Metadata\ForeignKeyMetadata;
+use ByJG\AnyDataset\Db\Metadata\IndexMetadata;
 use ByJG\AnyDataset\Db\SqlStatement;
 use ByJG\Cache\Psr16\ArrayCacheEngine;
 use ByJG\Serializer\PropertyHandler\PropertyNameMapper;
@@ -18,9 +21,9 @@ use Exception;
 use PDOException;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
-use Test\Models\DogEntity;
-use Test\Models\DogEntityComplex;
-use Test\Models\Dogs;
+use Tests\Models\DogEntity;
+use Tests\Models\DogEntityComplex;
+use Tests\Models\Dogs;
 
 abstract class BasePdo extends TestCase
 {
@@ -35,6 +38,11 @@ abstract class BasePdo extends TestCase
     protected string $escapeQuote = "''";
 
     protected int $floatSize = 10;
+
+    /**
+     * Whether "Id INTEGER NOT NULL PRIMARY KEY", with no identity clause, is filled in by the database.
+     */
+    protected bool $integerPrimaryKeyIsAutoIncrement = false;
 
     protected bool $testSkipped = false;
 
@@ -673,7 +681,7 @@ abstract class BasePdo extends TestCase
     {
         $newUri = $this->executor->getDriver()->getUri()->withQueryKeyValue(DbPdoDriver::DONT_PARSE_PARAM, "");
         $newConn = Factory::getDbInstance($newUri);
-        $it = $newConn->getIterator('select Id, Breed, Name, Age from Dogs where id = :field', ["field" => 1]);
+        $it = DatabaseExecutor::using($newConn)->getIterator('select Id, Breed, Name, Age from Dogs where id = :field', ["field" => 1]);
         $this->assertCount(1, $it->toArray());
         $this->assertFalse($it->isCursorOpen());
     }
@@ -688,7 +696,7 @@ abstract class BasePdo extends TestCase
     {
         $newUri = $this->executor->getDriver()->getUri()->withQueryKeyValue(DbPdoDriver::DONT_PARSE_PARAM, "");
         $newConn = Factory::getDbInstance($newUri);
-        $it = $newConn->getIterator('select Id, Breed, Name, Age from Dogs where id = :field');
+        $it = DatabaseExecutor::using($newConn)->getIterator('select Id, Breed, Name, Age from Dogs where id = :field');
         $this->assertCount(0, $it->toArray());
     }
 
@@ -792,6 +800,44 @@ abstract class BasePdo extends TestCase
         );
     }
 
+    /**
+     * 2026-03-05 14:07:09 as a date in this database's SQL.
+     */
+    protected function dateLiteral(): string
+    {
+        return "'2026-03-05 14:07:09'";
+    }
+
+    protected function selectScalarSql(string $expression): string
+    {
+        return "SELECT $expression";
+    }
+
+    /**
+     * What sqlDate() of each format returns for dateLiteral(), following the letters documented
+     * in docs/helper.md (D day with zero, d without, M month name, y two-digit year, h 12-hour).
+     *
+     * @return array<string, string>
+     */
+    protected function expectedSqlDates(): array
+    {
+        return [
+            'D/m/Y H:i:s' => '05/03/2026 14:07:09',
+            'd' => '5',
+            'd M Y' => '5 March 2026',
+            'y' => '26',
+            'h A' => '02 PM',
+        ];
+    }
+
+    public function testSqlDateFormatsADateWithTheDocumentedLetters()
+    {
+        foreach ($this->expectedSqlDates() as $format => $expected) {
+            $sql = $this->selectScalarSql($this->executor->getHelper()->sqlDate($format, $this->dateLiteral()));
+            $this->assertSame($expected, (string)$this->executor->getScalar($sql), "sqlDate('$format')");
+        }
+    }
+
     public function testGetDate() {
         throw new NotImplementedException("Needs to be implemented for each database");
     }
@@ -799,10 +845,8 @@ abstract class BasePdo extends TestCase
     public function testGetMetadata()
     {
         $metadata = $this->executor->getHelper()->getTableMetadata($this->executor, 'Dogs');
-
-        foreach ($metadata as $key => $field) {
-            unset($metadata[$key]['dbType']);
-        }
+        $this->assertContainsOnlyInstancesOf(ColumnMetadata::class, $metadata);
+        $metadata = $this->metadataToArray($metadata);
 
         $this->assertEquals($this->getExpectedMetadata(), $metadata);
     }
@@ -817,6 +861,9 @@ abstract class BasePdo extends TestCase
                 'phpType' => 'integer',
                 'length' => null,
                 'precision' => null,
+                'primaryKey' => true,
+                'autoIncrement' => true,
+                'generated' => false,
             ],
             'breed' => [
                 'name' => 'Breed',
@@ -825,6 +872,9 @@ abstract class BasePdo extends TestCase
                 'phpType' => 'string',
                 'length' => 50,
                 'precision' => null,
+                'primaryKey' => false,
+                'autoIncrement' => false,
+                'generated' => false,
             ],
             'name' => [
                 'name' => 'Name',
@@ -833,6 +883,9 @@ abstract class BasePdo extends TestCase
                 'phpType' => 'string',
                 'length' => 50,
                 'precision' => null,
+                'primaryKey' => false,
+                'autoIncrement' => false,
+                'generated' => false,
             ],
             'age' => [
                 'name' => 'Age',
@@ -841,6 +894,9 @@ abstract class BasePdo extends TestCase
                 'phpType' => 'integer',
                 'length' => null,
                 'precision' => null,
+                'primaryKey' => false,
+                'autoIncrement' => false,
+                'generated' => false,
             ],
             'weight' => [
                 'name' => 'Weight',
@@ -849,8 +905,135 @@ abstract class BasePdo extends TestCase
                 'phpType' => 'float',
                 'length' => $this->floatSize,
                 'precision' => 2,
+                'primaryKey' => false,
+                'autoIncrement' => false,
+                'generated' => false,
             ],
         ];
+    }
+
+    /**
+     * MetaOwner (unique index on Email) and MetaPet (foreign key to MetaOwner, composite
+     * index on Kind, Name), in SQL every database accepts. Dropped again by dropKeyTables().
+     */
+    protected function createKeyTables(): void
+    {
+        $this->executor->execute("CREATE TABLE MetaOwner (Id INTEGER NOT NULL PRIMARY KEY, Email VARCHAR(100) NOT NULL)");
+        $this->executor->execute("CREATE UNIQUE INDEX ux_metaowner_email ON MetaOwner (Email)");
+        $this->executor->execute(
+            "CREATE TABLE MetaPet (Id INTEGER NOT NULL PRIMARY KEY, OwnerId INTEGER NOT NULL, Kind VARCHAR(20), Name VARCHAR(50), "
+            . "CONSTRAINT fk_metapet_owner FOREIGN KEY (OwnerId) REFERENCES MetaOwner (Id))"
+        );
+        $this->executor->execute("CREATE INDEX ix_metapet_kind_name ON MetaPet (Kind, Name)");
+    }
+
+    protected function dropKeyTables(): void
+    {
+        $this->executor->execute("DROP TABLE MetaPet");
+        $this->executor->execute("DROP TABLE MetaOwner");
+    }
+
+    /**
+     * The metadata objects as arrays, without dbType, which each database spells its own way.
+     */
+    protected function metadataToArray(array $metadata): array
+    {
+        return array_map(fn (object $item) => array_diff_key(get_object_vars($item), ['dbType' => true]), $metadata);
+    }
+
+    /**
+     * Each database folds unquoted names to its own case; the tests compare them in lower case.
+     */
+    protected function lowerCaseNames(array $metadata): array
+    {
+        array_walk_recursive($metadata, function (&$value) {
+            if (is_string($value)) {
+                $value = strtolower($value);
+            }
+        });
+        return $metadata;
+    }
+
+    protected function getExpectedMetaPetIndexes(): array
+    {
+        return [
+            ['name' => 'ix_metapet_kind_name', 'columns' => ['kind', 'name'], 'unique' => false],
+        ];
+    }
+
+    public function testGetTableIndexes()
+    {
+        $this->createKeyTables();
+        try {
+            $helper = $this->executor->getHelper();
+            $this->assertContainsOnlyInstancesOf(IndexMetadata::class, $helper->getTableIndexes($this->executor, 'MetaPet'));
+
+            $this->assertEquals(
+                [['name' => 'ux_metaowner_email', 'columns' => ['email'], 'unique' => true]],
+                $this->lowerCaseNames($this->metadataToArray($helper->getTableIndexes($this->executor, 'MetaOwner')))
+            );
+            $this->assertEquals(
+                $this->getExpectedMetaPetIndexes(),
+                $this->lowerCaseNames($this->metadataToArray($helper->getTableIndexes($this->executor, 'MetaPet')))
+            );
+        } finally {
+            $this->dropKeyTables();
+        }
+    }
+
+    public function testGetTableForeignKeys()
+    {
+        $this->createKeyTables();
+        try {
+            $helper = $this->executor->getHelper();
+            $this->assertContainsOnlyInstancesOf(ForeignKeyMetadata::class, $helper->getTableForeignKeys($this->executor, 'MetaPet'));
+
+            $this->assertEquals(
+                [['columns' => ['ownerid'], 'parentTable' => 'metaowner', 'parentColumns' => ['id']]],
+                $this->lowerCaseNames($this->metadataToArray($helper->getTableForeignKeys($this->executor, 'MetaPet')))
+            );
+            $this->assertEquals([], $helper->getTableForeignKeys($this->executor, 'MetaOwner'));
+        } finally {
+            $this->dropKeyTables();
+        }
+    }
+
+    public function testGetTableMetadataPrimaryKeyWithoutIdentity()
+    {
+        $this->createKeyTables();
+        try {
+            $metadata = $this->executor->getHelper()->getTableMetadata($this->executor, 'MetaPet');
+
+            $this->assertTrue($metadata['id']->primaryKey);
+            $this->assertSame($this->integerPrimaryKeyIsAutoIncrement, $metadata['id']->autoIncrement);
+            $this->assertFalse($metadata['ownerid']->primaryKey);
+            $this->assertFalse($metadata['ownerid']->autoIncrement);
+        } finally {
+            $this->dropKeyTables();
+        }
+    }
+
+    /**
+     * The column definition of a column computed as A + B.
+     */
+    protected function getGeneratedColumnDefinition(): string
+    {
+        return "Total INTEGER GENERATED ALWAYS AS (A + B) STORED";
+    }
+
+    public function testGetTableMetadataGeneratedColumn()
+    {
+        $this->executor->execute("CREATE TABLE MetaSum (Id INTEGER NOT NULL PRIMARY KEY, A INTEGER, B INTEGER, " . $this->getGeneratedColumnDefinition() . ")");
+        try {
+            $metadata = $this->executor->getHelper()->getTableMetadata($this->executor, 'MetaSum');
+
+            $this->assertSame(['id', 'a', 'b', 'total'], array_keys($metadata));
+            $this->assertTrue($metadata['total']->generated);
+            $this->assertFalse($metadata['a']->generated);
+            $this->assertFalse($metadata['id']->generated);
+        } finally {
+            $this->executor->execute("DROP TABLE MetaSum");
+        }
     }
 
     public function testDisconnect()
@@ -876,9 +1059,9 @@ abstract class BasePdo extends TestCase
     {
         $this->assertFalse($this->executor->hasActiveTransaction());
         $this->assertNull($this->executor->activeIsolationLevel());
-        $this->executor->beginTransaction(IsolationLevelEnum::SERIALIZABLE);
+        $this->executor->beginTransaction(IsolationLevelEnum::Serializable);
         $this->assertTrue($this->executor->hasActiveTransaction());
-        $this->assertEquals(IsolationLevelEnum::SERIALIZABLE, $this->executor->activeIsolationLevel());
+        $this->assertEquals(IsolationLevelEnum::Serializable, $this->executor->activeIsolationLevel());
 
         $idInserted = $this->executor->executeAndGetId(
             "INSERT INTO Dogs (Breed, Name, Age) VALUES ('Cat', 'Doris', 7);"
@@ -902,9 +1085,9 @@ abstract class BasePdo extends TestCase
     {
         $this->assertFalse($this->executor->hasActiveTransaction());
         $this->assertNull($this->executor->activeIsolationLevel());
-        $this->executor->beginTransaction(IsolationLevelEnum::REPEATABLE_READ);
+        $this->executor->beginTransaction(IsolationLevelEnum::RepeatableRead);
         $this->assertTrue($this->executor->hasActiveTransaction());
-        $this->assertEquals(IsolationLevelEnum::REPEATABLE_READ, $this->executor->activeIsolationLevel());
+        $this->assertEquals(IsolationLevelEnum::RepeatableRead, $this->executor->activeIsolationLevel());
 
         $idInserted = $this->executor->executeAndGetId(
             "INSERT INTO Dogs (Breed, Name, Age) VALUES ('Cat', 'Doris', 7);"
@@ -939,14 +1122,14 @@ abstract class BasePdo extends TestCase
         $this->assertNull($this->executor->activeIsolationLevel());
         $this->assertEquals(0, $this->executor->remainingCommits());
 
-        $this->executor->beginTransaction(IsolationLevelEnum::READ_COMMITTED);
+        $this->executor->beginTransaction(IsolationLevelEnum::ReadCommitted);
         $this->assertTrue($this->executor->hasActiveTransaction());
-        $this->assertEquals(IsolationLevelEnum::READ_COMMITTED, $this->executor->activeIsolationLevel());
+        $this->assertEquals(IsolationLevelEnum::ReadCommitted, $this->executor->activeIsolationLevel());
         $this->assertEquals(1, $this->executor->remainingCommits());
 
         $this->executor->requiresTransaction();
         $this->assertTrue($this->executor->hasActiveTransaction());
-        $this->assertEquals(IsolationLevelEnum::READ_COMMITTED, $this->executor->activeIsolationLevel());
+        $this->assertEquals(IsolationLevelEnum::ReadCommitted, $this->executor->activeIsolationLevel());
         $this->assertEquals(1, $this->executor->remainingCommits());
 
         $this->executor->commitTransaction();
@@ -963,7 +1146,7 @@ abstract class BasePdo extends TestCase
 
     public function testBeginTransactionTwice()
     {
-        $this->executor->beginTransaction(IsolationLevelEnum::READ_UNCOMMITTED);
+        $this->executor->beginTransaction(IsolationLevelEnum::ReadUncommitted);
         $this->expectException(TransactionStartedException::class);
         try {
             $this->executor->beginTransaction();
@@ -977,18 +1160,18 @@ abstract class BasePdo extends TestCase
 
     public function testJoinTransaction()
     {
-        $this->executor->beginTransaction(IsolationLevelEnum::READ_UNCOMMITTED);
+        $this->executor->beginTransaction(IsolationLevelEnum::ReadUncommitted);
         $this->assertEquals(1, $this->executor->remainingCommits());
-        $this->assertEquals(IsolationLevelEnum::READ_UNCOMMITTED, $this->executor->activeIsolationLevel());
+        $this->assertEquals(IsolationLevelEnum::ReadUncommitted, $this->executor->activeIsolationLevel());
 
-        $this->executor->beginTransaction(IsolationLevelEnum::READ_UNCOMMITTED, true);
+        $this->executor->beginTransaction(IsolationLevelEnum::ReadUncommitted, true);
         $this->assertEquals(2, $this->executor->remainingCommits());
-        $this->assertEquals(IsolationLevelEnum::READ_UNCOMMITTED, $this->executor->activeIsolationLevel());
+        $this->assertEquals(IsolationLevelEnum::ReadUncommitted, $this->executor->activeIsolationLevel());
 
         $this->executor->commitTransaction();
         $this->assertEquals(1, $this->executor->remainingCommits());
         $this->assertTrue($this->executor->hasActiveTransaction());
-        $this->assertEquals(IsolationLevelEnum::READ_UNCOMMITTED, $this->executor->activeIsolationLevel());
+        $this->assertEquals(IsolationLevelEnum::ReadUncommitted, $this->executor->activeIsolationLevel());
 
         $this->executor->commitTransaction();
         $this->assertEquals(0, $this->executor->remainingCommits());
@@ -1000,28 +1183,31 @@ abstract class BasePdo extends TestCase
     {
         $dbDriver1 = $this->createInstance();
         $dbDriver2 = $this->createInstance();
+        $executor1 = DatabaseExecutor::using($dbDriver1);
+        $executor2 = DatabaseExecutor::using($dbDriver2);
 
         // Make sure there is no record in the database
-        $iterator = $dbDriver1->getIterator('select Id, Breed, Name, Age from Dogs where id = 4');
+        $iterator = $executor1->getIterator("select Id, Breed, Name, Age from Dogs where Name = 'Doris'");
         $row = $iterator->toArray();
         $this->assertEmpty($row);
-        $iterator = $dbDriver2->getIterator('select Id, Breed, Name, Age from Dogs where id = 4');
+        $iterator = $executor2->getIterator("select Id, Breed, Name, Age from Dogs where Name = 'Doris'");
         $row = $iterator->toArray();
         $this->assertEmpty($row);
 
         // Start a transaction on the first connection
-        $dbDriver1->beginTransaction(IsolationLevelEnum::SERIALIZABLE);
-        $idInserted = $dbDriver1->executeAndGetId(
+        $dbDriver1->beginTransaction(IsolationLevelEnum::Serializable);
+        $idInserted = $executor1->executeAndGetId(
             "INSERT INTO Dogs (Breed, Name, Age) VALUES ('Cat', 'Doris', 7);"
         );
 
-        // Check if the record is there
-        $iterator = $dbDriver1->getIterator('select Id, Breed, Name, Age from Dogs where id = 4');
+        // Check if the record is there, by the id the database gave it: an identity is unique, not
+        // consecutive (Oracle caches 20 values at a time and can skip them)
+        $iterator = $executor1->getIterator("select Id, Breed, Name, Age from Dogs where id = $idInserted");
         $row = $iterator->toArray();
         $this->assertNotEmpty($row);
 
         // Check if the record is not there on the second connection (due to isolation level)
-        $iterator = $dbDriver2->getIterator('select Id, Breed, Name, Age from Dogs where id = 4');
+        $iterator = $executor2->getIterator("select Id, Breed, Name, Age from Dogs where id = $idInserted");
         $row = $iterator->toArray();
         $this->assertEmpty($row);
 
@@ -1029,7 +1215,7 @@ abstract class BasePdo extends TestCase
         $dbDriver1->commitTransaction();
 
         // Check if the second transaction can read
-        $iterator = $dbDriver2->getIterator('select Id, Breed, Name, Age from Dogs where id = 4');
+        $iterator = $executor2->getIterator("select Id, Breed, Name, Age from Dogs where id = $idInserted");
         $row = $iterator->toArray();
         $this->assertNotEmpty($row);
     }
