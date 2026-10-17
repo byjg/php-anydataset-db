@@ -16,12 +16,13 @@ use ByJG\AnyDataset\Db\SqlStatement;
 
 // Create a database connection
 $dbDriver = Factory::getDbInstance("mysql://user:password@server/schema");
+$executor = \ByJG\AnyDataset\Db\DatabaseExecutor::using($dbDriver);
 
 // Create an SQL statement
 $sql = new SqlStatement("select * from table where field = :param");
 
-// Execute the SQL using the database driver
-$iterator = $dbDriver->getIterator($sql, ['param' => 'value']);
+// Execute the SQL through the DatabaseExecutor
+$iterator = $executor->getIterator($sql, ['param' => 'value']);
 ```
 
 ## The SqlStatement Class
@@ -60,8 +61,8 @@ $newSql = $sql->withParams(['deptId' => 10, 'status' => 'active']);
 // Original parameters: ['deptId' => 5]
 // New parameters: ['deptId' => 10, 'status' => 'active']
 
-// 3. When executing with the database driver (overrides any stored parameters)
-$iterator = $dbDriver->getIterator($sql, ['deptId' => 15]);
+// 3. When executing (merged with the stored parameters, overriding the same keys)
+$iterator = $executor->getIterator($sql, ['deptId' => 15]);
 
 // 4. Accessing stored parameters
 $params = $sql->getParams();
@@ -107,8 +108,8 @@ $sql = new SqlStatement("select * from table where field = :param");
 // Returns a new SqlStatement with caching enabled
 $cachedSql = $sql->withCache($cache, 'my_cache_key', 60);
 
-// Execute the query with the database driver (results will be cached)
-$iterator = $dbDriver->getIterator($cachedSql, ['param' => 'value']);
+// Execute the query (results will be cached)
+$iterator = $executor->getIterator($cachedSql, ['param' => 'value']);
 
 // Disable caching if needed - returns a new SqlStatement without caching
 $noCacheSql = $cachedSql->withoutCache();
@@ -116,26 +117,26 @@ $noCacheSql = $cachedSql->withoutCache();
 
 ## Using SqlStatement with Database Drivers
 
-The SqlStatement object is used with the database driver methods to execute queries:
+The SqlStatement object is passed to the `DatabaseExecutor` methods to execute queries:
 
 ### SELECT Queries
 
 ```php
 // Get an iterator to process results
-$iterator = $dbDriver->getIterator($sql, ['param' => 'value']);
+$iterator = $executor->getIterator($sql, ['param' => 'value']);
 
 // Get a single scalar value (first column of first row)
-$value = $dbDriver->getScalar($sql, ['param' => 'value']);
+$value = $executor->getScalar($sql, ['param' => 'value']);
 ```
 
 ### Data Modification Queries (INSERT, UPDATE, DELETE)
 
 ```php
 // Execute a query that doesn't return results
-$dbDriver->execute($sql, ['param' => 'value']);
+$executor->execute($sql, ['param' => 'value']);
 
 // Insert data and get the last inserted ID
-$newId = $dbDriver->executeAndGetId($sql, ['param' => 'value']);
+$newId = $executor->executeAndGetId($sql, ['param' => 'value']);
 ```
 
 ## Entity Mapping Support (EntityClass and EntityTransformer)
@@ -163,11 +164,12 @@ class User
 }
 
 $db = Factory::getDbInstance("mysql://user:password@server/schema");
+$executor = \ByJG\AnyDataset\Db\DatabaseExecutor::using($db);
 
 $sql = (new SqlStatement("SELECT id, name FROM users WHERE active = :active", [':active' => true]))
     ->withEntityClass(User::class);
 
-$it = $db->getIterator($sql);
+$it = $executor->getIterator($sql);
 foreach ($it as $row) {
     $user = $row->entity(); // instance of User populated from the row
 }
@@ -195,7 +197,7 @@ $statement = (new SqlStatement('SELECT id, name, breed, weight FROM Dogs'))
         'weight' => 'dogWeight',
     ]));
 
-$iterator = $db->getIterator($statement);
+$iterator = $executor->getIterator($statement);
 foreach ($iterator as $row) {
     $dog = $row->entity(); // DogEntity with transformed property names
 }
@@ -220,7 +222,8 @@ Notes:
 <?php
 
 $dbDriver = Factory::getDbInstance("mysql://user:password@server/schema");
+$executor = \ByJG\AnyDataset\Db\DatabaseExecutor::using($dbDriver);
 $sql = new SqlStatement("select * from table where field = :param");
 
-$iterator = $dbDriver->getIterator($sql, ['param' => 'value']);
+$iterator = $executor->getIterator($sql, ['param' => 'value']);
 ```

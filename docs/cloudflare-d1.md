@@ -90,6 +90,9 @@ timeouts or retries, and to test without hitting the network:
 $conn->setHttpClient($myPsr18Client);
 ```
 
+The second and third arguments optionally replace the PSR-17 request and stream factories:
+`setHttpClient(ClientInterface $httpClient, ?RequestFactoryInterface $requestFactory = null, ?StreamFactoryInterface $streamFactory = null)`.
+
 ## Read replication
 
 D1 can serve reads from replicas in other regions. This is **opt-in**: it is off until you set
@@ -140,7 +143,7 @@ and the driver fails loudly rather than pretending otherwise.
 - **No multiple rowsets.** `isSupportMultiRowset()` is always `false`.
 - **`getAllFields()` is not available.** It relies on column metadata that the API does not return
   for an empty result set, so it throws a `NotAvailableException`. Use `$executor->getHelper()->getTableMetadata($executor, 'Dogs')`
-  instead, which reads `PRAGMA table_info`.
+  instead, which reads `PRAGMA table_xinfo`.
 - **The Journal does not track INSERTs.** `JournalRecorder` locates the inserted row with
   `SELECT last_insert_rowid()`, which would be a second HTTP request on a different connection and
   always answers `0`. `executeAndGetId()` is unaffected: it reads the id from D1's own

@@ -14,20 +14,22 @@ Additionally, you must use the `SqlStatement` class to prepare the query and cac
 
 ```php
 <?php
+use ByJG\AnyDataset\Db\DatabaseExecutor;
 use ByJG\AnyDataset\Db\Factory;
 use ByJG\AnyDataset\Db\SqlStatement;
 use ByJG\Cache\Psr16\ArrayCacheEngine;
 
 $dbDriver = Factory::getDbInstance('mysql://username:password@host/database');
+$executor = DatabaseExecutor::using($dbDriver);
 $cache = new ArrayCacheEngine();
 
-// Define the SqlStatement object
+// Define the SqlStatement object. withCache() returns a new instance (SqlStatement is immutable)
 $sql = new SqlStatement("select * from table where field = :param");
-$sql->withCache($cache, 'my_cache_key', 60);
+$sql = $sql->withCache($cache, 'my_cache_key', 60);
 
 // Query using the PSR16 cache interface.
 // If not exists, will cache. If exists will get from cache.
-$iterator = $sql->getIterator($dbDriver, ['param' => 'value']);
+$iterator = $executor->getIterator($sql, ['param' => 'value']);
 ```
 
 ## Cache Methods
@@ -37,7 +39,7 @@ $iterator = $sql->getIterator($dbDriver, ['param' => 'value']);
 Enables caching for the SQL statement.
 
 ```php
-$sql->withCache($cache, 'my_cache_key', 60);
+$sql = $sql->withCache($cache, 'my_cache_key', 60);
 ```
 
 Parameters:
@@ -51,7 +53,7 @@ Parameters:
 Disables caching for the SQL statement.
 
 ```php
-$sql->withoutCache();
+$sql = $sql->withoutCache();
 ```
 
 ## Accessor Methods
@@ -71,12 +73,12 @@ $key = $sql->getCacheKey();
 
 ## Implementation Details
 
-The caching mechanism is implemented in the `SqlStatement` class. When caching is enabled:
+The `SqlStatement` carries the cache settings; the caching itself is done by `DatabaseExecutor::getIterator()`. When caching is enabled:
 
 1. A unique cache key is generated based on the base key and the query parameters:
    ```php
    // Internal key generation (simplified)
-   $cacheKey = $this->cacheKey . ':' . md5(json_encode($param));
+   $cacheKey = $sql->getCacheKey() . ':' . md5(json_encode($params)); // $params sorted by key
    ```
 
 2. Before executing the query, the cache is checked for an existing entry.
@@ -90,24 +92,23 @@ implements a mutex locking mechanism:
 
 1. Before regenerating a cache entry, the system checks for an existing lock:
    ```php
-   $lock = $this->mutexIsLocked($cacheKey);
+   $lock = $this->mutexIsLocked($cache, $cacheKey);
    ```
 
 2. If a lock exists, the process waits briefly and tries again:
    ```php
-   if ($lock !== false) {
-       usleep(200); // Wait 200 microseconds
-       continue;
+   while ($this->mutexIsLocked($cache, $cacheKey) !== false) {
+       usleep(100000); // Wait 100 ms
    }
    ```
 
 3. If no lock exists, the process acquires a lock, generates the cache, and then releases the lock:
    ```php
-   $this->mutexLock($cacheKey);
+   $this->mutexLock($cache, $cacheKey);
    try {
        // Generate cache content
    } finally {
-       $this->mutexRelease($cacheKey);
+       $this->mutexRelease($cache, $cacheKey);
    }
    ```
 
@@ -130,19 +131,19 @@ use ByJG\Cache\Psr16\MemcachedEngine;
 use ByJG\Cache\Psr16\RedisCacheEngine;
 
 // File system cache
-$fileCache = new FileSystemCacheEngine('/path/to/cache');
+$fileCache = new FileSystemCacheEngine('cache', '/path/to/cache');
 $sql = new SqlStatement("select * from table");
-$sql->withCache($fileCache, 'file_cache_key', 300); // 5 minutes
+$sql = $sql->withCache($fileCache, 'file_cache_key', 300); // 5 minutes
 
 // Memcached
-$memcached = new MemcachedEngine('localhost');
+$memcached = new MemcachedEngine(['localhost:11211']);
 $sql = new SqlStatement("select * from table");
-$sql->withCache($memcached, 'memcached_key', 600); // 10 minutes
+$sql = $sql->withCache($memcached, 'memcached_key', 600); // 10 minutes
 
 // Redis
 $redis = new RedisCacheEngine('localhost');
 $sql = new SqlStatement("select * from table");
-$sql->withCache($redis, 'redis_key', 1800); // 30 minutes
+$sql = $sql->withCache($redis, 'redis_key', 1800); // 30 minutes
 ```
 
 ### Caching Different Queries
@@ -158,13 +159,13 @@ $cache = new ArrayCacheEngine();
 
 // Cache frequently accessed data for longer periods
 $userQuery = new SqlStatement("select * from users where status = :status");
-$userQuery->withCache($cache, 'active_users', 3600); // 1 hour
-$activeUsers = $userQuery->getIterator($dbDriver, ['status' => 'active']);
+$userQuery = $userQuery->withCache($cache, 'active_users', 3600); // 1 hour
+$activeUsers = $executor->getIterator($userQuery, ['status' => 'active']);
 
 // Cache volatile data for shorter periods
 $orderQuery = new SqlStatement("select * from orders where date > :date");
-$orderQuery->withCache($cache, 'recent_orders', 300); // 5 minutes
-$recentOrders = $orderQuery->getIterator($dbDriver, ['date' => '2023-01-01']);
+$orderQuery = $orderQuery->withCache($cache, 'recent_orders', 300); // 5 minutes
+$recentOrders = $executor->getIterator($orderQuery, ['date' => '2023-01-01']);
 ```
 
 ## Cache Key Generation
@@ -179,8 +180,8 @@ For example:
 
 ```php
 // If you specify this cache key and parameters:
-$sql->withCache($cache, 'user_list', 60);
-$iterator = $sql->getIterator($dbDriver, ['status' => 'active', 'role' => 'admin']);
+$sql = $sql->withCache($cache, 'user_list', 60);
+$iterator = $executor->getIterator($sql, ['status' => 'active', 'role' => 'admin']);
 
 // The actual cache key used internally will be:
 // 'user_list:' + md5(json_encode(['status' => 'active', 'role' => 'admin']))

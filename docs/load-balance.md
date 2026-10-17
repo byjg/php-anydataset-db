@@ -58,7 +58,10 @@ $executor->execute('insert into table (a) values (1)'); // Will select route1;
 | `addRouteForDelete($routeName, $table = null)`  | Routes any `DELETE` operation. An optional specific table can be specified.                        |
 | `addRouteForUpdate($routeName, $table = null)`  | Routes any `UPDATE` operation. An optional specific table can be specified.                        |
 | `addRouteForFilter($routeName, $field, $value)` | Routes based on `WHERE` clauses with specific `FIELD = VALUE` conditions.                          |
+| `addRouteForSelect($routeName, $table = null)`  | Same as `addRouteForRead()`.                                                                       |
+| `addRouteForTable($routeName, $table = null)`   | Routes reads and writes (`addRouteForRead()` + `addRouteForWrite()`).                              |
 | `addCustomRoute($routeName, $regEx)`            | Routes based on a custom regular expression.                                                       |
+| `addDefaultRoute($routeName)`                   | Routes any statement not matched by a route added before it (routes are tried in the order added). |
 
 ## Advanced Examples
 

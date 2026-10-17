@@ -36,10 +36,11 @@ Supported drivers are listed below:
 |---------------------|---------------------------------------------------|-------------------|
 | SQLite              | sqlite:///path/to/file                            | `getDbInstance()` |
 | MySQL/MariaDB       | mysql://username:password@hostname:port/database  | `getDbInstance()` |
-| PostgreSQL          | psql://username:password@hostname:port/database   | `getDbInstance()` |
+| PostgreSQL          | pgsql://username:password@hostname:port/database  | `getDbInstance()` |
 | SQL Server (DbLib)  | dblib://username:password@hostname:port/database  | `getDbInstance()` |
 | SQL Server (Sqlsrv) | sqlsrv://username:password@hostname:port/database | `getDbInstance()` |
 | Oracle (OCI8)       | oci8://username:password@hostname:port/database   | `getDbInstance()` |
+| Oracle (PDO OCI)    | oci://username:password@hostname:port/database    | `getDbInstance()` |
 | Generic PDO         | pdo://username:password@pdo_driver?PDO_PARAMETERS | `getDbInstance()` |
 | Cloudflare D1       | d1://account_id:api_token@api.cloudflare.com/database_id | `getDbInstance()` |
 

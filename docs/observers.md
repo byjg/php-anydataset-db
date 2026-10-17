@@ -4,7 +4,7 @@ sidebar_position: 12
 
 # Executor Observers
 
-Starting from version 6.0, you can attach observers to a `DatabaseExecutor` to be notified about
+Starting from version 7.0, you can attach observers to a `DatabaseExecutor` to be notified about
 queries and commands executed against the database. This is the extension point used by features
 such as the [Journal](journal.md), and can also be used for auditing, metrics or custom query logging.
 
@@ -22,8 +22,8 @@ The events are defined by the `DatabaseEventTypeEnum`:
 Notes:
 
 - Queries answered from the [cache](cache.md) do **not** fire query events (no database round-trip happens).
-- `executeAndGetId()` fires the `EXECUTE` events for the INSERT statement and the `QUERY` events
-  for the statement retrieving the generated ID.
+- `executeAndGetId()` fires the `BeforeExecute`/`AfterExecute` events for the INSERT statement and the
+  `BeforeQuery`/`AfterQuery` events for the statement retrieving the generated ID (when the dialect runs one).
 - Observers are attached to a **specific executor instance**: two executors created from the
   same driver do not share observers. Attach the observer to the executor instance the code
   under observation actually uses.
@@ -88,7 +88,7 @@ Each notification receives a `DatabaseEvent` with:
 - `getStatement()`: the `SqlStatement` (SQL text and parameters);
 - `getExecutor()`: the executor that fired the event — observers can use it to run additional
   queries on the same connection (and same transaction);
-- `getResult()`: the operation result for `AFTER_*` events (`true` for `execute()`).
+- `getResult()`: `true` for `AfterExecute`; `null` for the other events.
 
 ## See Also
 

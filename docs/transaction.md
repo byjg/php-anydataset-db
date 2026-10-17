@@ -13,16 +13,18 @@ If any operation in the sequence fails, the transaction can be rolled back to it
 
 ```php
 <?php
+use ByJG\AnyDataset\Db\DatabaseExecutor;
 use ByJG\AnyDataset\Db\Factory;
 use ByJG\AnyDataset\Db\IsolationLevelEnum;
 
 $dbDriver = Factory::getDbInstance('mysql://username:password@host/database');
+$executor = DatabaseExecutor::using($dbDriver);
 
 $dbDriver->beginTransaction(IsolationLevelEnum::Serializable);
 try {
     // ... Perform your queries
-    $dbDriver->execute("INSERT INTO table (field) VALUES (:value)", [':value' => 'test']);
-    $dbDriver->execute("UPDATE table SET field = :value WHERE id = :id", [':value' => 'updated', ':id' => 1]);
+    $executor->execute("INSERT INTO table (field) VALUES (:value)", [':value' => 'test']);
+    $executor->execute("UPDATE table SET field = :value WHERE id = :id", [':value' => 'updated', ':id' => 1]);
     
     $dbDriver->commitTransaction(); // Commit all changes
 } catch (\Exception $ex) {
@@ -122,14 +124,17 @@ Nested transactions use a "Two-Phase Commit" process to ensure consistency:
 
 ```php
 <?php
-use ByJG\AnyDataset\Db\Interfaces\DbDriverInterface;use ByJG\AnyDataset\Db\IsolationLevelEnum;
+use ByJG\AnyDataset\Db\DatabaseExecutor;
+use ByJG\AnyDataset\Db\Factory;
+use ByJG\AnyDataset\Db\Interfaces\DbDriverInterface;
+use ByJG\AnyDataset\Db\IsolationLevelEnum;
 
 function mainFunction(DbDriverInterface $dbDriver)
 {
     $dbDriver->beginTransaction(IsolationLevelEnum::Serializable);
     try {
         // ... Do your queries
-        $dbDriver->execute("INSERT INTO table (field) VALUES (:value)", [':value' => 'test']);
+        DatabaseExecutor::using($dbDriver)->execute("INSERT INTO table (field) VALUES (:value)", [':value' => 'test']);
         
         nestedFunction($dbDriver);
 
@@ -145,7 +150,7 @@ function nestedFunction(DbDriverInterface $dbDriver)
     $dbDriver->beginTransaction(IsolationLevelEnum::Serializable, allowJoin: true);
     try {
         // ... Do your queries
-        $dbDriver->execute("UPDATE table SET field = :value WHERE id = :id", [':value' => 'updated', ':id' => 1]);
+        DatabaseExecutor::using($dbDriver)->execute("UPDATE table SET field = :value WHERE id = :id", [':value' => 'updated', ':id' => 1]);
         
         $dbDriver->commitTransaction();
     } catch (\Exception $ex) {

@@ -73,6 +73,9 @@ $odbc = Factory::getDbInstance('odbc://username:password@dsn');
 
 // Generic PDO
 $pdo = Factory::getDbInstance('pdo://username:password@hostname/database');
+
+// Cloudflare D1
+$d1 = Factory::getDbInstance('d1://account_id:api_token@api.cloudflare.com/database_id');
 ```
 
 ## 3. Perform a query

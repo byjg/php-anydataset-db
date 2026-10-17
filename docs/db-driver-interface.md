@@ -8,8 +8,8 @@ The `DbDriverInterface` is the core interface for all database drivers in AnyDat
 that all database drivers must implement, providing a consistent API for interacting with different database systems.
 
 :::warning Important
-As of version 6.0, some high-level query methods in `DbDriverInterface` are deprecated in favor of
-using `DatabaseExecutor`. See the [deprecation section](#deprecated-methods) below and the
+The high-level query methods of `DbDriverInterface`, deprecated in version 6.0, were removed in version 7.0
+in favor of `DatabaseExecutor`. See the [removed methods](#removed-methods) below and the
 [DatabaseExecutor documentation](database-executor.md) for the recommended approach.
 :::
 
@@ -89,11 +89,13 @@ The interface extends `DbTransactionInterface`, so it also includes these transa
 
 | Method                                                              | Description                                            |
 |---------------------------------------------------------------------|--------------------------------------------------------|
-| `beginTransaction(IsolationLevelEnum $isolationLevel = null): void` | Starts a new transaction                               |
+| `beginTransaction(?IsolationLevelEnum $isolationLevel = null, bool $allowJoin = false)` | Starts a new transaction (or joins the active one when `$allowJoin` is true) |
 | `commitTransaction(): void`                                         | Commits the current transaction                        |
 | `rollbackTransaction(): void`                                       | Rolls back the current transaction                     |
 | `hasActiveTransaction(): bool`                                      | Checks if there is an active transaction               |
 | `activeIsolationLevel(): ?IsolationLevelEnum`                       | Returns the isolation level of the current transaction |
+| `remainingCommits(): int`                                           | Number of commits left before the real commit (nested transactions) |
+| `requiresTransaction(): void`                                       | Throws `TransactionNotStartedException` if no transaction is active |
 
 ## Usage Example
 
@@ -133,14 +135,14 @@ $iterator = $executor->getIterator($sqlStatement, [':role' => 'admin']);
 // Transaction example (can use either executor or driver)
 $executor->beginTransaction(IsolationLevelEnum::Serializable);
 try {
-    $executor->execute("INSERT INTO users (name, email) VALUES (:name, :email)", [
+    $userId = $executor->executeAndGetId("INSERT INTO users (name, email) VALUES (:name, :email)", [
         ':name' => 'John Doe',
         ':email' => 'john@example.com'
     ]);
 
-    $lastId = $executor->executeAndGetId(
+    $executor->execute(
         "INSERT INTO user_roles (user_id, role) VALUES (:user_id, :role)",
-        [':user_id' => $lastId, ':role' => 'admin']
+        [':user_id' => $userId, ':role' => 'admin']
     );
 
     $executor->commitTransaction();
@@ -217,8 +219,8 @@ AnyDataset-DB provides several implementations of the `DbDriverInterface`:
 
 | Class            | Schema | Description                                               |
 |------------------|--------|-----------------------------------------------------------|
-| `PdoMysql`       | mysql  | MySQL and MariaDB driver                                  |
-| `PdoPgsql`       | pgsql  | PostgreSQL driver                                         |
+| `PdoMysql`       | mysql, mariadb | MySQL and MariaDB driver                          |
+| `PdoPgsql`       | pgsql, postgres, postgresql | PostgreSQL driver                    |
 | `PdoSqlite`      | sqlite | SQLite driver                                             |
 | `PdoDblib`       | dblib  | SQL Server driver (using FreeTDS)                         |
 | `PdoSqlsrv`      | sqlsrv | SQL Server driver (using Microsoft driver)                |

@@ -89,6 +89,11 @@ class MyFunctionalTest extends TestCase
 The restore statements run through a dedicated executor without observers,
 so they are never recorded again.
 
+`restore()` clears the recorder after a successful restore; pass `false` as the third argument
+(`$clear`) to keep the entries. It throws `JournalRestoreException` (a `JournalException`) when an
+entry cannot be reverted: an INSERT without captured values, or an UPDATE whose captured rows do
+not have the primary key column.
+
 ## Primary Keys
 
 The journal uses the primary key to capture rows after an `UPDATE` and to delete

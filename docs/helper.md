@@ -19,6 +19,7 @@ database-specific SQL operations based on the current database connection.
 | `hasLimit()`                                                                             | Returns `true` if the current connection supports `LIMIT`.                          | bool                 |
 | `sqlDate($format, $column = null)`                                                       | Returns the proper function to format a date field based on the current connection. | string               |
 | `executeAndGetInsertedId(DatabaseExecutor $executor, string\|SqlStatement $sql, $param)` | Executes a SQL query and returns the inserted ID .                                  | mixed                |
+| `getSqlLastInsertId()`                                                                   | Returns the SQL that reads the last inserted ID (used by `executeAndGetInsertedId()`). | string               |
 | `delimiterField(string\|array $field)`                                                   | Returns the field name with the correct field delimiter for the current connection. | string\|array        |
 | `delimiterTable($table)`                                                                 | Returns the table name with the correct table delimiter for the current connection. | string               |
 | `forUpdate($sql)`                                                                        | Returns the SQL query with the `FOR UPDATE` clause for the current connection.      | string               |

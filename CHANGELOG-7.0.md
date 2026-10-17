@@ -68,7 +68,7 @@ extend `BaseSqlDialect` must add the method.
 
 `SqlDialectInterface::getTableMetadata()` returns `array<string, ColumnMetadata>` (still keyed by the
 lower-case column name) instead of an array of arrays. Each `ColumnMetadata` has the same fields as the
-old array, as read-only public properties, plus two new ones:
+old array, as read-only public properties, plus three new ones:
 
 - `primaryKey`: the column is part of the primary key.
 - `autoIncrement`: the database fills in the value (`auto_increment`, `IDENTITY`, `SERIAL`/identity,
@@ -143,9 +143,8 @@ every space. It is now encoded with `rawurlencode()`.
 
 ### Enum cases renamed to PascalCase
 
-Enum cases follow the ByJG standard and are written in PascalCase. The backed values did not
-change, so `->value`, `from()`, `tryFrom()` and stored data are not affected; only code that
-names a case (or reads `->name`) has to be updated.
+Enum cases follow the ByJG standard and are written in PascalCase. Both enums below are pure
+(non-backed) enums, so any code that names a case (or reads `->name`) has to be updated.
 
 | Enum | Before (6.x) | After (7.0) |
 |---|---|---|

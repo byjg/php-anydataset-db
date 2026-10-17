@@ -12,7 +12,7 @@ array structures. This provides a more convenient and type-safe way to work with
 To use entity mapping, you need to:
 
 1. Define a PHP class that represents your entity
-2. Pass the class name to the `getIterator()` method
+2. Set the class name in a `SqlStatement` with `withEntityClass()` and run it through the `DatabaseExecutor`
 
 ```php
 <?php
@@ -26,14 +26,12 @@ class User {
 
 // 2. Get a database connection
 $conn = \ByJG\AnyDataset\Db\Factory::getDbInstance("mysql://root:password@localhost/myschema");
+$executor = \ByJG\AnyDataset\Db\DatabaseExecutor::using($conn);
 
-// 3. Query with entity mapping by passing the entity class name
-$iterator = $conn->getIterator(
-    "SELECT * FROM users WHERE active = :active", 
-    [':active' => true],
-    0,                  // prefetch
-    User::class         // Entity class name
-);
+// 3. Query with entity mapping by setting the entity class name
+$sql = \ByJG\AnyDataset\Db\SqlStatement::from("SELECT * FROM users WHERE active = :active", [':active' => true])
+    ->withEntityClass(User::class);
+$iterator = $executor->getIterator($sql);
 
 // 4. Iterate through User objects
 foreach ($iterator as $row) {
@@ -64,7 +62,7 @@ For best results:
 ## Custom Property Transformation
 
 In some cases, you might want to customize how database field values are mapped to your entity properties. For this, you
-can use the `entityTransformer` parameter to provide a custom property handler:
+can provide a custom property handler with `SqlStatement::withEntityTransformer()`:
 
 ```php
 <?php
@@ -87,18 +85,17 @@ $transformer = new PropertyNameMapper([
 ]);
 
 // Pass the transformer along with the entity class
-$iterator = $conn->getIterator(
+$sql = \ByJG\AnyDataset\Db\SqlStatement::from(
     "SELECT 
         product_id, 
         name, 
         price, 
         currency
-     FROM products", 
-    [],
-    0,                  // prefetch
-    Product::class,     // Entity class name
-    $transformer        // Custom property handler
-);
+     FROM products"
+)
+    ->withEntityClass(Product::class)     // Entity class name
+    ->withEntityTransformer($transformer); // Custom property handler
+$iterator = $executor->getIterator($sql);
 
 // Iterate through transformed Product objects
 foreach ($iterator as $row) {
@@ -198,13 +195,14 @@ if (!$user->isValidEmail()) {
 Entity mapping creates a clear separation between your database access code and business logic:
 
 ```php
+use ByJG\AnyDataset\Db\DatabaseExecutor;
+use ByJG\AnyDataset\Db\SqlStatement;
+
 // Data access layer
-function getUserById(DbDriverInterface $db, int $userId): ?User {
-    $iterator = $db->getIterator(
-        "SELECT * FROM users WHERE id = :id",
-        [':id' => $userId],
-        0,          // prefetch
-        User::class // entity class
+function getUserById(DatabaseExecutor $executor, int $userId): ?User {
+    $iterator = $executor->getIterator(
+        SqlStatement::from("SELECT * FROM users WHERE id = :id", [':id' => $userId])
+            ->withEntityClass(User::class)
     );
     
     if ($iterator->valid()) {
@@ -215,7 +213,7 @@ function getUserById(DbDriverInterface $db, int $userId): ?User {
 }
 
 // Business logic
-$user = getUserById($dbConn, 123);
+$user = getUserById($executor, 123);
 if ($user !== null) {
     // Process user
 }
@@ -248,7 +246,9 @@ class UserOrder {
     public float $total;
 }
 
-$iterator = $conn->getIterator($sql, [':status' => 'completed'], 0, UserOrder::class);
+$iterator = $executor->getIterator(
+    SqlStatement::from($sql, [':status' => 'completed'])->withEntityClass(UserOrder::class)
+);
 ```
 
 ## Combining with Other Features
@@ -267,18 +267,17 @@ $userQuery = $userQuery->withEntityClass(User::class);
 
 
 // store the entity class (and optional transformer) in the SqlStatement itself
-$iterator = $dbDriver->getIterator($userQuery);
+$iterator = $executor->getIterator($userQuery);
 ```
 
 ### With Pre-Fetch
 
 ```php
 // Combine entity mapping with pre-fetching
-$iterator = $dbDriver->getIterator(
-    "SELECT * FROM users", 
-    [], 
-    100,        // Pre-fetch 100 records
-    User::class // Map to User entities
+$iterator = $executor->getIterator(
+    SqlStatement::from("SELECT * FROM users")->withEntityClass(User::class), // Map to User entities
+    null,
+    100         // Pre-fetch 100 records
 );
 ```
 

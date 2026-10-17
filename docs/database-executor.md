@@ -198,6 +198,13 @@ $connection = $driver->getDbConnection();
 $dialect = $driver->getSqlDialect();
 ```
 
+`$executor->getHelper()` is a shortcut for `$executor->getDriver()->getSqlDialect()` (see [SQL Dialect Helper](helper.md)).
+
+### Observers
+
+`addObserver()` and `removeObserver()` attach and detach a `DatabaseEventObserverInterface` notified about
+the queries and commands run through this executor. See [Executor Observers](observers.md).
+
 ## Complete Example
 
 ```php
