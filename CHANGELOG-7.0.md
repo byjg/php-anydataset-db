@@ -139,6 +139,27 @@ check from the scheme. `DbPdoDriver` now passes `PdoObj` the driver's main schem
 `byjg/uri` 7.0 reads `+` as a literal plus sign, so the string reached PDO with `+` in place of
 every space. It is now encoded with `rawurlencode()`.
 
+### Changed: a password without a user is not passed to SQL Server and Oracle
+
+With `byjg/uri` 7.0 an empty user removes the user information, so `PdoSqlsrv`, `PdoDblib` and `PdoOci` no
+longer pass the password of a password-only URI (`sqlsrv://:pw@host/db`): PDO gets no user and no password.
+These databases cannot log in with a password only (with no user they use integrated/external authentication).
+
+### Fixed: `DatabaseRouter` route order and literal table names
+
+- Routes were stored by pattern, so adding the same pattern twice (e.g. `addRouteForRead('a', 'users')`
+  then `addRouteForRead('b', 'users')`) replaced the first route: the later name took the earlier one's
+  position. Routes are now kept in the order added and the first match wins, as documented; the
+  second route with the same pattern never matches.
+- The table name of `addRouteForSelect/Insert/Update/Delete/Read/Write/Table()` and the field and
+  value of `addRouteForFilter()` went into the regular expression unescaped: a table `a.b` also matched
+  `axb`, and a `/` broke the expression. They are now matched literally (`preg_quote()`).
+- Routes are now matched case-insensitively. Before, the SQL was lowercased but the patterns were not, so a
+  route for an uppercase table (`addRouteForRead('x', 'Users')`) or a custom pattern with capitals
+  (`addCustomRoute('x', 'GROUP\s+BY')`) never matched. As a consequence, the `$value` of
+  `addRouteForFilter()` is matched case-insensitively too (`'A@B'` matches `'a@b'`).
+- The protected `$routes` property is now a list of `[regEx, routeName]` pairs.
+
 ---
 
 ### Enum cases renamed to PascalCase
@@ -190,6 +211,16 @@ New `DbD1Driver` (`d1://` scheme) talking to the [Cloudflare D1 REST API](https:
 **Documentation:** [Driver: Cloudflare D1](docs/cloudflare-d1.md)
 
 ---
+
+## Bug Fixes
+
+- `DatabaseRouter`: routes with the same pattern no longer replace each other, table names, filter
+  fields and values are matched literally, and routes match case-insensitively (uppercase table names and
+  custom patterns with capitals now match). See "Fixed: `DatabaseRouter` route order and literal table
+  names" under Breaking Changes.
+- `DbOci8Driver`: a URI without a user or password no longer passes `null` to `oci_connect()` (PHP 8.1+
+  deprecation "Passing null to parameter of type string"); the missing part is sent as an empty string.
+- `DbD1Driver`: an account id, API token or database id of `"0"` is no longer rejected as missing.
 
 ## Known Limitations
 

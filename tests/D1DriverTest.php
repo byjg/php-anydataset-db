@@ -87,6 +87,18 @@ class D1DriverTest extends TestCase
         new DbD1Driver(new Uri($uri));
     }
 
+    public function testZeroAccountTokenAndDatabaseAreAccepted(): void
+    {
+        $driver = $this->createDriver('d1://0:0@api.cloudflare.com/0');
+        $this->client->queueSuccess();
+
+        DatabaseExecutor::using($driver)->execute('DELETE FROM Dogs');
+
+        $request = $this->client->getLastRequest();
+        $this->assertEquals('/client/v4/accounts/0/d1/database/0/query', $request->getUri()->getPath());
+        $this->assertEquals('Bearer 0', $request->getHeaderLine('Authorization'));
+    }
+
     // ------------------------------------------------------------------------- the HTTP request
 
     public function testRequestTargetsTheD1QueryEndpoint(): void

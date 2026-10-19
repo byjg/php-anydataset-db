@@ -28,9 +28,11 @@ class DatabaseRouter implements DbDriverInterface
     protected array $drivers = [];
 
     /**
-     * @var string[]
+     * Routes in the order added: [regEx, routeName]. The first matching route wins.
+     *
+     * @var array<int, array{0: string, 1: string}>
      */
-    protected array $routes;
+    protected array $routes = [];
 
     /**
      * @var DbDriverInterface|null Last matched driver for transaction and connection operations
@@ -86,7 +88,7 @@ class DatabaseRouter implements DbDriverInterface
             return $this->addCustomRoute($routeName, '^select\s');
         }
         // Match SELECT with specific table
-        return $this->addCustomRoute($routeName, '^select.*from\s+([`]?' . $table . '[`]?)\s');
+        return $this->addCustomRoute($routeName, '^select.*from\s+([`]?' . preg_quote($table, '/') . '[`]?)\s');
     }
 
     /**
@@ -97,9 +99,7 @@ class DatabaseRouter implements DbDriverInterface
      */
     public function addRouteForInsert(string $routeName, ?string $table = null): static
     {
-        if (empty($table)) {
-            $table = '\w+';
-        }
+        $table = empty($table) ? '\w+' : preg_quote($table, '/');
         return $this->addCustomRoute($routeName, '^insert\s+into\s+([`]?' . $table . '[`]?)\s+\(');
     }
 
@@ -111,9 +111,7 @@ class DatabaseRouter implements DbDriverInterface
      */
     public function addRouteForUpdate(string $routeName, ?string $table = null): static
     {
-        if (empty($table)) {
-            $table = '\w+';
-        }
+        $table = empty($table) ? '\w+' : preg_quote($table, '/');
         return $this->addCustomRoute($routeName, '^update\s+([`]?' . $table . '[`]?)\s+set');
     }
 
@@ -125,9 +123,7 @@ class DatabaseRouter implements DbDriverInterface
      */
     public function addRouteForDelete(string $routeName, ?string $table = null): static
     {
-        if (empty($table)) {
-            $table = '\w+';
-        }
+        $table = empty($table) ? '\w+' : preg_quote($table, '/');
         return $this->addCustomRoute($routeName, '^delete\s+(from\s+)?([`]?' . $table . '[`]?)\s');
     }
 
@@ -178,6 +174,8 @@ class DatabaseRouter implements DbDriverInterface
      */
     public function addRouteForFilter(string $routeName, string $field, string $value): static
     {
+        $field = preg_quote($field, '/');
+        $value = preg_quote($value, '/');
         return $this->addCustomRoute($routeName, "\\s`?$field`?\\s*=\\s*'?$value'?\s");
     }
 
@@ -202,7 +200,7 @@ class DatabaseRouter implements DbDriverInterface
         if (!isset($this->drivers[$routeName])) {
             throw new RouteNotFoundException("Invalid route $routeName");
         }
-        $this->routes[$regEx] = $routeName;
+        $this->routes[] = [$regEx, $routeName];
         return $this;
     }
 
@@ -215,9 +213,9 @@ class DatabaseRouter implements DbDriverInterface
      */
     public function matchRoute(string $sql): DbDriverInterface
     {
-        $sql = trim(strtolower(str_replace("\n", " ", $sql))) . ' ';
-        foreach ($this->routes as $pattern => $routeName) {
-            if (!preg_match("/$pattern/", $sql)) {
+        $sql = trim(str_replace("\n", " ", $sql)) . ' ';
+        foreach ($this->routes as [$pattern, $routeName]) {
+            if (!preg_match("/$pattern/i", $sql)) {
                 continue;
             }
 

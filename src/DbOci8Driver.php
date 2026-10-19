@@ -345,8 +345,8 @@ class DbOci8Driver implements DbDriverInterface
 
         /** @psalm-suppress UndefinedConstant */
         $this->conn = $connectMethod(
-            $this->connectionUri->getUsername(),
-            $this->connectionUri->getPassword(),
+            $this->connectionUri->getUsername() ?? '',
+            $this->connectionUri->getPassword() ?? '',
             $tns,
             $codePage,
             $this->connectionUri->getQueryPart('session_mode') ?? OCI_DEFAULT

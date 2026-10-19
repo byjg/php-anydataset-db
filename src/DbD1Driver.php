@@ -99,7 +99,7 @@ class DbD1Driver implements DbDriverInterface
         $this->apiToken = (string)$connectionUri->getPassword();
         $this->databaseId = trim($connectionUri->getPath(), '/');
 
-        if (empty($this->accountId) || empty($this->apiToken) || empty($this->databaseId)) {
+        if ($this->accountId === '' || $this->apiToken === '' || $this->databaseId === '') {
             throw new InvalidArgumentException(
                 'The D1 connection URI must be in the form '
                 . 'd1://{account_id}:{api_token}@api.cloudflare.com/{database_id}'
