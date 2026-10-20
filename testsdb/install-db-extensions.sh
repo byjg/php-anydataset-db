@@ -3,12 +3,13 @@
 # packages, so every test in testsdb/ can run. See docs/installing-extensions.md for what each
 # step is for.
 #
-#   install-db-extensions.sh [oracle] [sqlsrv]
+#   install-db-extensions.sh [oracle] [sqlsrv] [duckdb]
 #
 #   oracle   oci8 and pdo_oci, with Oracle Instant Client
 #   sqlsrv   pdo_sqlsrv, with Microsoft ODBC Driver 18
+#   duckdb   pdo_duckdb, with the musl build of libduckdb
 #
-# Without arguments it installs both, which is how it runs as a shellscript.download
+# Without arguments it installs all of them, which is how it runs as a shellscript.download
 # post-install script:
 #
 #   load.sh php-docker -- 8.5 --postinstall testsdb/install-db-extensions.sh
@@ -22,6 +23,8 @@ set -eu
 
 IC_URL=https://download.oracle.com/otn_software/linux/instantclient
 MSODBC_URL=https://download.microsoft.com/download/fae28b9a-d880-42fd-9b98-d779f0fdd77f/msodbcsql18_18.5.1.1-1_amd64.apk
+DUCKDB_URL=https://github.com/duckdb/duckdb/releases/download/v1.5.6/libduckdb-linux-amd64-musl.zip
+PIE_URL=https://github.com/php/pie/releases/download/1.5.2/pie.phar
 BUILD_DEPS="${PHP_VARIANT}-dev ${PHP_VARIANT}-pear build-base unixodbc-dev unzip"
 
 install_oracle() {
@@ -58,12 +61,33 @@ install_sqlsrv() {
     EXTENSIONS="$EXTENSIONS pdo_sqlsrv"
 }
 
-[ $# -gt 0 ] || set -- oracle sqlsrv
+install_duckdb() {
+    # pdo_duckdb has prebuilt binaries for glibc only, so it is built here against the musl
+    # build of libduckdb that DuckDB publishes. libstdc++ stays: libduckdb needs it at runtime.
+    apk add --no-cache libstdc++
+    apk add --no-cache --virtual .duckdb-build autoconf pkgconfig libtool
+
+    mkdir -p /opt/duckdb/include /opt/duckdb/lib
+    curl -fsSL -o /tmp/duckdb.zip "$DUCKDB_URL"
+    unzip -q -o /tmp/duckdb.zip -d /tmp/duckdb
+    mv /tmp/duckdb/duckdb.h /opt/duckdb/include/
+    mv /tmp/duckdb/libduckdb.so /opt/duckdb/lib/
+    rm -rf /tmp/duckdb /tmp/duckdb.zip
+
+    curl -fsSL -o /tmp/pie.phar "$PIE_URL"
+    php /tmp/pie.phar install iliaal/pdo_duckdb:0.8.0 --with-pdo-duckdb=/opt/duckdb
+    rm -f /tmp/pie.phar
+    apk del .duckdb-build
+
+    EXTENSIONS="$EXTENSIONS pdo_duckdb"
+}
+
+[ $# -gt 0 ] || set -- oracle sqlsrv duckdb
 
 for target in "$@"; do
     case "$target" in
-        oracle|sqlsrv) ;;
-        *) echo "Unknown target '$target'. Use: oracle, sqlsrv" >&2; exit 1 ;;
+        oracle|sqlsrv|duckdb) ;;
+        *) echo "Unknown target '$target'. Use: oracle, sqlsrv, duckdb" >&2; exit 1 ;;
     esac
 done
 

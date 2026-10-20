@@ -1,10 +1,10 @@
 ---
-sidebar_position: 27
+sidebar_position: 28
 ---
 
 # Installing the PHP database extensions
 
-Each driver needs a PHP extension, and three of them need a vendor client library that no
+Each driver needs a PHP extension, and four of them need a vendor client library that no
 Linux distribution ships. This page lists what each driver needs and how to install it.
 
 | Driver (scheme)            | PHP extension | Extra client library          | Where it comes from |
@@ -12,6 +12,7 @@ Linux distribution ships. This page lists what each driver needs and how to inst
 | MySQL (`mysql`)            | `pdo_mysql`   | none                          | distribution package |
 | PostgreSQL (`pgsql`)       | `pdo_pgsql`   | none                          | distribution package |
 | SQLite (`sqlite`)          | `pdo_sqlite`  | none                          | distribution package |
+| DuckDB (`duckdb`)          | `pdo_duckdb`  | libduckdb                     | DuckDB download + PIE |
 | SQL Server (`dblib`)       | `pdo_dblib`   | FreeTDS (pulled in by the package) | distribution package |
 | SQL Server (`sqlsrv`)      | `pdo_sqlsrv`  | Microsoft ODBC Driver 18      | Microsoft download + PECL |
 | Oracle (`oci8`)            | `oci8`        | Oracle Instant Client         | Oracle download + PECL |
@@ -21,7 +22,7 @@ Linux distribution ships. This page lists what each driver needs and how to inst
 Check what is loaded with:
 
 ```bash
-php -m | grep -i -E "pdo|oci|sqlsrv"
+php -m | grep -i -E "pdo|oci|sqlsrv|duckdb"
 ```
 
 :::info Tested with
@@ -35,10 +36,11 @@ and `pdo_sqlsrv` 5.13.3 fail to build against it.
 ## The install script
 
 [`testsdb/install-db-extensions.sh`](https://github.com/byjg/php-anydataset-db/blob/master/testsdb/install-db-extensions.sh)
-installs the three extensions that are not distribution packages - `oci8`, `pdo_oci` and
-`pdo_sqlsrv` - and is the reference for the exact commands. The sections below explain what it
+installs the extensions that are not distribution packages - `oci8`, `pdo_oci`, `pdo_sqlsrv`
+and `pdo_duckdb` - and is the reference for the exact commands. The sections below explain what it
 does and why. It must run as `root`, and it stops with an error if one of the extensions does
-not load. Pass `oracle` or `sqlsrv` to install only that one; without arguments it installs both.
+not load. Pass `oracle`, `sqlsrv` or `duckdb` to install only those; without arguments it
+installs all of them.
 
 There are three ways to run it:
 
@@ -80,6 +82,26 @@ They are distribution packages and are already present in the `byjg/php` images:
 ```bash
 apk add --no-cache ${PHP_VARIANT}-pdo_mysql ${PHP_VARIANT}-pdo_pgsql ${PHP_VARIANT}-pdo_sqlite
 ```
+
+## DuckDB
+
+[`pdo_duckdb`](https://github.com/iliaal/pdo_duckdb) is installed with
+[PIE](https://github.com/php/pie). On a glibc Linux (Debian, Ubuntu), macOS or Windows, PIE
+downloads a prebuilt binary that already contains DuckDB:
+
+```bash
+pie install iliaal/pdo_duckdb
+```
+
+The prebuilt binaries are for glibc only, so on Alpine (the `byjg/php` images) the script
+compiles the extension:
+
+1. downloads the **musl build of libduckdb** from the DuckDB releases into `/opt/duckdb`, and
+   keeps `libstdc++`, which it needs at runtime;
+2. runs `pie install iliaal/pdo_duckdb --with-pdo-duckdb=/opt/duckdb`, which builds the
+   extension against it and enables it.
+
+Tested with DuckDB 1.5.6 and `pdo_duckdb` 0.8.0 on PHP 8.5.
 
 ## SQL Server with Dblib (FreeTDS)
 

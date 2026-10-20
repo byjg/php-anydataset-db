@@ -210,6 +210,21 @@ New `DbD1Driver` (`d1://` scheme) talking to the [Cloudflare D1 REST API](https:
 
 **Documentation:** [Driver: Cloudflare D1](docs/cloudflare-d1.md)
 
+### 4. DuckDB Driver
+
+New `PdoDuckdb` (`duckdb://` scheme) for [DuckDB](https://duckdb.org), an embedded database for
+analytics, through the [`pdo_duckdb`](https://github.com/iliaal/pdo_duckdb) extension:
+
+- Connection string: `duckdb:///path/to/file.duckdb`, or `duckdb://` for an in-memory database
+- `DuckdbDialect` extends `PgsqlDialect`. `executeAndGetId()` reads the id from the sequence in
+  the default value of the primary key; `sqlDate()` uses `strftime()`; table metadata, indexes and
+  foreign keys come from DuckDB's catalog functions
+- `PdoPdo` and `PdoLiteral` detect a `duckdb` connection and use `DuckdbDialect`
+- `testsdb/install-db-extensions.sh duckdb` builds `pdo_duckdb` on Alpine against the musl build
+  of libduckdb
+
+**Documentation:** [Driver: DuckDB](docs/duckdb.md)
+
 ---
 
 ## Bug Fixes
@@ -236,6 +251,9 @@ New `DbD1Driver` (`d1://` scheme) talking to the [Cloudflare D1 REST API](https:
 - The D1 Sessions API is only available through the Workers binding, so the driver cannot provide
   sequential consistency (read-your-own-writes) on databases with read replication enabled.
   See [Driver: Cloudflare D1](docs/cloudflare-d1.md) for the full list.
+- DuckDB: one connection per database file in a process (`pdo_duckdb` opens a separate database
+  per connection, and they do not see each other's commits), no `FOR UPDATE`, no isolation levels,
+  and generated columns are not reported as generated. See [Driver: DuckDB](docs/duckdb.md).
 
 ---
 

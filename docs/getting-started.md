@@ -15,7 +15,7 @@ composer require byjg/anydataset-db
 ## 2. Connect to the database
 
 Set up a database connection. ByJG AnyDatasetDB supports multiple databases, including MySQL, PostgreSQL, SQL Server,
-Oracle and SQLite.
+Oracle, SQLite and DuckDB.
 
 Example: Connecting to a MySQL database:
 
@@ -55,6 +55,9 @@ $pgsql = Factory::getDbInstance('pgsql://username:password@hostname/database');
 
 // SQLite
 $sqlite = Factory::getDbInstance('sqlite:///path/to/database.db');
+
+// DuckDB
+$duckdb = Factory::getDbInstance('duckdb:///path/to/database.duckdb');
 
 // SQL Server (via DBLIB)
 $dblib = Factory::getDbInstance('dblib://username:password@hostname/database');

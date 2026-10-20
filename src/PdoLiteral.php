@@ -5,6 +5,7 @@ namespace ByJG\AnyDataset\Db;
 use ByJG\AnyDataset\Core\Exception\NotAvailableException;
 use ByJG\AnyDataset\Db\Exception\DbDriverNotConnected;
 use ByJG\AnyDataset\Db\SqlDialect\DblibDialect;
+use ByJG\AnyDataset\Db\SqlDialect\DuckdbDialect;
 use ByJG\AnyDataset\Db\SqlDialect\GenericPdoDialect;
 use ByJG\AnyDataset\Db\SqlDialect\MysqlDialect;
 use ByJG\AnyDataset\Db\SqlDialect\OciDialect;
@@ -39,6 +40,7 @@ class PdoLiteral extends DbPdoDriver
                 'sqlsrv' => SqlsrvDialect::class,
                 'dblib' => DblibDialect::class,
                 'oci' => OciDialect::class,
+                'duckdb' => DuckdbDialect::class,
                 default => GenericPdoDialect::class,
             };
         }

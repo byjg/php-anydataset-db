@@ -35,6 +35,7 @@ Supported drivers are listed below:
 | Database            | Connection String                                 | Factory Method    |
 |---------------------|---------------------------------------------------|-------------------|
 | SQLite              | sqlite:///path/to/file                            | `getDbInstance()` |
+| DuckDB              | duckdb:///path/to/file (duckdb:// for in-memory)  | `getDbInstance()` |
 | MySQL/MariaDB       | mysql://username:password@hostname:port/database  | `getDbInstance()` |
 | PostgreSQL          | pgsql://username:password@hostname:port/database  | `getDbInstance()` |
 | SQL Server (DbLib)  | dblib://username:password@hostname:port/database  | `getDbInstance()` |
@@ -71,6 +72,7 @@ $conn = \ByJG\AnyDataset\Db\Factory::getDbInstance("mysql://root:password@10.0.1
 - [Journal (Record and Restore Changes)](docs/journal.md)
 - [Passing Parameters to PDODriver](docs/parameters.md)
 - [Generic PDO Driver](docs/generic-pdo-driver.md)
+- [Driver: DuckDB](docs/duckdb.md)
 - [Running Tests](docs/tests.md)
 - [Installing the PHP database extensions](docs/installing-extensions.md)
 - [Getting an Iterator from an existing PDO Statement](docs/pdostatement.md)
