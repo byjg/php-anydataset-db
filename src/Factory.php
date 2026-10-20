@@ -68,16 +68,6 @@ class Factory
         self::registerDbDriver(DbD1Driver::class);
     }
 
-    /**
-     * @param string $connectionString
-     * @return DbDriverInterface
-     * @deprecated Use getDbInstance instead
-     */
-    public static function getDbRelationalInstance(string $connectionString): DbDriverInterface
-    {
-        return self::getDbInstance(new Uri($connectionString));
-    }
-
 
     /**
      * @param Uri|string $connectionUri Uri

@@ -162,6 +162,21 @@ These databases cannot log in with a password only (with no user they use integr
 
 ---
 
+### Removed: `Factory::getDbRelationalInstance()`
+
+Deprecated since 5.0. Use `Factory::getDbInstance()`, which takes the same connection string (or a
+`Uri`). In a dependency injection configuration the method is named as a string, so Psalm does not
+report it and it fails only when the container builds the driver:
+
+```php
+// Before
+->withFactoryMethod("getDbRelationalInstance", [Param::get('DBDRIVER_CONNECTION')])
+// After
+->withFactoryMethod("getDbInstance", [Param::get('DBDRIVER_CONNECTION')])
+```
+
+---
+
 ### Enum cases renamed to PascalCase
 
 Enum cases follow the ByJG standard and are written in PascalCase. Both enums below are pure

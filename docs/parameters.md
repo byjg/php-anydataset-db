@@ -14,7 +14,7 @@ use ByJG\Util\Uri;
 use ByJG\AnyDataset\Db\Factory;
 use PDO;
 
-$uri = Uri::getInstanceFromString("mysql://root:password@localhost")
+$uri = Uri::getInstance("mysql://root:password@localhost")
     ->withQueryKeyValue(PDO::MYSQL_ATTR_COMPRESS, 1);
 $db = Factory::getDbInstance($uri);
 ```
@@ -36,7 +36,7 @@ use ByJG\Util\Uri;
 use ByJG\AnyDataset\Db\DbPdoDriver;
 use ByJG\AnyDataset\Db\Factory;
 
-$uri = Uri::getInstanceFromString("sqlite:///path/to/database.db")
+$uri = Uri::getInstance("sqlite:///path/to/database.db")
     ->withQueryKeyValue(DbPdoDriver::DONT_PARSE_PARAM, "");
 
 $db = Factory::getDbInstance($uri);
@@ -52,7 +52,7 @@ use ByJG\AnyDataset\Db\Factory;
 
 // Note: there are 3 slashes after the protocol
 // The first one is the separator between the protocol and the host
-$uri = Uri::getInstanceFromString("mysql:///" . $dbname)
+$uri = Uri::getInstance("mysql:///" . $dbname)
     ->withQueryKeyValue(DbPdoDriver::UNIX_SOCKET, "/run/mysql.sock");
 
 $db = Factory::getDbInstance($uri);

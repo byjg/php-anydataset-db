@@ -58,9 +58,10 @@ class Oci8Test extends BasePdo
 
     protected function createDatabase()
     {
-        //create the database
+        //create the database. NOCACHE: Oracle hands out identity values from a cache of 20 and
+        //can skip the rest of it, while the tests expect consecutive ids
         $this->executor->execute("CREATE TABLE Dogs (
-            Id INT GENERATED ALWAYS as IDENTITY(START with 1 INCREMENT by 1), 
+            Id INT GENERATED ALWAYS as IDENTITY(START with 1 INCREMENT by 1 NOCACHE),
             Breed varchar2(50), 
             Name varchar2(50), 
             Age INT, 
