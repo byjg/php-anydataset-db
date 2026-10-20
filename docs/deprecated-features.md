@@ -107,6 +107,21 @@ The following methods are **NOT** deprecated and remain as core driver functiona
 - All transaction methods remain in `DbTransactionInterface`
 - Available in both driver and executor for convenience
 
+## Removed: `Factory::getDbRelationalInstance()`
+
+**Deprecated in:** Version 5.0
+**Removed in:** Version 7.0
+
+Use `Factory::getDbInstance()`, which accepts the same connection string or a `Uri`. Search the
+dependency injection configuration too, where the method name is a string:
+
+```php
+// Before
+->withFactoryMethod("getDbRelationalInstance", [Param::get('DBDRIVER_CONNECTION')])
+// After
+->withFactoryMethod("getDbInstance", [Param::get('DBDRIVER_CONNECTION')])
+```
+
 ## Backward Compatibility
 
 ### Version 6.0
