@@ -26,6 +26,7 @@ docker-compose up -d postgres mysql
 ```bash
 vendor/bin/testsdb/PdoMySqlTest.php 
 vendor/bin/testsdb/PdoSqliteTest.php 
+vendor/bin/testsdb/PdoDuckdbTest.php 
 vendor/bin/testsdb/PdoPostgresTest.php 
 vendor/bin/testsdb/PdoDblibTest.php 
 vendor/bin/testsdb/PdoSqlsrvTest.php 
@@ -47,12 +48,13 @@ export ORACLE_DATABASE=XE            # defaults to XE
 ```
 
 A test class is skipped when its PHP extension is not loaded: `pdo_dblib`, `pdo_sqlsrv`, `oci8`
-(`Oci8Test`) and `pdo_oci` (`PdoOciTest`). See
+(`Oci8Test`), `pdo_oci` (`PdoOciTest`) and `pdo_duckdb` (`PdoDuckdbTest`, which uses the file
+`/tmp/test.duckdb`). See
 [Installing the PHP database extensions](installing-extensions.md) to install them. The PDO OCI
 tests also need `NLS_LANG=.AL32UTF8` in the environment.
 
 With the [shellscript.download](https://shellscript.download) PHP wrappers, one command installs
-`oci8`, `pdo_oci` and `pdo_sqlsrv` and sets that variable:
+`oci8`, `pdo_oci`, `pdo_sqlsrv` and `pdo_duckdb` and sets that variable:
 
 ```bash
 load.sh php-docker -- 8.5 --postinstall testsdb/install-db-extensions.sh

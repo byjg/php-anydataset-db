@@ -77,6 +77,8 @@ jobs:
         # pdo_sqlsrv 5.13 does not compile against PHP 8.6 yet
         if: matrix.php-version != '8.6'
         run: sh testsdb/install-db-extensions.sh sqlsrv
+      - name: Install pdo_duckdb
+        run: sh testsdb/install-db-extensions.sh duckdb
       - run: composer install
       - run: composer test
 

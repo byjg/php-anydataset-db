@@ -600,6 +600,20 @@ abstract class BasePdo extends TestCase
         $this->assertEquals(3.2, $row[0]["weight"]);
     }
 
+    public function testBindBoolean()
+    {
+        $sql = "INSERT INTO Dogs (Breed, Name, Age) VALUES ('Bool', :name, :age)";
+        $this->executor->execute($sql, ["name" => 'Yes', "age" => true]);
+        $this->executor->execute($sql, ["name" => 'No', "age" => false]);
+
+        // Literals, so a false stored as '' or NULL does not match
+        $this->assertEquals(1, $this->executor->getScalar("select count(*) from Dogs where Name = 'Yes' and Age = 1"));
+        $this->assertEquals(1, $this->executor->getScalar("select count(*) from Dogs where Name = 'No' and Age = 0"));
+
+        $this->assertEquals(1, $this->executor->getScalar("select count(*) from Dogs where Breed = 'Bool' and Age = :age", ["age" => false]));
+        $this->assertEquals(1, $this->executor->getScalar("select count(*) from Dogs where Breed = 'Bool' and Age = :age", ["age" => true]));
+    }
+
     public function testEscapeQuote()
     {
         $escapeQuote = $this->escapeQuote;

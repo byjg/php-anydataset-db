@@ -222,6 +222,7 @@ AnyDataset-DB provides several implementations of the `DbDriverInterface`:
 | `PdoMysql`       | mysql, mariadb | MySQL and MariaDB driver                          |
 | `PdoPgsql`       | pgsql, postgres, postgresql | PostgreSQL driver                    |
 | `PdoSqlite`      | sqlite | SQLite driver                                             |
+| `PdoDuckdb`      | duckdb | DuckDB driver (embedded analytics)                        |
 | `PdoDblib`       | dblib  | SQL Server driver (using FreeTDS)                         |
 | `PdoSqlsrv`      | sqlsrv | SQL Server driver (using Microsoft driver)                |
 | `PdoOci`         | oci, oracle | Oracle driver (using PDO OCI)                        |

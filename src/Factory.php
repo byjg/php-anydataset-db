@@ -58,6 +58,7 @@ class Factory
         self::registerDbDriver(PdoMysql::class);
         self::registerDbDriver(PdoPgsql::class);
         self::registerDbDriver(PdoSqlite::class);
+        self::registerDbDriver(PdoDuckdb::class);
         self::registerDbDriver(PdoDblib::class);
         self::registerDbDriver(PdoSqlsrv::class);
         self::registerDbDriver(PdoOdbc::class);

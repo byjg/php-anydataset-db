@@ -34,7 +34,7 @@ database-specific SQL operations based on the current database connection.
 ## Table Metadata
 
 `getTableMetadata()`, `getTableIndexes()` and `getTableForeignKeys()` describe an existing table, and are
-implemented for MySQL, SQLite (and Cloudflare D1), PostgreSQL, SQL Server and Oracle. They return objects
+implemented for MySQL, SQLite (and Cloudflare D1), PostgreSQL, SQL Server, Oracle and DuckDB. They return objects
 from `ByJG\AnyDataset\Db\Metadata`, with read-only public properties. Names are returned the way the
 database stores them: PostgreSQL folds unquoted names to lower case, Oracle to upper case.
 
@@ -61,9 +61,11 @@ foreach ($dialect->getTableForeignKeys($executor, 'pet') as $foreignKey) {
 
 - `autoIncrement` is true when the database fills in the value: `auto_increment` (MySQL), `IDENTITY`
   (SQL Server, Oracle), `SERIAL` or identity (PostgreSQL), and a single-column `INTEGER PRIMARY KEY`
-  in SQLite, which is an alias of the rowid.
+  in SQLite, which is an alias of the rowid, and a primary key whose default is `nextval()` of a
+  sequence (DuckDB).
 - `generated` is true for a column the database computes from an expression: a generated column
-  (MySQL, SQLite, PostgreSQL), a computed column (SQL Server) or a virtual column (Oracle).
+  (MySQL, SQLite, PostgreSQL), a computed column (SQL Server) or a virtual column (Oracle). DuckDB
+  does not report it: its catalog shows the expression as the column's default.
 - `getTableIndexes()` leaves out the index of the primary key, which `primaryKey` already reports.
   It includes the indexes the database creates by itself: MySQL adds one for a foreign key that has
   none, and a `UNIQUE` constraint is an index everywhere.
@@ -112,7 +114,7 @@ $date2 = $dialect->sqlDate(BaseDialect::DMYH, "some_field_date"); // Same as abo
 // MySQL, PostgreSQL, SQL Server and Oracle support every letter above except Q/q, which only
 // PostgreSQL and Oracle have, and a/p, which is AM/PM everywhere. SQLite's strftime() has no
 // month names and no two-digit year: there M is the month number and y the four-digit year,
-// d keeps the leading zero, and h is the 24-hour hour.
+// d keeps the leading zero, and h is the 24-hour hour. DuckDB supports every letter except Q/q.
 
 
 // This will return the fields with proper field delimiter
