@@ -221,6 +221,8 @@ New `DbD1Driver` (`d1://` scheme) talking to the [Cloudflare D1 REST API](https:
 - `DbOci8Driver`: a URI without a user or password no longer passes `null` to `oci_connect()` (PHP 8.1+
   deprecation "Passing null to parameter of type string"); the missing part is sent as an empty string.
 - `DbD1Driver`: an account id, API token or database id of `"0"` is no longer rejected as missing.
+- PDO drivers and `DbOci8Driver`: a boolean parameter is bound as `1`/`0`. `false` was bound as `''`,
+  which MySQL, PostgreSQL and integer columns rejected, SQLite stored as text and Oracle stored as NULL.
 
 ## Known Limitations
 

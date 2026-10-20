@@ -132,6 +132,10 @@ class DbOci8Driver implements DbDriverInterface
         // Bind the parameters
         if (is_array($params)) {
             foreach ($params as $key => $value) {
+                // A bool binds as a string: false would be '', which Oracle stores as NULL
+                if (is_bool($value)) {
+                    $params[$key] = (int)$value;
+                }
                 oci_bind_by_name($stid, ":$key", $params[$key], -1);
             }
         }

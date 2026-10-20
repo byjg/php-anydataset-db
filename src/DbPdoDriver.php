@@ -143,7 +143,12 @@ abstract class DbPdoDriver implements DbDriverInterface
 
         if (!empty($params)) {
             foreach ($params as $key => $value) {
-                $stmt->bindValue(":" . ParameterBinder::sanitizeParameterKey($key), $value);
+                // Bound as a string, false would be '', which boolean and integer columns reject.
+                // Not PDO::PARAM_BOOL: pgsql renders it 't'/'f', which an integer column rejects.
+                $stmt->bindValue(
+                    ":" . ParameterBinder::sanitizeParameterKey($key),
+                    is_bool($value) ? (int)$value : $value
+                );
             }
         }
 
