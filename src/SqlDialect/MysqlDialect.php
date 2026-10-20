@@ -96,7 +96,7 @@ class MysqlDialect extends BaseSqlDialect
         $pattern = [
             'Y' => "%Y",
             'y' => "%y",
-            'M' => "%b",
+            'M' => "%M",
             'm' => "%m",
             'Q' => "",
             'q' => "",
@@ -144,25 +144,55 @@ class MysqlDialect extends BaseSqlDialect
         $return = [];
 
         foreach ($metadata as $key => $value) {
-            $return[strtolower($value['field'])] = [
-                'name' => $value['field'],
-                'dbType' => strtolower($value['type']),
-                'required' => $value['null'] == 'NO',
-                'default' => $value['default'],
-            ] + $this->parseTypeMetadata(strtolower($value['type']));
+            $return[strtolower($value['field'])] = $this->newColumnMetadata(
+                name: (string)$value['field'],
+                dbType: strtolower($value['type']),
+                required: $value['null'] == 'NO',
+                default: $value['default'],
+                primaryKey: $value['key'] == 'PRI',
+                autoIncrement: str_contains(strtolower((string)$value['extra']), 'auto_increment'),
+                generated: str_contains(strtolower((string)$value['extra']), 'generated')
+            );
         }
 
         return $return;
     }
 
     #[Override]
+    public function getTableIndexes(DatabaseExecutor $executor, string $tableName): array
+    {
+        return $this->getTableIndexesFromSql(
+            $executor,
+            "SELECT index_name AS index_name, column_name AS column_name, 1 - non_unique AS is_unique
+               FROM information_schema.statistics
+              WHERE table_schema = database() AND table_name = :tablename AND index_name <> 'PRIMARY'
+              ORDER BY index_name, seq_in_index",
+            ['tablename' => $tableName]
+        );
+    }
+
+    #[Override]
+    public function getTableForeignKeys(DatabaseExecutor $executor, string $tableName): array
+    {
+        return $this->getTableForeignKeysFromSql(
+            $executor,
+            "SELECT constraint_name AS constraint_name, column_name AS column_name,
+                    referenced_table_name AS parent_table, referenced_column_name AS parent_column
+               FROM information_schema.key_column_usage
+              WHERE table_schema = database() AND table_name = :tablename AND referenced_table_name IS NOT NULL
+              ORDER BY constraint_name, ordinal_position",
+            ['tablename' => $tableName]
+        );
+    }
+
+    #[Override]
     public function getIsolationLevelCommand(?IsolationLevelEnum $isolationLevel = null): string
     {
         return match ($isolationLevel) {
-            IsolationLevelEnum::READ_UNCOMMITTED => "SET SESSION TRANSACTION ISOLATION LEVEL READ UNCOMMITTED",
-            IsolationLevelEnum::READ_COMMITTED => "SET SESSION TRANSACTION ISOLATION LEVEL READ COMMITTED",
-            IsolationLevelEnum::REPEATABLE_READ => "SET SESSION TRANSACTION ISOLATION LEVEL REPEATABLE READ",
-            IsolationLevelEnum::SERIALIZABLE => "SET SESSION TRANSACTION ISOLATION LEVEL SERIALIZABLE",
+            IsolationLevelEnum::ReadUncommitted => "SET SESSION TRANSACTION ISOLATION LEVEL READ UNCOMMITTED",
+            IsolationLevelEnum::ReadCommitted => "SET SESSION TRANSACTION ISOLATION LEVEL READ COMMITTED",
+            IsolationLevelEnum::RepeatableRead => "SET SESSION TRANSACTION ISOLATION LEVEL REPEATABLE READ",
+            IsolationLevelEnum::Serializable => "SET SESSION TRANSACTION ISOLATION LEVEL SERIALIZABLE",
             default => "",
         };
     }

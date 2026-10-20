@@ -1,5 +1,5 @@
 ---
-sidebar_position: 19
+sidebar_position: 21
 ---
 
 # Driver: MySQL
@@ -23,7 +23,8 @@ $db = \ByJG\AnyDataset\Db\Factory::getDbInstance(
     "mysql://localhost/database?ca=$sslCa&key=$sslKey&cert=$sslCert&capath=$sslCaPath&verifyssl=$verifySsl&cipher=$sslCipher"
 );
 
-$iterator = $db->getIterator('select * from table where field = :value', ['value' => 10]);
+$iterator = \ByJG\AnyDataset\Db\DatabaseExecutor::using($db)
+    ->getIterator('select * from table where field = :value', ['value' => 10]);
 foreach ($iterator as $row) {
     // Do Something
     // $row->getField('field');

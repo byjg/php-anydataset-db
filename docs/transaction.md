@@ -13,16 +13,18 @@ If any operation in the sequence fails, the transaction can be rolled back to it
 
 ```php
 <?php
+use ByJG\AnyDataset\Db\DatabaseExecutor;
 use ByJG\AnyDataset\Db\Factory;
 use ByJG\AnyDataset\Db\IsolationLevelEnum;
 
 $dbDriver = Factory::getDbInstance('mysql://username:password@host/database');
+$executor = DatabaseExecutor::using($dbDriver);
 
-$dbDriver->beginTransaction(IsolationLevelEnum::SERIALIZABLE);
+$dbDriver->beginTransaction(IsolationLevelEnum::Serializable);
 try {
     // ... Perform your queries
-    $dbDriver->execute("INSERT INTO table (field) VALUES (:value)", [':value' => 'test']);
-    $dbDriver->execute("UPDATE table SET field = :value WHERE id = :id", [':value' => 'updated', ':id' => 1]);
+    $executor->execute("INSERT INTO table (field) VALUES (:value)", [':value' => 'test']);
+    $executor->execute("UPDATE table SET field = :value WHERE id = :id", [':value' => 'updated', ':id' => 1]);
     
     $dbDriver->commitTransaction(); // Commit all changes
 } catch (\Exception $ex) {
@@ -38,7 +40,7 @@ try {
 Starts a new transaction with an optional isolation level.
 
 ```php
-$dbDriver->beginTransaction(IsolationLevelEnum::READ_COMMITTED);
+$dbDriver->beginTransaction(IsolationLevelEnum::ReadCommitted);
 ```
 
 Parameters:
@@ -86,16 +88,16 @@ The library supports different transaction isolation levels through the `Isolati
 
 | Isolation Level    | Description                                                                             |
 |--------------------|-----------------------------------------------------------------------------------------|
-| `READ_UNCOMMITTED` | Allows dirty reads, non-repeatable reads, and phantom reads. Lowest isolation level.    |
-| `READ_COMMITTED`   | Prevents dirty reads but allows non-repeatable reads and phantom reads.                 |
-| `REPEATABLE_READ`  | Prevents dirty reads and non-repeatable reads but allows phantom reads.                 |
-| `SERIALIZABLE`     | Prevents dirty reads, non-repeatable reads, and phantom reads. Highest isolation level. |
+| `ReadUncommitted` | Allows dirty reads, non-repeatable reads, and phantom reads. Lowest isolation level.    |
+| `ReadCommitted`   | Prevents dirty reads but allows non-repeatable reads and phantom reads.                 |
+| `RepeatableRead`  | Prevents dirty reads and non-repeatable reads but allows phantom reads.                 |
+| `Serializable`     | Prevents dirty reads, non-repeatable reads, and phantom reads. Highest isolation level. |
 
 Example:
 
 ```php
-// Start a transaction with READ_COMMITTED isolation level
-$dbDriver->beginTransaction(IsolationLevelEnum::READ_COMMITTED);
+// Start a transaction with ReadCommitted isolation level
+$dbDriver->beginTransaction(IsolationLevelEnum::ReadCommitted);
 ```
 
 ## Nested Transactions
@@ -122,14 +124,17 @@ Nested transactions use a "Two-Phase Commit" process to ensure consistency:
 
 ```php
 <?php
-use ByJG\AnyDataset\Db\Interfaces\DbDriverInterface;use ByJG\AnyDataset\Db\IsolationLevelEnum;
+use ByJG\AnyDataset\Db\DatabaseExecutor;
+use ByJG\AnyDataset\Db\Factory;
+use ByJG\AnyDataset\Db\Interfaces\DbDriverInterface;
+use ByJG\AnyDataset\Db\IsolationLevelEnum;
 
 function mainFunction(DbDriverInterface $dbDriver)
 {
-    $dbDriver->beginTransaction(IsolationLevelEnum::SERIALIZABLE);
+    $dbDriver->beginTransaction(IsolationLevelEnum::Serializable);
     try {
         // ... Do your queries
-        $dbDriver->execute("INSERT INTO table (field) VALUES (:value)", [':value' => 'test']);
+        DatabaseExecutor::using($dbDriver)->execute("INSERT INTO table (field) VALUES (:value)", [':value' => 'test']);
         
         nestedFunction($dbDriver);
 
@@ -142,10 +147,10 @@ function mainFunction(DbDriverInterface $dbDriver)
 
 function nestedFunction(DbDriverInterface $dbDriver)
 {
-    $dbDriver->beginTransaction(IsolationLevelEnum::SERIALIZABLE, allowJoin: true);
+    $dbDriver->beginTransaction(IsolationLevelEnum::Serializable, allowJoin: true);
     try {
         // ... Do your queries
-        $dbDriver->execute("UPDATE table SET field = :value WHERE id = :id", [':value' => 'updated', ':id' => 1]);
+        DatabaseExecutor::using($dbDriver)->execute("UPDATE table SET field = :value WHERE id = :id", [':value' => 'updated', ':id' => 1]);
         
         $dbDriver->commitTransaction();
     } catch (\Exception $ex) {

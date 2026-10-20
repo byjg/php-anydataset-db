@@ -1,5 +1,5 @@
 ---
-sidebar_position: 17
+sidebar_position: 19
 ---
 
 # Logging
@@ -88,7 +88,8 @@ $dbDriver = Factory::getDbInstance('mysql://user:password@host/database');
 $dbDriver->enableLogger($logger);
 
 // Now all database operations will be logged
-$dbDriver->execute("INSERT INTO users (name, email) VALUES (?, ?)", ['John Doe', 'john@example.com']);
+\ByJG\AnyDataset\Db\DatabaseExecutor::using($dbDriver)
+    ->execute("INSERT INTO users (name, email) VALUES (?, ?)", ['John Doe', 'john@example.com']);
 ```
 
 ## Log Output Example

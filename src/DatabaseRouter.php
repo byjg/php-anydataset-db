@@ -28,9 +28,11 @@ class DatabaseRouter implements DbDriverInterface
     protected array $drivers = [];
 
     /**
-     * @var string[]
+     * Routes in the order added: [regEx, routeName]. The first matching route wins.
+     *
+     * @var array<int, array{0: string, 1: string}>
      */
-    protected array $routes;
+    protected array $routes = [];
 
     /**
      * @var DbDriverInterface|null Last matched driver for transaction and connection operations
@@ -86,7 +88,7 @@ class DatabaseRouter implements DbDriverInterface
             return $this->addCustomRoute($routeName, '^select\s');
         }
         // Match SELECT with specific table
-        return $this->addCustomRoute($routeName, '^select.*from\s+([`]?' . $table . '[`]?)\s');
+        return $this->addCustomRoute($routeName, '^select.*from\s+([`]?' . preg_quote($table, '/') . '[`]?)\s');
     }
 
     /**
@@ -97,9 +99,7 @@ class DatabaseRouter implements DbDriverInterface
      */
     public function addRouteForInsert(string $routeName, ?string $table = null): static
     {
-        if (empty($table)) {
-            $table = '\w+';
-        }
+        $table = empty($table) ? '\w+' : preg_quote($table, '/');
         return $this->addCustomRoute($routeName, '^insert\s+into\s+([`]?' . $table . '[`]?)\s+\(');
     }
 
@@ -111,9 +111,7 @@ class DatabaseRouter implements DbDriverInterface
      */
     public function addRouteForUpdate(string $routeName, ?string $table = null): static
     {
-        if (empty($table)) {
-            $table = '\w+';
-        }
+        $table = empty($table) ? '\w+' : preg_quote($table, '/');
         return $this->addCustomRoute($routeName, '^update\s+([`]?' . $table . '[`]?)\s+set');
     }
 
@@ -125,9 +123,7 @@ class DatabaseRouter implements DbDriverInterface
      */
     public function addRouteForDelete(string $routeName, ?string $table = null): static
     {
-        if (empty($table)) {
-            $table = '\w+';
-        }
+        $table = empty($table) ? '\w+' : preg_quote($table, '/');
         return $this->addCustomRoute($routeName, '^delete\s+(from\s+)?([`]?' . $table . '[`]?)\s');
     }
 
@@ -178,6 +174,8 @@ class DatabaseRouter implements DbDriverInterface
      */
     public function addRouteForFilter(string $routeName, string $field, string $value): static
     {
+        $field = preg_quote($field, '/');
+        $value = preg_quote($value, '/');
         return $this->addCustomRoute($routeName, "\\s`?$field`?\\s*=\\s*'?$value'?\s");
     }
 
@@ -202,7 +200,7 @@ class DatabaseRouter implements DbDriverInterface
         if (!isset($this->drivers[$routeName])) {
             throw new RouteNotFoundException("Invalid route $routeName");
         }
-        $this->routes[$regEx] = $routeName;
+        $this->routes[] = [$regEx, $routeName];
         return $this;
     }
 
@@ -215,9 +213,9 @@ class DatabaseRouter implements DbDriverInterface
      */
     public function matchRoute(string $sql): DbDriverInterface
     {
-        $sql = trim(strtolower(str_replace("\n", " ", $sql))) . ' ';
-        foreach ($this->routes as $pattern => $routeName) {
-            if (!preg_match("/$pattern/", $sql)) {
+        $sql = trim(str_replace("\n", " ", $sql)) . ' ';
+        foreach ($this->routes as [$pattern, $routeName]) {
+            if (!preg_match("/$pattern/i", $sql)) {
                 continue;
             }
 
@@ -279,67 +277,6 @@ class DatabaseRouter implements DbDriverInterface
     }
 
     /**
-     * @param string|SqlStatement $sql
-     * @param array|null $params
-     * @param int $preFetch
-     * @return GenericDbIterator|GenericIterator
-     * @throws RouteNotMatchedException
-     * @deprecated Use DatabaseExecutor::using($route)->getIterator() instead. This method will be removed in version 7.0.
-     */
-    #[Override]
-    public function getIterator(string|SqlStatement $sql, ?array $params = null, int $preFetch = 0): GenericDbIterator|GenericIterator
-    {
-        $sqlString = $sql instanceof SqlStatement ? $sql->getSql() : $sql;
-        $driver = $this->matchRoute($sqlString);
-        return $driver->getIterator($sql, $params, $preFetch);
-    }
-
-    /**
-     * @param string|SqlStatement $sql
-     * @param array|null $array
-     * @return mixed
-     * @throws RouteNotMatchedException
-     * @deprecated Use DatabaseExecutor::using($route)->getScalar() instead. This method will be removed in version 7.0.
-     */
-    #[Override]
-    public function getScalar(string|SqlStatement $sql, ?array $array = null): mixed
-    {
-        $sqlString = $sql instanceof SqlStatement ? $sql->getSql() : $sql;
-        $driver = $this->matchRoute($sqlString);
-        return $driver->getScalar($sql, $array);
-    }
-
-    /**
-     * @param string $tablename
-     * @return array
-     * @throws RouteNotMatchedException
-     * @deprecated Use DatabaseExecutor::using($route)->getAllFields() instead. This method will be removed in version 7.0.
-     */
-    #[Override]
-    public function getAllFields(string $tablename): array
-    {
-        // Use a simple SELECT query to match the route
-        $sql = "SELECT * FROM $tablename LIMIT 1";
-        $driver = $this->matchRoute($sql);
-        return $driver->getAllFields($tablename);
-    }
-
-    /**
-     * @param string|SqlStatement $sql
-     * @param array|null $array
-     * @return bool
-     * @throws RouteNotMatchedException
-     * @deprecated Use DatabaseExecutor::using($route)->execute() instead. This method will be removed in version 7.0.
-     */
-    #[Override]
-    public function execute(string|SqlStatement $sql, ?array $array = null): bool
-    {
-        $sqlString = $sql instanceof SqlStatement ? $sql->getSql() : $sql;
-        $driver = $this->matchRoute($sqlString);
-        return $driver->execute($sql, $array);
-    }
-
-    /**
      * @param IsolationLevelEnum|null $isolationLevel
      * @param bool $allowJoin
      * @return void
@@ -391,21 +328,6 @@ class DatabaseRouter implements DbDriverInterface
             throw new RouteNotInitializedException('Cannot get connection: no database has been selected. Execute a query first to match a route.');
         }
         return $this->lastMatchedDriver->getDbConnection();
-    }
-
-    /**
-     * @param string|SqlStatement $sql
-     * @param array|null $array
-     * @return mixed
-     * @throws RouteNotMatchedException
-     *@deprecated Use DatabaseExecutor::using($driver)->executeAndGetId() instead. This method will be removed in version 7.0.
-     */
-    #[Override]
-    public function executeAndGetId(string|SqlStatement $sql, ?array $array = null): mixed
-    {
-        $sqlString = $sql instanceof SqlStatement ? $sql->getSql() : $sql;
-        $driver = $this->matchRoute($sqlString);
-        return $driver->executeAndGetId($sql, $array);
     }
 
     /**
@@ -597,6 +519,18 @@ class DatabaseRouter implements DbDriverInterface
             throw new RouteNotInitializedException('Cannot get driver iterator: no database has been selected. Execute a query first to match a route.');
         }
         return $this->lastMatchedDriver->getDriverIterator($statement, $preFetch, $entityClass, $entityTransformer);
+    }
+
+    /**
+     * @throws RouteNotInitializedException
+     */
+    #[Override]
+    public function getStatementFields(mixed $statement): array
+    {
+        if ($this->lastMatchedDriver === null) {
+            throw new RouteNotInitializedException('Cannot get statement fields: no database has been selected. Execute a query first to match a route.');
+        }
+        return $this->lastMatchedDriver->getStatementFields($statement);
     }
 
     /**

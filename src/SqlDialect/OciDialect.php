@@ -101,12 +101,13 @@ class OciDialect extends BaseSqlDialect
         $pattern = [
             'Y' => "YYYY",
             'y' => "YY",
-            'M' => "Mon",
+            // FM toggles Oracle's fill mode: closed again so it applies to this element only
+            'M' => "FMMonthFM",
             'm' => "MM",
             'Q' => "Q",
             'q' => "Q",
             'D' => "DD",
-            'd' => "DD",
+            'd' => "FMDDFM",
             'h' => "HH",
             'H' => "HH24",
             'i' => "MI",
@@ -197,10 +198,58 @@ class OciDialect extends BaseSqlDialect
                                 ) || ')'
                         END AS TYPE,
                     DATA_DEFAULT AS COLUMN_DEFAULT,
-                    NULLABLE
-                FROM ALL_TAB_COLUMNS WHERE TABLE_NAME = '$tableName'";
+                    NULLABLE,
+                    CASE WHEN IDENTITY_COLUMN = 'YES' THEN 1 ELSE 0 END AS IS_AUTO_INCREMENT,
+                    CASE WHEN EXISTS (
+                        SELECT 1 FROM ALL_TAB_COLS V
+                         WHERE V.OWNER = T.OWNER AND V.TABLE_NAME = T.TABLE_NAME
+                           AND V.COLUMN_NAME = T.COLUMN_NAME AND V.VIRTUAL_COLUMN = 'YES'
+                    ) THEN 1 ELSE 0 END AS IS_GENERATED,
+                    CASE WHEN EXISTS (
+                        SELECT 1 FROM ALL_CONSTRAINTS C
+                          JOIN ALL_CONS_COLUMNS CC ON CC.OWNER = C.OWNER AND CC.CONSTRAINT_NAME = C.CONSTRAINT_NAME
+                         WHERE C.CONSTRAINT_TYPE = 'P' AND C.OWNER = T.OWNER
+                           AND C.TABLE_NAME = T.TABLE_NAME AND CC.COLUMN_NAME = T.COLUMN_NAME
+                    ) THEN 1 ELSE 0 END AS IS_PRIMARY_KEY
+                FROM ALL_TAB_COLUMNS T WHERE TABLE_NAME = '$tableName'";
 
         return $this->getTableMetadataFromSql($executor, $sql);
+    }
+
+    #[Override]
+    public function getTableIndexes(DatabaseExecutor $executor, string $tableName): array
+    {
+        return $this->getTableIndexesFromSql(
+            $executor,
+            "SELECT IC.INDEX_NAME AS INDEX_NAME, IC.COLUMN_NAME AS COLUMN_NAME,
+                    CASE WHEN I.UNIQUENESS = 'UNIQUE' THEN 1 ELSE 0 END AS IS_UNIQUE
+               FROM USER_INDEXES I
+               JOIN USER_IND_COLUMNS IC ON IC.INDEX_NAME = I.INDEX_NAME
+              WHERE I.TABLE_NAME = :tablename AND I.INDEX_TYPE <> 'LOB'
+                AND NOT EXISTS (
+                    SELECT 1 FROM USER_CONSTRAINTS C
+                     WHERE C.CONSTRAINT_TYPE = 'P' AND C.TABLE_NAME = I.TABLE_NAME AND C.INDEX_NAME = I.INDEX_NAME
+                )
+              ORDER BY IC.INDEX_NAME, IC.COLUMN_POSITION",
+            ['tablename' => strtoupper($tableName)]
+        );
+    }
+
+    #[Override]
+    public function getTableForeignKeys(DatabaseExecutor $executor, string $tableName): array
+    {
+        return $this->getTableForeignKeysFromSql(
+            $executor,
+            "SELECT C.CONSTRAINT_NAME AS CONSTRAINT_NAME, CC.COLUMN_NAME AS COLUMN_NAME,
+                    P.TABLE_NAME AS PARENT_TABLE, PC.COLUMN_NAME AS PARENT_COLUMN
+               FROM USER_CONSTRAINTS C
+               JOIN USER_CONS_COLUMNS CC ON CC.CONSTRAINT_NAME = C.CONSTRAINT_NAME
+               JOIN ALL_CONSTRAINTS P ON P.OWNER = C.R_OWNER AND P.CONSTRAINT_NAME = C.R_CONSTRAINT_NAME
+               JOIN ALL_CONS_COLUMNS PC ON PC.OWNER = P.OWNER AND PC.CONSTRAINT_NAME = P.CONSTRAINT_NAME AND PC.POSITION = CC.POSITION
+              WHERE C.CONSTRAINT_TYPE = 'R' AND C.TABLE_NAME = :tablename
+              ORDER BY C.CONSTRAINT_NAME, CC.POSITION",
+            ['tablename' => strtoupper($tableName)]
+        );
     }
 
     #[Override]
@@ -209,12 +258,15 @@ class OciDialect extends BaseSqlDialect
         $return = [];
 
         foreach ($metadata as $key => $value) {
-            $return[strtolower($value['column_name'])] = [
-                    'name' => $value['column_name'],
-                    'dbType' => strtolower($value['type']),
-                    'required' => $value['nullable'] == 'N',
-                    'default' => $value['column_default'] ?? null,
-                ] + $this->parseTypeMetadata(strtolower($value['type']));
+            $return[strtolower($value['column_name'])] = $this->newColumnMetadata(
+                    name: (string)$value['column_name'],
+                    dbType: strtolower($value['type']),
+                    required: $value['nullable'] == 'N',
+                    default: $value['column_default'] ?? null,
+                    primaryKey: $value['is_primary_key'] == 1,
+                    autoIncrement: $value['is_auto_increment'] == 1,
+                    generated: $value['is_generated'] == 1
+                );
         }
 
         return $return;
@@ -224,10 +276,16 @@ class OciDialect extends BaseSqlDialect
     public function getIsolationLevelCommand(?IsolationLevelEnum $isolationLevel = null): string
     {
         return match ($isolationLevel) {
-            IsolationLevelEnum::READ_UNCOMMITTED => "SET TRANSACTION READ WRITE",
-            IsolationLevelEnum::READ_COMMITTED, IsolationLevelEnum::REPEATABLE_READ => "SET TRANSACTION ISOLATION LEVEL READ COMMITTED",
-            IsolationLevelEnum::SERIALIZABLE => "SET TRANSACTION ISOLATION LEVEL SERIALIZABLE",
+            IsolationLevelEnum::ReadUncommitted => "SET TRANSACTION READ WRITE",
+            IsolationLevelEnum::ReadCommitted, IsolationLevelEnum::RepeatableRead => "SET TRANSACTION ISOLATION LEVEL READ COMMITTED",
+            IsolationLevelEnum::Serializable => "SET TRANSACTION ISOLATION LEVEL SERIALIZABLE",
             default => "",
         };
+    }
+
+    #[Override]
+    public function getPingSql(): string
+    {
+        return "SELECT 1 FROM DUAL";
     }
 }

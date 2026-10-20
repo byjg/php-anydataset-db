@@ -1,6 +1,6 @@
 <?php
 
-namespace Test\Helpers;
+namespace Tests\Helpers;
 
 use ByJG\AnyDataset\Core\Exception\NotAvailableException;
 use ByJG\AnyDataset\Db\SqlDialect\DblibDialect;
@@ -66,12 +66,15 @@ class DbDblibFunctionsTest extends TestCase
 
     public function testSqlDate()
     {
-        $this->assertEquals("FORMAT(column, 'dd/MM/YYYY')", $this->object->sqlDate('d/M/Y', 'column'));
-        $this->assertEquals("FORMAT(column, 'dd/M/YYYY HH:mm')", $this->object->sqlDate('d/m/Y H:i', 'column'));
+        // .NET custom format specifiers
+        $this->assertEquals("FORMAT(column, 'd/MMMM/yyyy')", $this->object->sqlDate('d/M/Y', 'column'));
+        $this->assertEquals("FORMAT(column, 'd/MM/yyyy HH:mm')", $this->object->sqlDate('d/m/Y H:i', 'column'));
         $this->assertEquals("FORMAT(column, 'HH:mm')", $this->object->sqlDate('H:i', 'column'));
-        $this->assertEquals("FORMAT(column, 'dd M YYYY HH mm')", $this->object->sqlDate('d m Y H i', 'column'));
-        $this->assertEquals("FORMAT(getdate(), 'dd/M/YY H:mm')", $this->object->sqlDate('d/m/y h:i'));
-        $this->assertEquals("FORMAT(column, 'MM ')", $this->object->sqlDate('M q', 'column'));
+        $this->assertEquals("FORMAT(column, 'd MM yyyy HH mm')", $this->object->sqlDate('d m Y H i', 'column'));
+        $this->assertEquals("FORMAT(getdate(), 'd/MM/yy hh:mm')", $this->object->sqlDate('d/m/y h:i'));
+        $this->assertEquals("FORMAT(column, 'MMMM ')", $this->object->sqlDate('M q', 'column'));
+        // One specifier alone is a .NET standard format: "%" makes it the custom one
+        $this->assertEquals("FORMAT(column, '%d')", $this->object->sqlDate('d', 'column'));
     }
 
     public function testDelimiterField()

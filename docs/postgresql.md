@@ -1,5 +1,5 @@
 ---
-sidebar_position: 20
+sidebar_position: 22
 ---
 
 # Driver: PostgreSQL
@@ -20,7 +20,8 @@ $db = \ByJG\AnyDataset\Db\Factory::getDbInstance(
     "postgresql://localhost/database?sslmode=$sslMode&sslcert=$sslCert&sslkey=$sslKey&sslrootcert=$sslRootCert&sslcrl=$sslCrl"
 );
 
-$iterator = $db->getIterator('select * from table where field = :value', ['value' => 10]);
+$iterator = \ByJG\AnyDataset\Db\DatabaseExecutor::using($db)
+    ->getIterator('select * from table where field = :value', ['value' => 10]);
 foreach ($iterator as $row) {
     // Do Something
     // $row->getField('field');

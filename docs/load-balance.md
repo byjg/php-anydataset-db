@@ -58,7 +58,17 @@ $executor->execute('insert into table (a) values (1)'); // Will select route1;
 | `addRouteForDelete($routeName, $table = null)`  | Routes any `DELETE` operation. An optional specific table can be specified.                        |
 | `addRouteForUpdate($routeName, $table = null)`  | Routes any `UPDATE` operation. An optional specific table can be specified.                        |
 | `addRouteForFilter($routeName, $field, $value)` | Routes based on `WHERE` clauses with specific `FIELD = VALUE` conditions.                          |
-| `addCustomRoute($routeName, $regEx)`            | Routes based on a custom regular expression.                                                       |
+| `addRouteForSelect($routeName, $table = null)`  | Same as `addRouteForRead()`.                                                                       |
+| `addRouteForTable($routeName, $table = null)`   | Routes reads and writes (`addRouteForRead()` + `addRouteForWrite()`).                              |
+| `addCustomRoute($routeName, $regEx)`            | Routes based on a custom regular expression (see below).                                           |
+| `addDefaultRoute($routeName)`                   | Routes any statement not matched by a route added before it (routes are tried in the order added). |
+
+Routes are tried in the order they were added, and the first one that matches wins. Adding the same route twice
+(e.g. the same table for two route names) does not replace the first one: the first one added keeps matching.
+
+The `$table`, `$field` and `$value` arguments are matched literally (a table `a.b` does not match `axb`).
+All routes are matched case-insensitively: `addRouteForRead('x', 'Users')` matches `select * from users`, and
+`addRouteForFilter('x', 'email', 'A@B')` matches `email = 'a@b'`.
 
 ## Advanced Examples
 
@@ -204,7 +214,7 @@ $route
 ;
 
 // DatabaseRouter complex queries to analytics database
-$route->addCustomRoute('analytics', '.*GROUP\s+BY.*HAVING.*');
+$route->addCustomRoute('analytics', 'GROUP\s+BY.*HAVING');
 
 // DatabaseRouter other queries to transactional database
 $route->addRouteForRead('transactional');
@@ -219,6 +229,9 @@ $executor->getIterator('SELECT category, COUNT(*) FROM sales GROUP BY category H
 $executor->getIterator('SELECT * FROM users WHERE id = 1');
 ```
 
+The regular expression is matched case-insensitively against the SQL, with line breaks replaced by spaces and a
+trailing space added. It is used between `/` delimiters: escape a `/` inside it as `\/`.
+
 ## Implementation Details
 
 The `DatabaseRouter` class is an implementation of `DbDriverInterface` that works by analyzing SQL queries and routing
@@ -232,8 +245,8 @@ The routing process follows these steps:
 3. You define routing rules (for reads, writes, specific tables, filters, etc.) that map SQL patterns to route names
 4. You wrap the DatabaseRouter in a `DatabaseExecutor` using `DatabaseExecutor::using($route)`
 5. When a query is executed through the executor, the SQL is passed to the DatabaseRouter's `matchRoute()` method
-6. The method iterates through all defined routes and checks if the query matches any of them
-7. If a match is found, the corresponding driver is returned and used to execute the query
+6. The method iterates through the defined routes in the order they were added
+7. The first route that matches wins: its driver is returned and used to execute the query
 8. If no match is found, a `RouteNotMatchedException` is thrown
 
 All `DbDriverInterface` methods are implemented in the `DatabaseRouter` class and delegate to the matched driver, making

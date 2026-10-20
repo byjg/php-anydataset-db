@@ -132,9 +132,7 @@ class PdoObj
     public static function getUriFromPdoConnStr(string $connStr, string $username = "", string $password = ""): Uri
     {
         if (preg_match("~^([^:]+):(/.*)~", $connStr, $matches) !== 0) {
-            $uri = Uri::getInstance("{$matches[1]}://{$matches[2]}");
-            assert($uri instanceof Uri);
-            return $uri;
+            return new Uri("{$matches[1]}://{$matches[2]}");
         }
 
         $parts = explode(":", $connStr, 2);
@@ -174,10 +172,7 @@ class PdoObj
             $query = "";
         }
 
-        $str = "{$scheme}://{$credentials}{$host}{$port}{$database}{$query}";
-        $uri = Uri::getInstance($str);
-        assert($uri instanceof Uri);
-        return $uri;
+        return new Uri("{$scheme}://{$credentials}{$host}{$port}{$database}{$query}");
     }
 
 }

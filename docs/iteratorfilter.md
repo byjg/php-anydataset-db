@@ -13,20 +13,16 @@ It is a standard feature across all AnyDataset implementations.
 <?php
 // Create the IteratorFilter instance
 $filter = new \ByJG\AnyDataset\Core\IteratorFilter();
-$filter->addRelation('field', \ByJG\AnyDataset\Enum\Relation::EQUAL, 10);
+$filter->addRelation('field', \ByJG\AnyDataset\Core\Enum\Relation::Equal, 10);
 
 // Generate the SQL
 $param = [];
-$formatter = new \ByJG\AnyDataset\Db\IteratorFilterSqlFormatter();
-$sql = $formatter->format(
-    $filter->getRawFilters(),
-    'mytable',
-    $param,
-    'field1, field2'
-);
+$formatter = new \ByJG\AnyDataset\Db\IteratorFilterSqlFormatter('mytable', 'field1, field2');
+$sql = $filter->format($formatter, $param);
+// $sql: select field1, field2 from mytable where field = :field
 
 // Execute the Query
-$iterator = $db->getIterator($sql, $param);
+$iterator = \ByJG\AnyDataset\Db\DatabaseExecutor::using($dbDriver)->getIterator($sql, $param);
 ```
 
 ## Using IteratorFilter with Literal values
@@ -54,5 +50,5 @@ $literal = new MyLiteral();
 
 // Using the IteratorFilter:
 $filter = new \ByJG\AnyDataset\Core\IteratorFilter();
-$filter->addRelation('field', \ByJG\AnyDataset\Core\Enum\Relation::EQUAL, $literal);
+$filter->addRelation('field', \ByJG\AnyDataset\Core\Enum\Relation::Equal, $literal);
 ```

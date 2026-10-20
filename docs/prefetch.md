@@ -1,5 +1,5 @@
 ---
-sidebar_position: 16
+sidebar_position: 18
 ---
 
 # Pre-Fetch Records
@@ -14,21 +14,21 @@ before starting the iteration, which can improve performance in certain scenario
 
 ```php
 <?php
-use ByJG\AnyDataset\Db\Factory;
+use ByJG\AnyDataset\Db\DatabaseExecutor;
 use ByJG\AnyDataset\Db\SqlStatement;
 
-// Using SqlStatement
-$sql = new SqlStatement("select * from table where field = :param");
+$executor = DatabaseExecutor::using($dbDriver);
 
 // Pre-fetch 100 records
-$iterator = $sql->getIterator($dbDriver, ['param' => 'value'], preFetch: 100);
-
-// Or directly with DbDriver
-$iterator = $dbDriver->getIterator(
-    "select * from table where field = :param", 
-    ['param' => 'value'], 
+$iterator = $executor->getIterator(
+    "select * from table where field = :param",
+    ['param' => 'value'],
     preFetch: 100
 );
+
+// Or with a SqlStatement
+$sql = new SqlStatement("select * from table where field = :param");
+$iterator = $executor->getIterator($sql, ['param' => 'value'], preFetch: 100);
 ```
 
 ## Implementation Details
@@ -133,7 +133,7 @@ Example:
 ```php
 <?php
 // For small tables, pre-fetch all records (e.g., 1000)
-$iterator = $dbDriver->getIterator("SELECT * FROM small_table", preFetch: 1000);
+$iterator = $executor->getIterator("SELECT * FROM small_table", preFetch: 1000);
 
 // Process records (database connection is released after pre-fetching)
 foreach ($iterator as $row) {
@@ -152,7 +152,7 @@ Example:
 ```php
 <?php
 // Pre-fetch records to release database connection during processing
-$iterator = $dbDriver->getIterator("SELECT * FROM table", preFetch: 50);
+$iterator = $executor->getIterator("SELECT * FROM table", preFetch: 50);
 
 foreach ($iterator as $row) {
     // Perform time-consuming operations
@@ -176,7 +176,7 @@ Example of when not to use pre-fetch:
 ```php
 <?php
 // For large tables with many columns or BLOB data, avoid pre-fetch
-$iterator = $dbDriver->getIterator(
+$iterator = $executor->getIterator(
     "SELECT * FROM large_table_with_blobs", 
     preFetch: 0  // Explicitly set to 0 to disable pre-fetch
 );

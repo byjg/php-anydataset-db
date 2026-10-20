@@ -1,6 +1,6 @@
 <?php
 
-namespace Test;
+namespace Tests;
 
 use ByJG\AnyDataset\Db\DatabaseRouter;
 use ByJG\AnyDataset\Db\Exception\RouteNotFoundException;
@@ -8,6 +8,7 @@ use ByJG\AnyDataset\Db\Exception\RouteNotMatchedException;
 use ByJG\AnyDataset\Db\Factory;
 use ByJG\AnyDataset\Db\Interfaces\DbDriverInterface;
 use Override;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
 class DatabaseRouterTest extends TestCase
@@ -189,5 +190,61 @@ class DatabaseRouterTest extends TestCase
 
         $this->object->addRouteForFilter('route3', 'id', '3');
         $this->object->matchRoute('SELECT field1, fields fRom othertable where id=31');
+    }
+
+    public function testSamePatternKeepsOrderAdded()
+    {
+        // Routes are tried in the order added: the first one with the pattern wins
+        $this->object->addCustomRoute('route1', '^select\s');
+        $this->object->addRouteForSelect('route2', 'mytable');
+        $this->object->addCustomRoute('route3', '^select\s');
+        $this->assertSame($this->obj1, $this->object->matchRoute('SELECT field1 fRom mytable'));
+    }
+
+    public static function tableWithRegexCharsProvider(): array
+    {
+        return [
+            'select' => ['addRouteForSelect', 'a.b', 'select * from a.b ', 'select * from axb '],
+            'insert' => ['addRouteForInsert', 'a.b', 'insert into a.b (a) values (1)', 'insert into axb (a) values (1)'],
+            'update' => ['addRouteForUpdate', 'a.b', 'update a.b set a=1', 'update axb set a=1'],
+            'delete' => ['addRouteForDelete', 'a.b', 'delete from a.b where a=1', 'delete from axb where a=1'],
+            'table'  => ['addRouteForTable', 'a.b', 'select * from a.b ', 'select * from axb '],
+            'slash'  => ['addRouteForSelect', 'a/b', 'select * from a/b ', 'select * from axb '],
+        ];
+    }
+
+    #[DataProvider('tableWithRegexCharsProvider')]
+    public function testTableNameIsMatchedLiterally(string $method, string $table, string $matchingSql, string $otherSql)
+    {
+        $this->object->$method('route3', $table);
+        $this->object->addDefaultRoute('route1');
+        $this->assertSame($this->obj3, $this->object->matchRoute($matchingSql));
+        $this->assertSame($this->obj1, $this->object->matchRoute($otherSql));
+    }
+
+    public function testFilterValueIsMatchedLiterally()
+    {
+        $this->object->addRouteForFilter('route3', 'email', 'a.b');
+        $this->object->addDefaultRoute('route1');
+        $this->assertSame($this->obj3, $this->object->matchRoute("select * from t where email = 'a.b'"));
+        $this->assertSame($this->obj1, $this->object->matchRoute("select * from t where email = 'axb'"));
+    }
+
+    public static function caseInsensitiveProvider(): array
+    {
+        return [
+            'uppercase table'  => ['addRouteForRead', ['Users'], 'SELECT * FROM Users WHERE id = 1'],
+            'uppercase insert' => ['addRouteForWrite', ['Users'], 'insert into users (a) values (1)'],
+            'custom pattern'   => ['addCustomRoute', ['GROUP\s+BY.*HAVING'], 'select a, count(*) from t group by a having count(*) > 1'],
+            'filter value'     => ['addRouteForFilter', ['Email', 'A@B'], "select * from t where email = 'a@b'"],
+        ];
+    }
+
+    #[DataProvider('caseInsensitiveProvider')]
+    public function testMatchIsCaseInsensitive(string $method, array $args, string $sql)
+    {
+        $this->object->$method('route3', ...$args);
+        $this->object->addDefaultRoute('route1');
+        $this->assertSame($this->obj3, $this->object->matchRoute($sql));
     }
 }

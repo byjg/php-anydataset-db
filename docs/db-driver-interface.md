@@ -8,8 +8,8 @@ The `DbDriverInterface` is the core interface for all database drivers in AnyDat
 that all database drivers must implement, providing a consistent API for interacting with different database systems.
 
 :::warning Important
-As of version 6.0, some high-level query methods in `DbDriverInterface` are deprecated in favor of
-using `DatabaseExecutor`. See the [deprecation section](#deprecated-methods) below and the
+The high-level query methods of `DbDriverInterface`, deprecated in version 6.0, were removed in version 7.0
+in favor of `DatabaseExecutor`. See the [removed methods](#removed-methods) below and the
 [DatabaseExecutor documentation](database-executor.md) for the recommended approach.
 :::
 
@@ -45,11 +45,12 @@ interface DbDriverInterface extends DbTransactionInterface
 | `executeCursor(mixed $statement): void`                                                                                                                                        | Executes a prepared statement                       |
 | `processMultiRowset(mixed $statement): void`                                                                                                                                   | Processes multiple result sets                      |
 | `getDriverIterator(mixed $statement, int $preFetch = 0, ?string $entityClass = null, ?PropertyHandlerInterface $entityTransformer = null): GenericDbIterator\|GenericIterator` | Creates a driver-specific iterator from a statement |
+| `getStatementFields(mixed $statement): array`                                                                                                                                  | Returns the column names of an executed statement   |
 
-### High-Level Query Execution (Deprecated)
+### High-Level Query Execution (Removed in 7.0)
 
-:::danger Deprecated
-Deprecated in version 6.0, will be removed in version 7.0.
+:::danger Removed
+Deprecated in version 6.0 and removed in version 7.0.
 Use [DatabaseExecutor](database-executor.md) instead for these operations.
 :::
 
@@ -88,11 +89,13 @@ The interface extends `DbTransactionInterface`, so it also includes these transa
 
 | Method                                                              | Description                                            |
 |---------------------------------------------------------------------|--------------------------------------------------------|
-| `beginTransaction(IsolationLevelEnum $isolationLevel = null): void` | Starts a new transaction                               |
+| `beginTransaction(?IsolationLevelEnum $isolationLevel = null, bool $allowJoin = false)` | Starts a new transaction (or joins the active one when `$allowJoin` is true) |
 | `commitTransaction(): void`                                         | Commits the current transaction                        |
 | `rollbackTransaction(): void`                                       | Rolls back the current transaction                     |
 | `hasActiveTransaction(): bool`                                      | Checks if there is an active transaction               |
 | `activeIsolationLevel(): ?IsolationLevelEnum`                       | Returns the isolation level of the current transaction |
+| `remainingCommits(): int`                                           | Number of commits left before the real commit (nested transactions) |
+| `requiresTransaction(): void`                                       | Throws `TransactionNotStartedException` if no transaction is active |
 
 ## Usage Example
 
@@ -130,16 +133,16 @@ $sqlStatement = new SqlStatement(
 $iterator = $executor->getIterator($sqlStatement, [':role' => 'admin']);
 
 // Transaction example (can use either executor or driver)
-$executor->beginTransaction(IsolationLevelEnum::SERIALIZABLE);
+$executor->beginTransaction(IsolationLevelEnum::Serializable);
 try {
-    $executor->execute("INSERT INTO users (name, email) VALUES (:name, :email)", [
+    $userId = $executor->executeAndGetId("INSERT INTO users (name, email) VALUES (:name, :email)", [
         ':name' => 'John Doe',
         ':email' => 'john@example.com'
     ]);
 
-    $lastId = $executor->executeAndGetId(
+    $executor->execute(
         "INSERT INTO user_roles (user_id, role) VALUES (:user_id, :role)",
-        [':user_id' => $lastId, ':role' => 'admin']
+        [':user_id' => $userId, ':role' => 'admin']
     );
 
     $executor->commitTransaction();
@@ -161,7 +164,7 @@ use ByJG\AnyDataset\Db\Factory;
 // Get a database driver instance
 $dbDriver = Factory::getDbInstance('mysql://user:password@host/database');
 
-// ⚠️ Deprecated: Direct query methods on driver will be removed in version 7.0
+// ⚠️ Removed in version 7.0: direct query methods on the driver no longer exist (6.x only)
 $iterator = $dbDriver->getIterator("SELECT * FROM users WHERE active = :active", [':active' => true]);
 foreach ($iterator as $row) {
     echo $row->get('name') . "\n";
@@ -198,9 +201,9 @@ class MyCustomDriver extends DbPdoDriver
 $db = \ByJG\AnyDataset\Db\Factory::getDbInstance("mycustom://user:pass@host/db");
 ```
 
-## Deprecated Methods
+## Removed Methods
 
-As of version 6.0, the following methods are deprecated and will be removed in version 7.0:
+The following methods were deprecated in version 6.0 and removed in version 7.0:
 
 - `getIterator()` - Use `DatabaseExecutor::using($driver)->getIterator()` instead
 - `getScalar()` - Use `DatabaseExecutor::using($driver)->getScalar()` instead
@@ -216,15 +219,16 @@ AnyDataset-DB provides several implementations of the `DbDriverInterface`:
 
 | Class            | Schema | Description                                               |
 |------------------|--------|-----------------------------------------------------------|
-| `PdoMysql`       | mysql  | MySQL and MariaDB driver                                  |
-| `PdoPgsql`       | pgsql  | PostgreSQL driver                                         |
+| `PdoMysql`       | mysql, mariadb | MySQL and MariaDB driver                          |
+| `PdoPgsql`       | pgsql, postgres, postgresql | PostgreSQL driver                    |
 | `PdoSqlite`      | sqlite | SQLite driver                                             |
 | `PdoDblib`       | dblib  | SQL Server driver (using FreeTDS)                         |
 | `PdoSqlsrv`      | sqlsrv | SQL Server driver (using Microsoft driver)                |
-| `PdoOci`         | oci    | Oracle driver (using PDO OCI)                             |
+| `PdoOci`         | oci, oracle | Oracle driver (using PDO OCI)                        |
 | `DbOci8Driver`   | oci8   | Oracle driver (using OCI8 extension)                      |
 | `PdoOdbc`        | odbc   | ODBC driver                                               |
 | `PdoPdo`         | pdo    | Generic PDO driver                                        |
+| `DbD1Driver`     | d1     | Cloudflare D1 driver (using the REST API)                 |
 | `DatabaseRouter` | N/A    | Special driver for routing queries to different databases |
 
 ## See Also
