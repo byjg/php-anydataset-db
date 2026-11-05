@@ -59,6 +59,12 @@ For best results:
 - Properties should be declared as `public` to allow direct assignment
 - Use type declarations for better type safety
 
+:::note Properties without a column
+Each row is a new entity filled with the columns of the row. The properties that have no column in the row take
+the values of a new entity, read once per query: a value that the constructor sets differently for each instance
+(a UUID, the current time) is the same in every row of a query. Set it after reading, or give it a column.
+:::
+
 ## Custom Property Transformation
 
 In some cases, you might want to customize how database field values are mapped to your entity properties. For this, you
@@ -268,17 +274,6 @@ $userQuery = $userQuery->withEntityClass(User::class);
 
 // store the entity class (and optional transformer) in the SqlStatement itself
 $iterator = $executor->getIterator($userQuery);
-```
-
-### With Pre-Fetch
-
-```php
-// Combine entity mapping with pre-fetching
-$iterator = $executor->getIterator(
-    SqlStatement::from("SELECT * FROM users")->withEntityClass(User::class), // Map to User entities
-    null,
-    100         // Pre-fetch 100 records
-);
 ```
 
 ## Performance Considerations

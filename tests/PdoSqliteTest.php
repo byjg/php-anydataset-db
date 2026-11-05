@@ -15,6 +15,7 @@ use PDO;
 use PHPUnit\Framework\TestCase;
 use Tests\Models\Info;
 use Tests\Models\InfoEntity;
+use Tests\Models\InfoNumbered;
 use Tests\Models\UserEntity;
 use Tests\Models\UserTypedEntity;
 
@@ -711,6 +712,23 @@ class PdoSqliteTest extends TestCase
 
         $this->executor->execute('drop table info');
         $this->assertFalse($this->executor->getScalar("select name from sqlite_master where name = 'info'"));
+    }
+
+    /**
+     * The properties without a column take the values of a new entity read once per query (not one per row): a
+     * value the constructor sets for each instance is the same in every row
+     */
+    public function testPropertyWithoutColumnTakesTheValueOfOneNewEntityPerQuery()
+    {
+        $sql = (new SqlStatement('select * from info order by id'))->withEntityClass(InfoNumbered::class);
+
+        $entities = $this->executor->getIterator($sql)->toEntities();
+
+        $this->assertSame([1, 2, 3], array_map(fn(InfoNumbered $info) => (int)$info->id, $entities));
+        // Each row was a new entity (its own instance number), but took the instance of the one read for the query
+        $instances = array_map(fn(InfoNumbered $info) => $info->instance, $entities);
+        $this->assertCount(1, array_unique($instances));
+        $this->assertLessThan((new InfoNumbered())->instance - 3, $instances[0]);
     }
 
     private function infoRows(): array

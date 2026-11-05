@@ -59,15 +59,27 @@ abstract class GenericDbIterator extends GenericIterator
         ?string $entityClass,
         ?PropertyHandlerInterface $entityTransformer
     ): Generator {
+        $defaults = null;
         foreach ($rows as $row) {
-            yield self::createRow(array_change_key_case($row), $entityClass, $entityTransformer);
+            if (!empty($entityClass)) {
+                // The properties of a new entity, the same for every row: listed once, at the first row
+                $defaults ??= Serialize::from(new $entityClass())->toArray();
+            }
+            yield self::createRow(array_change_key_case($row), $entityClass, $entityTransformer, $defaults ?? []);
         }
     }
 
+    /**
+     * @param array $fieldValues The columns of the row
+     * @param string|null $entityClass
+     * @param PropertyHandlerInterface|null $entityTransformer
+     * @param array $defaults The properties of a new $entityClass (Serialize::from(new $entityClass())->toArray())
+     */
     protected static function createRow(
         array $fieldValues,
         ?string $entityClass,
-        ?PropertyHandlerInterface $entityTransformer
+        ?PropertyHandlerInterface $entityTransformer,
+        array $defaults = []
     ): RowInterface {
         if (empty($entityClass)) {
             return new Row($fieldValues);
@@ -76,11 +88,7 @@ abstract class GenericDbIterator extends GenericIterator
         $entity = new $entityClass();
         // All the properties of the class, not only the columns: the ones without a column are processed too
         // (particularly useful for the selectFunction)
-        ObjectCopy::copy(
-            array_merge(Serialize::from($entity)->toArray(), $fieldValues),
-            $entity,
-            $entityTransformer
-        );
+        ObjectCopy::copy(array_merge($defaults, $fieldValues), $entity, $entityTransformer);
         return new Row($entity);
     }
 }

@@ -71,9 +71,6 @@ use ByJG\AnyDataset\Db\SqlStatement;
 
 $sql = new SqlStatement('SELECT * FROM users WHERE role = :role');
 $iterator = $executor->getIterator($sql, ['role' => 'admin']);
-
-// With pre-fetch
-$iterator = $executor->getIterator('SELECT * FROM large_table', null, 100);
 ```
 
 #### getScalar()

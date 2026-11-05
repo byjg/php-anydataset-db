@@ -211,16 +211,14 @@ $fields = $executor->getAllFields("your_table");
 print_r($fields);
 ```
 
-### Pre-fetching Records
+### Large Result Sets
 
-For better performance with large result sets:
+The rows are fetched one at a time while they are read: walk the iterator with `foreach` instead of `toArray()`
+to keep only one row in memory.
 
 ```php
 <?php
-// Pre-fetch 100 records
-$iterator = $executor->getIterator("SELECT * FROM large_table", null, 100);
-
-foreach ($iterator as $row) {
+foreach ($executor->getIterator("SELECT * FROM large_table") as $row) {
     // Process each row
 }
 ```
