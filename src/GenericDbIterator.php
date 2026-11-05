@@ -5,6 +5,7 @@ namespace ByJG\AnyDataset\Db;
 use ByJG\AnyDataset\Core\GenericIterator;
 use ByJG\AnyDataset\Core\Row;
 use ByJG\AnyDataset\Core\RowInterface;
+use ByJG\AnyDataset\Db\Interfaces\EntityHydratorInterface;
 use ByJG\Serializer\ObjectCopy;
 use ByJG\Serializer\PropertyHandler\PropertyHandlerInterface;
 use ByJG\Serializer\Serialize;
@@ -86,6 +87,11 @@ abstract class GenericDbIterator extends GenericIterator
         }
 
         $entity = new $entityClass();
+        if ($entityTransformer instanceof EntityHydratorInterface) {
+            $entityTransformer->hydrate($fieldValues, $entity, $defaults);
+            return new Row($entity);
+        }
+
         // All the properties of the class, not only the columns: the ones without a column are processed too
         // (particularly useful for the selectFunction)
         ObjectCopy::copy(array_merge($defaults, $fieldValues), $entity, $entityTransformer);

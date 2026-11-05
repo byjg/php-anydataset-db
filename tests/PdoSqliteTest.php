@@ -16,6 +16,7 @@ use PHPUnit\Framework\TestCase;
 use Tests\Models\Info;
 use Tests\Models\InfoEntity;
 use Tests\Models\InfoNumbered;
+use Tests\Models\RecordingHydrator;
 use Tests\Models\UserEntity;
 use Tests\Models\UserTypedEntity;
 
@@ -729,6 +730,27 @@ class PdoSqliteTest extends TestCase
         $instances = array_map(fn(InfoNumbered $info) => $info->instance, $entities);
         $this->assertCount(1, array_unique($instances));
         $this->assertLessThan((new InfoNumbered())->instance - 3, $instances[0]);
+    }
+
+    public function testEntityTransformerThatHydratesFillsTheEntity()
+    {
+        $hydrator = new RecordingHydrator();
+        $sql = (new SqlStatement('select * from info where id <= 2 order by id'))
+            ->withEntityClass(Info::class)
+            ->withEntityTransformer($hydrator);
+
+        $entities = $this->executor->getIterator($sql)->toEntities();
+
+        $this->assertSame([1, 2], array_map(fn(Info $info) => $info->id, $entities));
+        $this->assertSame(['hydrated:xxx', 'hydrated:ggg'], array_map(fn(Info $info) => $info->property, $entities));
+        $this->assertNull($entities[0]->iduser);
+
+        // Each row, a new Info, and the properties of a new Info read once
+        $defaults = ['id' => null, 'iduser' => null, 'number' => null, 'property' => null];
+        $this->assertEquals([
+            [['id' => 1, 'iduser' => 1, 'number' => 10.45, 'property' => 'xxx'], Info::class, $defaults],
+            [['id' => 2, 'iduser' => 1, 'number' => 3, 'property' => 'ggg'], Info::class, $defaults],
+        ], $hydrator->calls);
     }
 
     private function infoRows(): array

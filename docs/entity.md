@@ -140,6 +140,24 @@ $transformer = new PropertyNameMapper(
 );
 ```
 
+### Filling the entity yourself: EntityHydratorInterface
+
+By default each row is copied into the entity with `ByJG\Serializer\ObjectCopy`, calling the transformer
+(`mapName()`, `transformValue()`) for each value. A transformer that also implements
+`ByJG\AnyDataset\Db\Interfaces\EntityHydratorInterface` fills the entity itself, once per row:
+
+```php
+public function hydrate(array $row, object $entity, array $defaults): void;
+```
+
+- `$row`: the columns of the row (lower-case names)
+- `$entity`: a new instance of the entity class
+- `$defaults`: the properties of a new instance of the entity class, read once per query
+
+It must give the entity the same values as `ObjectCopy::copy(array_merge($defaults, $row), $entity, $transformer)`.
+It is for an ORM that knows its mapping and can resolve it once per query instead of for each value
+(byjg/micro-orm does it); `ObjectCopy::writerFor()` gives how `ObjectCopy` writes each name.
+
 ## Benefits of Entity Mapping
 
 ### 1. Type Safety
