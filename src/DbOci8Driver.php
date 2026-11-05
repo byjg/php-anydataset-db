@@ -171,16 +171,15 @@ class DbOci8Driver implements DbDriverInterface
 
     /**
      * @param mixed $statement The statement to check and handle
-     * @param int $preFetch Number of rows to prefetch
      * @param string|null $entityClass Optional entity class name to return rows as objects
      * @param PropertyHandlerInterface|null $entityTransformer Optional transformation function for customizing entity mapping
      * @return GenericDbIterator|GenericIterator Returns GenericIterator for the statement
      */
     #[Override]
-    public function getDriverIterator(mixed $statement, int $preFetch = 0, ?string $entityClass = null, ?PropertyHandlerInterface $entityTransformer = null): GenericDbIterator|GenericIterator
+    public function getDriverIterator(mixed $statement, ?string $entityClass = null, ?PropertyHandlerInterface $entityTransformer = null): GenericDbIterator|GenericIterator
     {
         if (is_resource($statement)) {
-            return new Oci8Iterator($statement, $preFetch, $entityClass, $entityTransformer);
+            return new Oci8Iterator($statement, $entityClass, $entityTransformer);
         }
 
         throw new InvalidArgumentException('Invalid statement type');

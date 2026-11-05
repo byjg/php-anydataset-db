@@ -289,4 +289,4 @@ might consider:
 
 1. Using the raw iterator without entity mapping
 2. Limiting the number of records returned from the database
-3. Using the PreFetch feature to optimize memory usage 
+3. Walking the iterator with `foreach` instead of `toArray()`: the rows are fetched one at a time 

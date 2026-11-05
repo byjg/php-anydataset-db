@@ -119,7 +119,6 @@ class DatabaseExecutor implements DbTransactionInterface
      *
      * @param string|SqlStatement $sql The SQL statement to execute
      * @param array|null $params Parameters for the SQL query
-     * @param int $preFetch Number of rows to prefetch
      * @return GenericDbIterator|GenericIterator The iterator containing the results
      * @throws DatabaseException
      * @throws DbDriverNotConnected
@@ -127,7 +126,7 @@ class DatabaseExecutor implements DbTransactionInterface
      * @throws PsrInvalidArgumentException
      * @throws XmlUtilException
      */
-    public function getIterator(string|SqlStatement $sql, ?array $params = null, int $preFetch = 0): GenericDbIterator|GenericIterator
+    public function getIterator(string|SqlStatement $sql, ?array $params = null): GenericDbIterator|GenericIterator
     {
         // Convert string to SqlStatement if needed
         if (is_string($sql)) {
@@ -149,7 +148,7 @@ class DatabaseExecutor implements DbTransactionInterface
             $statement = $this->driver->prepareStatement($sqlText, $params);
             $this->driver->executeCursor($statement);
             $this->notifyObservers(DatabaseEventTypeEnum::AfterQuery, $sql);
-            return $this->driver->getDriverIterator($statement, $preFetch, $sql->getEntityClass(), $sql->getEntityTransformer());
+            return $this->driver->getDriverIterator($statement, $sql->getEntityClass(), $sql->getEntityTransformer());
         }
 
         // Cache is configured - try to get from the cache first
@@ -183,7 +182,7 @@ class DatabaseExecutor implements DbTransactionInterface
             $statement = $this->driver->prepareStatement($sqlText, $params);
             $this->driver->executeCursor($statement);
             $this->notifyObservers(DatabaseEventTypeEnum::AfterQuery, $sql);
-            $iterator = $this->driver->getDriverIterator($statement, preFetch: $preFetch, entityClass: $sql->getEntityClass(), entityTransformer: $sql->getEntityTransformer());
+            $iterator = $this->driver->getDriverIterator($statement, entityClass: $sql->getEntityClass(), entityTransformer: $sql->getEntityTransformer());
 
             // Cache the results
             $arrayData = [];

@@ -101,7 +101,6 @@ $conn = \ByJG\AnyDataset\Db\Factory::getDbInstance("mysql://root:password@10.0.1
 - [Running Tests](docs/tests.md)
 - [Installing the PHP database extensions](docs/installing-extensions.md)
 - [Getting an Iterator from an existing PDO Statement](docs/pdostatement.md)
-- [Pre Fetch records](docs/prefetch.md)
 - [Logging](docs/logging.md)
 - [Deprecated Features](docs/deprecated-features.md)
 

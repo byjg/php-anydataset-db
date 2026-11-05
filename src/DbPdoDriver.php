@@ -190,16 +190,15 @@ abstract class DbPdoDriver implements DbDriverInterface
      * Handles PDOStatement specific statement type
      *
      * @param mixed $statement The statement to check and handle
-     * @param int $preFetch Number of rows to prefetch
      * @param string|null $entityClass Optional entity class name to return rows as objects
      * @param PropertyHandlerInterface|null $entityTransformer Optional transformation function for customizing entity mapping
      * @return GenericDbIterator|GenericIterator Returns GenericIterator for the statement
      */
     #[Override]
-    public function getDriverIterator(mixed $statement, int $preFetch = 0, ?string $entityClass = null, ?PropertyHandlerInterface $entityTransformer = null): GenericDbIterator|GenericIterator
+    public function getDriverIterator(mixed $statement, ?string $entityClass = null, ?PropertyHandlerInterface $entityTransformer = null): GenericDbIterator|GenericIterator
     {
         if ($statement instanceof PDOStatement) {
-            return new DbIterator($statement, $preFetch, $entityClass, $entityTransformer);
+            return new DbIterator($statement, $entityClass, $entityTransformer);
         }
 
         throw new InvalidArgumentException('The argument needs to be a PDOStatement object');

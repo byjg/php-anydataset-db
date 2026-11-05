@@ -293,5 +293,4 @@ For more advanced features, check out the following documentation:
 - [Transactions](transaction.md)
 - [Caching](cache.md)
 - [Load Balancing](load-balance.md)
-- [Pre-fetching](prefetch.md)
 - [Deprecated Features](deprecated-features.md) - Migration guide for older code

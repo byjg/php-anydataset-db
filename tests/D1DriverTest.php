@@ -295,42 +295,16 @@ class D1DriverTest extends TestCase
         $this->assertEquals(['Spyke', 'Sandy'], $names);
     }
 
-    /**
-     * The same expectations BasePdo uses for the PDO drivers: the buffer is measured while
-     * iterating, and the cursor closes as soon as the underlying result set is drained.
-     *
-     * @return array<int, array{0: int, 1: array<int, int>, 2: array<int, bool>}>
-     */
-    public static function dataProviderPreFetch(): array
+    public function testIteratorReleasesTheCursorAfterTheLastRow(): void
     {
-        return [
-            [0, [1, 1, 1], [true, true, true]],
-            [1, [1, 1, 1], [true, true, true]],
-            [2, [2, 2, 1], [true, true, false]],
-            [3, [3, 2, 1], [true, false, false]],
-            [50, [3, 2, 1], [false, false, false]],
-        ];
-    }
-
-    /**
-     * @param array<int, int> $expectedBuffer
-     * @param array<int, bool> $expectedCursor
-     */
-    #[DataProvider('dataProviderPreFetch')]
-    public function testPreFetchBuffersTheRequestedNumberOfRows(
-        int $preFetch,
-        array $expectedBuffer,
-        array $expectedCursor
-    ): void {
         $this->client->queueSuccess([['id' => 1], ['id' => 2], ['id' => 3]]);
 
-        $iterator = $this->createExecutor()->getIterator('SELECT Id FROM Dogs', null, $preFetch);
+        $iterator = $this->createExecutor()->getIterator('SELECT Id FROM Dogs');
 
         $i = 0;
         foreach ($iterator as $row) {
             $this->assertEquals(['id' => $i + 1], $row->toArray(), "Row $i");
-            $this->assertEquals($expectedBuffer[$i], $iterator->getPreFetchBufferSize(), "Buffer $i");
-            $this->assertEquals($expectedCursor[$i], $iterator->isCursorOpen(), "Cursor $i");
+            $this->assertTrue($iterator->isCursorOpen(), "Cursor $i");
             $i++;
         }
 
