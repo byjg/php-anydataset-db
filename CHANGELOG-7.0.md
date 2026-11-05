@@ -187,6 +187,47 @@ Enum cases follow the ByJG standard and are written in PascalCase. Both enums be
 | `IsolationLevelEnum` | `READ_UNCOMMITTED`, `READ_COMMITTED`, `REPEATABLE_READ`, `SERIALIZABLE` | `ReadUncommitted`, `ReadCommitted`, `RepeatableRead`, `Serializable` |
 | `TransactionStageEnum` | `begin`, `commit`, `rollback` | `Begin`, `Commit`, `Rollback` |
 
+### Removed: pre-fetch
+
+The pre-fetch buffer gave no advantage: MySQL and PostgreSQL already hold the whole result in memory
+after the query, OCI8 pre-fetches in the driver, and D1 returns all the rows in one response;
+pre-fetching in PHP only kept a second copy of the rows. Nothing in the byjg ecosystem used it.
+
+| Removed | Replacement |
+|---|---|
+| The `$preFetch` argument of `DatabaseExecutor::getIterator()`, `DbDriverInterface::getDriverIterator()`, `DatabaseRouter::getDriverIterator()` and the constructors of `DbIterator`, `Oci8Iterator`, `D1Iterator` | Remove it: the rows are fetched one at a time while they are read |
+| `getPreFetchRows()`, `setPreFetchRows()`, `getPreFetchBufferSize()` | None |
+| `ByJG\AnyDataset\Db\Traits\PreFetchTrait` | None |
+
+```php
+// Before (6.x)
+$iterator = $executor->getIterator('SELECT * FROM users', null, 100);
+// After (7.0): PHP ignores an extra argument, so remove it to avoid misleading code
+$iterator = $executor->getIterator('SELECT * FROM users');
+```
+
+See [Deprecated Features](docs/deprecated-features.md).
+
+### Changed: the driver iterators are generator based
+
+The iterators follow byjg/anydataset 7.0 (`GenericIterator` is an `IteratorAggregate`, moves forward
+only; see its changelog). `GenericDbIterator` creates the rows or entities; a driver iterator only
+implements a static `fetch(mixed $cursor): Generator` over its cursor, and releases it in a `finally`.
+`fetchRow()`, `releaseCursor()` and `__destruct()` are removed, and `isCursorOpen()` is `valid()`.
+
+The cursor is released at the last row, **or as soon as the iterator is dropped** (`getScalar()`,
+`first()`, a `foreach` with `break`): a partly read iterator no longer depends on the garbage
+collector to close its cursor.
+
+### Changed: the properties without a column take the values of one new entity per query
+
+With `SqlStatement::withEntityClass()`, each row is a new entity filled with its columns. The
+properties that have no column in the row take the values of a new entity read **once per query**
+(in 6.x, the entity's own values, read again for each row). A value the constructor sets differently
+for each instance (a UUID, the current time) on a property without a column is therefore the same in
+every row of a query: set it after reading, or give it a column. See
+[Entity Mapping](docs/entity.md).
+
 ## New Features
 
 ### 1. Executor Observers
@@ -240,6 +281,31 @@ analytics, through the [`pdo_duckdb`](https://github.com/iliaal/pdo_duckdb) exte
 
 **Documentation:** [Driver: DuckDB](docs/duckdb.md)
 
+### 5. EntityHydratorInterface
+
+An entity transformer (`SqlStatement::withEntityTransformer()`) that also implements
+`ByJG\AnyDataset\Db\Interfaces\EntityHydratorInterface` fills the entity of each row itself:
+
+```php
+public function hydrate(array $row, object $entity, array $defaults): void;
+```
+
+instead of `GenericDbIterator` copying the row with `ByJG\Serializer\ObjectCopy` and the transformer as
+the property handler. It must give the entity the same values as
+`ObjectCopy::copy(array_merge($defaults, $row), $entity, $transformer)`. It is for an ORM that resolves its
+mapping once per query (byjg/micro-orm does). Without a transformer, or with any other transformer,
+nothing changes.
+
+**Documentation:** [Entity Mapping](docs/entity.md)
+
+## Performance
+
+- Entity reads (`withEntityClass()`): the properties of a new entity are read once per query instead of
+  for each row, and the row is copied with byjg/serializer's direct array path. With byjg/micro-orm
+  (which also implements `EntityHydratorInterface`), reading 20,000 entities is about 5x faster than at
+  the start of 7.0 development (MySQL ~152 ms -> ~29 ms; PHP 8.5, Xdebug off).
+- Iterating raw rows is about 1.4x faster (SQLite, 200,000 rows: ~227 ms -> ~164 ms).
+
 ---
 
 ## Bug Fixes
@@ -251,6 +317,10 @@ analytics, through the [`pdo_duckdb`](https://github.com/iliaal/pdo_duckdb) exte
 - `DbOci8Driver`: a URI without a user or password no longer passes `null` to `oci_connect()` (PHP 8.1+
   deprecation "Passing null to parameter of type string"); the missing part is sent as an empty string.
 - `DbD1Driver`: an account id, API token or database id of `"0"` is no longer rejected as missing.
+- Entities (`withEntityClass()`): a property without a column that the constructor sets to an object (for
+  example `$this->tags = new ArrayObject()`) kept that object only by chance: the properties of the new entity
+  were converted to arrays before being copied back, so a setter typed with the class threw a `TypeError`, and an
+  untyped property got an array. They are now read at the first level: the object stays an object.
 - PDO drivers and `DbOci8Driver`: a boolean parameter is bound as `1`/`0`. `false` was bound as `''`,
   which MySQL, PostgreSQL and integer columns rejected, SQLite stored as text and Oracle stored as NULL.
 
@@ -276,7 +346,9 @@ analytics, through the [`pdo_duckdb`](https://github.com/iliaal/pdo_duckdb) exte
 
 1. Migrate every direct driver query call to `DatabaseExecutor` (see the table above).
    Code already using `DatabaseExecutor` — the recommended API since 6.0 — needs no changes.
-2. Update the composer constraint:
+2. Remove the `$preFetch` argument (the third argument of `getIterator()`), and any call to the
+   pre-fetch methods (see "Removed: pre-fetch").
+3. Update the composer constraint:
 
 ```json
 {
