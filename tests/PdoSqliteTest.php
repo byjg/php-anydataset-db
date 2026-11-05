@@ -16,6 +16,7 @@ use PHPUnit\Framework\TestCase;
 use Tests\Models\Info;
 use Tests\Models\InfoEntity;
 use Tests\Models\InfoNumbered;
+use Tests\Models\InfoWithObject;
 use Tests\Models\RecordingHydrator;
 use Tests\Models\UserEntity;
 use Tests\Models\UserTypedEntity;
@@ -730,6 +731,21 @@ class PdoSqliteTest extends TestCase
         $instances = array_map(fn(InfoNumbered $info) => $info->instance, $entities);
         $this->assertCount(1, array_unique($instances));
         $this->assertLessThan((new InfoNumbered())->instance - 3, $instances[0]);
+    }
+
+    /**
+     * A property without a column that the constructor sets to an object keeps an object (the defaults are read
+     * at the first level, not converted to arrays)
+     */
+    public function testPropertyWithoutColumnKeepsTheObjectOfTheConstructor()
+    {
+        $sql = (new SqlStatement('select * from info where id = 1'))->withEntityClass(InfoWithObject::class);
+
+        $entity = $this->executor->getIterator($sql)->first();
+
+        $this->assertSame(1, $entity->id);
+        $this->assertInstanceOf(\ArrayObject::class, $entity->getTags());
+        $this->assertSame(['new'], $entity->getTags()->getArrayCopy());
     }
 
     public function testEntityTransformerThatHydratesFillsTheEntity()

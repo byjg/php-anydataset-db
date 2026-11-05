@@ -63,8 +63,9 @@ abstract class GenericDbIterator extends GenericIterator
         $defaults = null;
         foreach ($rows as $row) {
             if (!empty($entityClass)) {
-                // The properties of a new entity, the same for every row: listed once, at the first row
-                $defaults ??= Serialize::from(new $entityClass())->toArray();
+                // The properties of a new entity, the same for every row: listed once, at the first row. At the
+                // first level: an object the constructor sets stays that object, not an array
+                $defaults ??= Serialize::from(new $entityClass())->withStopAtFirstLevel()->toArray();
             }
             yield self::createRow(array_change_key_case($row), $entityClass, $entityTransformer, $defaults ?? []);
         }

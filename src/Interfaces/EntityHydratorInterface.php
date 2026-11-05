@@ -15,7 +15,8 @@ interface EntityHydratorInterface
     /**
      * @param array $row The columns of the row (lower-case names)
      * @param object $entity A new instance of the entity class
-     * @param array $defaults The properties of a new instance of the entity class, read once per query
+     * @param array $defaults The properties of a new instance of the entity class, read once per query, at the
+     *                        first level (Serialize::from(new $entityClass())->withStopAtFirstLevel()->toArray())
      */
     public function hydrate(array $row, object $entity, array $defaults): void;
 }
