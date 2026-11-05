@@ -4,7 +4,7 @@ namespace Tests\Models;
 
 /**
  * Entity whose typed properties are non-nullable and have no default value. A freshly
- * constructed instance keeps them in the "uninitialized" state. PreFetchTrait serializes an
+ * constructed instance keeps them in the "uninitialized" state. GenericDbIterator serializes an
  * empty instance (Serialize::from(new self())->toArray()) to enumerate the fields before
  * hydration, which used to raise "Typed property ... must not be accessed before initialization".
  *

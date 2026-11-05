@@ -19,7 +19,6 @@ use ByJG\Cache\Psr16\ArrayCacheEngine;
 use ByJG\Serializer\PropertyHandler\PropertyNameMapper;
 use Exception;
 use PDOException;
-use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Tests\Models\DogEntity;
 use Tests\Models\DogEntityComplex;
@@ -1234,14 +1233,10 @@ abstract class BasePdo extends TestCase
         $this->assertNotEmpty($row);
     }
 
-    /**
-     * @return void
-     * @psalm-suppress UndefinedMethod
-     */
-    #[DataProvider('dataProviderPreFetch')]
-    public function testPreFetchWhile(int $preFetch, array $rows, array $expected, array $expectedCursor)
+    public function testIteratorWhile()
     {
-        $iterator = $this->executor->getIterator('select * from Dogs', preFetch: $preFetch);
+        $rows = $this->dogRows();
+        $iterator = $this->executor->getIterator('select * from Dogs');
 
         $i = 0;
         while ($iterator->valid()) {
@@ -1251,54 +1246,47 @@ abstract class BasePdo extends TestCase
             $i++;
             $iterator->next();
         }
+        $this->assertEquals(3, $i);
         $this->assertFalse($iterator->isCursorOpen());
     }
 
-    /**
-     * @psalm-suppress UndefinedMethod
-     * @return void
-     */
-    #[DataProvider('dataProviderPreFetch')]
-    public function testPreFetchForEach(int $preFetch, array $rows, array $expected, array $expectedCursor)
+    public function testIteratorForEach()
     {
-        $iterator = $this->executor->getIterator('select * from Dogs', preFetch: $preFetch);
+        $rows = $this->dogRows();
+        $iterator = $this->executor->getIterator('select * from Dogs');
 
         $i = 0;
         foreach ($iterator as $row) {
-            $this->assertEquals($rows[$i], $row->toArray(), "Row[$preFetch] $i");
-            $this->assertEquals($i, $iterator->key(), "Key Row[$preFetch] $i");
-            $this->assertEquals($expected[$i], $iterator->getPreFetchBufferSize(), "PreFetchBufferSize Row[$preFetch] $i");
-            $this->assertEquals($expectedCursor[$i], $iterator->isCursorOpen(), "CursorOpen Row[$preFetch] $i");
+            $this->assertEquals($rows[$i], $row->toArray(), "Row $i");
+            $this->assertEquals($i, $iterator->key(), "Key Row $i");
+            $this->assertTrue($iterator->isCursorOpen(), "CursorOpen Row $i");
             $i++;
         }
+        $this->assertEquals(3, $i);
         $this->assertFalse($iterator->isCursorOpen());
     }
 
-    /**
-     * @psalm-suppress UndefinedMethod
-     * @return void
-     */
-    #[DataProvider('dataProviderPreFetch')]
-    public function testPreFetchPhpIterator(int $preFetch, array $rows, array $expected, array $expectedCursor)
+    public function testIteratorPhpIterator()
     {
-        $iterator = $this->executor->getIterator('select * from Dogs', preFetch: $preFetch);
+        $rows = $this->dogRows();
+        $iterator = $this->executor->getIterator('select * from Dogs');
 
         $i = 0;
         while ($iterator->valid()) {
             $row = $iterator->current();
-            $this->assertEquals($rows[$i], $row->toArray(), "Row[$preFetch] $i");
-            $this->assertEquals($i, $iterator->key(), "Key Row[$preFetch] $i");
-            $this->assertEquals($expected[$i], $iterator->getPreFetchBufferSize(), "PreFetchBufferSize Row[$preFetch] $i");
-            $this->assertEquals($expectedCursor[$i], $iterator->isCursorOpen(), "CursorOpen Row[$preFetch] $i");
+            $this->assertEquals($rows[$i], $row->toArray(), "Row $i");
+            $this->assertEquals($i, $iterator->key(), "Key Row $i");
+            $this->assertTrue($iterator->isCursorOpen(), "CursorOpen Row $i");
             $i++;
             $iterator->next();
         }
+        $this->assertEquals(3, $i);
         $this->assertFalse($iterator->isCursorOpen());
     }
 
-    public static function dataProviderPreFetch()
+    private function dogRows(): array
     {
-        $rows = [
+        return [
             [
                 'breed' => 'Mutt',
                 'name' => 'Spyke',
@@ -1320,15 +1308,6 @@ abstract class BasePdo extends TestCase
                 'id' => 3,
                 'weight' => 1.2
             ]
-        ];
-
-
-        return [
-            [0, $rows, [1, 1, 1], [true, true, true]],
-            [1, $rows, [1, 1, 1], [true, true, true]],
-            [2, $rows, [2, 2, 1], [true, true, false]],
-            [3, $rows, [3, 2, 1], [true, false, false]],
-            [50, $rows, [3, 2, 1], [false, false, false]],
         ];
     }
 

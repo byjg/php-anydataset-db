@@ -7,6 +7,33 @@ sidebar_position: 20
 This document lists features that were deprecated in version 6.0 and **removed in version 7.0**. If you are
 upgrading from 6.x, update your code to use the recommended alternatives before moving to 7.0.
 
+## Removed: Pre-fetch
+
+**Removed in:** Version 7.0
+**Reason:** It gave no advantage. MySQL and PostgreSQL already hold the whole result in memory after the query
+runs, Oracle (OCI8) pre-fetches in the driver, and Cloudflare D1 returns all the rows in one response: pre-fetching
+in PHP only kept a second copy of the rows.
+
+### Affected API
+
+- The `$preFetch` argument of `DatabaseExecutor::getIterator()`, `DbDriverInterface::getDriverIterator()` and the
+  constructors of `DbIterator`, `Oci8Iterator` and `D1Iterator`
+- `getPreFetchRows()`, `setPreFetchRows()` and `getPreFetchBufferSize()` of the iterators
+- `ByJG\AnyDataset\Db\Traits\PreFetchTrait`
+
+### Migration Path
+
+Remove the `preFetch` argument. The rows are fetched one at a time while they are read, and the cursor is released
+when the last row was read. To read all the rows at once (and release the cursor), use `toArray()`.
+
+```php
+// ❌ Removed
+$iterator = $executor->getIterator('SELECT * FROM users', preFetch: 100);
+
+// ✅ Use
+$iterator = $executor->getIterator('SELECT * FROM users');
+```
+
 ## Removed: Direct Query Methods on DbDriverInterface
 
 **Deprecated in:** Version 6.0

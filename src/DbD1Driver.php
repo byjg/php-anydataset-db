@@ -413,7 +413,6 @@ class DbD1Driver implements DbDriverInterface
     #[Override]
     public function getDriverIterator(
         mixed $statement,
-        int $preFetch = 0,
         ?string $entityClass = null,
         ?PropertyHandlerInterface $entityTransformer = null
     ): GenericDbIterator|GenericIterator {
@@ -421,7 +420,7 @@ class DbD1Driver implements DbDriverInterface
             throw new InvalidArgumentException('The argument needs to be a D1Statement object');
         }
 
-        return new D1Iterator($statement, $preFetch, $entityClass, $entityTransformer);
+        return new D1Iterator($statement, $entityClass, $entityTransformer);
     }
 
     /**

@@ -2,69 +2,37 @@
 
 namespace ByJG\AnyDataset\Db;
 
-use ByJG\AnyDataset\Db\Traits\PreFetchTrait;
 use ByJG\Serializer\PropertyHandler\PropertyHandlerInterface;
+use Generator;
 use Override;
 use PDO;
 use PDOStatement;
 
 class DbIterator extends GenericDbIterator
 {
-    use PreFetchTrait;
-
-    /**
-     * @var PDOStatement|null
-     */
-    private ?PDOStatement $statement;
-
-    /**
-     * @var string|null
-     */
-    private ?string $entityClass;
-
-    /**
-     * @var PropertyHandlerInterface|null
-     */
-    private ?PropertyHandlerInterface $entityTransformer;
-
     /**
      * @param PDOStatement $recordset
-     * @param int $preFetch
      * @param string|null $entityClass
      * @param PropertyHandlerInterface|null $entityTransformer
      */
-    public function __construct(PDOStatement $recordset, int $preFetch = 0, ?string $entityClass = null, ?PropertyHandlerInterface $entityTransformer = null)
+    public function __construct(PDOStatement $recordset, ?string $entityClass = null, ?PropertyHandlerInterface $entityTransformer = null)
     {
-        $this->statement = $recordset;
-        $this->entityClass = $entityClass;
-        $this->entityTransformer = $entityTransformer;
-        $this->initPreFetch($preFetch);
+        parent::__construct($recordset, $entityClass, $entityTransformer);
     }
 
+    /**
+     * @return Generator<int, array>
+     */
     #[Override]
-    public function isCursorOpen(): bool
+    protected static function fetch(mixed $cursor): Generator
     {
-        return !is_null($this->statement);
-    }
-
-    #[Override]
-    public function releaseCursor(): void
-    {
-        if ($this->isCursorOpen()) {
-            /** @psalm-suppress PossiblyNullReference */
-            $this->statement->closeCursor();
-            $this->statement = null;
+        assert($cursor instanceof PDOStatement);
+        try {
+            while (is_array($row = $cursor->fetch(PDO::FETCH_ASSOC))) {
+                yield $row;
+            }
+        } finally {
+            $cursor->closeCursor();
         }
-    }
-
-    #[Override]
-    protected function fetchRow(): array|bool
-    {
-        return $this->statement?->fetch(PDO::FETCH_ASSOC) ?? false;
-    }
-
-    public function __destruct()
-    {
-        $this->releaseCursor();
     }
 }

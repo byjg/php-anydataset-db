@@ -12,7 +12,6 @@ use ByJG\Serializer\PropertyHandler\PropertyNameMapper;
 use ByJG\Util\Uri;
 use Override;
 use PDO;
-use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Tests\Models\Info;
 use Tests\Models\InfoEntity;
@@ -595,13 +594,9 @@ class PdoSqliteTest extends TestCase
     }
 
 
-    /**
-     * @return void
-     * @psalm-suppress UndefinedMethod
-     */
-    public function testPreFetch()
+    public function testGetIteratorOneRow()
     {
-        $iterator = $this->executor->getIterator('select * from info where id = :id', ["id" => 1], preFetch: 50);
+        $iterator = $this->executor->getIterator('select * from info where id = :id', ["id" => 1]);
 
         $result = $iterator->toArray();
 
@@ -613,13 +608,9 @@ class PdoSqliteTest extends TestCase
         );
     }
 
-    /**
-     * @return void
-     * @psalm-suppress UndefinedMethod
-     */
-    public function testPreFetch2()
+    public function testGetIteratorNoRows()
     {
-        $iterator = $this->executor->getIterator('select * from info where id = :id', ["id" => 50], preFetch: 50);
+        $iterator = $this->executor->getIterator('select * from info where id = :id', ["id" => 50]);
 
         $result = $iterator->toArray();
 
@@ -629,13 +620,9 @@ class PdoSqliteTest extends TestCase
         );
     }
 
-    /**
-     * @return void
-     * @psalm-suppress UndefinedMethod
-     */
-    public function testPreFetchError()
+    public function testGetIteratorMissingParameter()
     {
-        $iterator = $this->executor->getIterator('select * from info where id = :id', [], preFetch: 50);
+        $iterator = $this->executor->getIterator('select * from info where id = :id', []);
 
         $result = $iterator->toArray();
 
@@ -646,14 +633,10 @@ class PdoSqliteTest extends TestCase
     }
 
 
-    /**
-     * @return void
-     * @psalm-suppress UndefinedMethod
-     */
-    #[DataProvider('dataProviderPreFetch')]
-    public function testPreFetchWhile(int $preFetch, array $rows, array $expected, array $expectedCursor)
+    public function testIteratorWhile()
     {
-        $iterator = $this->executor->getIterator('select * from info', preFetch: $preFetch);
+        $rows = $this->infoRows();
+        $iterator = $this->executor->getIterator('select * from info');
 
         $i = 0;
         while ($iterator->valid()) {
@@ -666,62 +649,76 @@ class PdoSqliteTest extends TestCase
     }
 
 
-    /**
-     * @psalm-suppress UndefinedMethod
-     * @return void
-     */
-    #[DataProvider('dataProviderPreFetch')]
-    public function testPreFetchForEach(int $preFetch, array $rows, array $expected, array $expectedCursor)
+    public function testIteratorForEach()
     {
-        $iterator = $this->executor->getIterator('select * from info', preFetch: $preFetch);
+        $rows = $this->infoRows();
+        $iterator = $this->executor->getIterator('select * from info');
 
         $i = 0;
         foreach ($iterator as $row) {
-            $this->assertEquals($rows[$i], $row->toArray(), "Row[$preFetch] $i");
-            $this->assertEquals($i, $iterator->key(), "Key Row[$preFetch] $i");
-            $this->assertEquals($expected[$i], $iterator->getPreFetchBufferSize(), "PreFetchBufferSize Row[$preFetch] $i");
-            $this->assertEquals($expectedCursor[$i], $iterator->isCursorOpen(), "CursorOpen Row[$preFetch] $i");
+            $this->assertEquals($rows[$i], $row->toArray(), "Row $i");
+            $this->assertEquals($i, $iterator->key(), "Key Row $i");
+            $this->assertTrue($iterator->isCursorOpen(), "CursorOpen Row $i");
             $i++;
         }
+        $this->assertEquals(3, $i);
         $this->assertFalse($iterator->isCursorOpen());
     }
 
-    /**
-     * @psalm-suppress UndefinedMethod
-     * @return void
-     */
-    #[DataProvider('dataProviderPreFetch')]
-    public function testPreFetchPhpIterator(int $preFetch, array $rows, array $expected, array $expectedCursor)
+    public function testIteratorPhpIterator()
     {
-        $iterator = $this->executor->getIterator('select * from info', preFetch: $preFetch);
+        $rows = $this->infoRows();
+        $iterator = $this->executor->getIterator('select * from info');
 
         $i = 0;
         while ($iterator->valid()) {
             $row = $iterator->current();
-            $this->assertEquals($rows[$i], $row->toArray(), "Row[$preFetch] $i");
-            $this->assertEquals($i, $iterator->key(), "Key Row[$preFetch] $i");
-            $this->assertEquals($expected[$i], $iterator->getPreFetchBufferSize(), "PreFetchBufferSize Row[$preFetch] $i");
-            $this->assertEquals($expectedCursor[$i], $iterator->isCursorOpen(), "CursorOpen Row[$preFetch] $i");
+            $this->assertEquals($rows[$i], $row->toArray(), "Row $i");
+            $this->assertEquals($i, $iterator->key(), "Key Row $i");
+            $this->assertTrue($iterator->isCursorOpen(), "CursorOpen Row $i");
             $i++;
             $iterator->next();
         }
+        $this->assertEquals(3, $i);
         $this->assertFalse($iterator->isCursorOpen());
     }
 
-    public static function dataProviderPreFetch()
+    /**
+     * SQLite does not drop a table while a cursor over it is open ("database table is locked")
+     */
+    public function testCursorIsOpenWhileAPartlyReadIteratorExists()
     {
-        $rows = [
+        $iterator = $this->executor->getIterator('select * from info');
+        $this->assertTrue($iterator->valid());
+
+        $this->expectExceptionMessage('database table is locked');
+        $this->executor->execute('drop table info');
+    }
+
+    public function testGetScalarReleasesTheCursor()
+    {
+        $this->assertEquals(1, $this->executor->getScalar('select id from info order by id'));
+
+        $this->executor->execute('drop table info');
+        $this->assertFalse($this->executor->getScalar("select name from sqlite_master where name = 'info'"));
+    }
+
+    public function testFirstReleasesTheCursorWhenTheIteratorIsDestroyed()
+    {
+        $iterator = $this->executor->getIterator('select * from info order by id');
+        $this->assertEquals(['id' => 1, 'iduser' => 1, 'number' => 10.45, 'property' => 'xxx'], $iterator->first());
+        unset($iterator);
+
+        $this->executor->execute('drop table info');
+        $this->assertFalse($this->executor->getScalar("select name from sqlite_master where name = 'info'"));
+    }
+
+    private function infoRows(): array
+    {
+        return [
             ['id' => 1, 'iduser' => 1, 'number' => 10.45, 'property' => 'xxx'],
             ['id' => 2, 'iduser' => 1, 'number' => 3, 'property' => 'ggg'],
             ['id' => 3, 'iduser' => 3, 'number' => 20.02, 'property' => 'bbb'],
-        ];
-
-        return [
-            [0, $rows, [1, 1, 1], [true, true, true]],
-            [1, $rows, [1, 1, 1], [true, true, true]],
-            [2, $rows, [2, 2, 1], [true, true, false]],
-            [3, $rows, [3, 2, 1], [true, false, false]],
-            [50, $rows, [3, 2, 1], [false, false, false]],
         ];
     }
 
@@ -810,7 +807,7 @@ class PdoSqliteTest extends TestCase
 
     /**
      * Regression: an entity whose typed properties are non-nullable and have no default keeps
-     * them "uninitialized" on `new`. PreFetchTrait serializes an empty instance to enumerate the
+     * them "uninitialized" on `new`. GenericDbIterator serializes an empty instance to enumerate the
      * fields before hydration, which used to raise "must not be accessed before initialization".
      */
     public function testEntityWithUninitializedTypedProperties()

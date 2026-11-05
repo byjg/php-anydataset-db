@@ -44,7 +44,7 @@ interface DbDriverInterface extends DbTransactionInterface
 | `prepareStatement(string $sql, ?array $params = null, ?array &$cacheInfo = []): mixed`                                                                                         | Prepares an SQL statement for execution             |
 | `executeCursor(mixed $statement): void`                                                                                                                                        | Executes a prepared statement                       |
 | `processMultiRowset(mixed $statement): void`                                                                                                                                   | Processes multiple result sets                      |
-| `getDriverIterator(mixed $statement, int $preFetch = 0, ?string $entityClass = null, ?PropertyHandlerInterface $entityTransformer = null): GenericDbIterator\|GenericIterator` | Creates a driver-specific iterator from a statement |
+| `getDriverIterator(mixed $statement, ?string $entityClass = null, ?PropertyHandlerInterface $entityTransformer = null): GenericDbIterator\|GenericIterator` | Creates a driver-specific iterator from a statement |
 | `getStatementFields(mixed $statement): array`                                                                                                                                  | Returns the column names of an executed statement   |
 
 ### High-Level Query Execution (Removed in 7.0)
@@ -56,7 +56,7 @@ Use [DatabaseExecutor](database-executor.md) instead for these operations.
 
 | Method                                                                                                                 | Description                                                   | Replacement                                           |
 |------------------------------------------------------------------------------------------------------------------------|---------------------------------------------------------------|-------------------------------------------------------|
-| `getIterator(string\|SqlStatement $sql, ?array $params = null, int $preFetch = 0): GenericDbIterator\|GenericIterator` | Executes a SELECT query and returns an iterator               | `DatabaseExecutor::using($driver)->getIterator()`     |
+| `getIterator(string\|SqlStatement $sql, ?array $params = null): GenericDbIterator\|GenericIterator` | Executes a SELECT query and returns an iterator               | `DatabaseExecutor::using($driver)->getIterator()`     |
 | `getScalar(mixed $sql, ?array $array = null): mixed`                                                                   | Returns a single value from the first column of the first row | `DatabaseExecutor::using($driver)->getScalar()`       |
 | `execute(mixed $sql, ?array $array = null): bool`                                                                      | Executes a non-query SQL statement                            | `DatabaseExecutor::using($driver)->execute()`         |
 | `executeAndGetId(string\|SqlStatement $sql, ?array $array = null): mixed`                                              | Executes a query and returns the last inserted ID             | `DatabaseExecutor::using($driver)->executeAndGetId()` |

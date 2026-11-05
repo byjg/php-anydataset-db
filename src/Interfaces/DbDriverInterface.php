@@ -24,12 +24,11 @@ interface DbDriverInterface extends DbTransactionInterface
      * Creates a database driver-specific iterator for query results
      *
      * @param mixed $statement The statement to create an iterator from (PDOStatement, resource, etc.)
-     * @param int $preFetch Number of rows to prefetch
      * @param string|null $entityClass Optional entity class name to return rows as objects
      * @param PropertyHandlerInterface|null $entityTransformer Optional transformation function for customizing entity mapping
      * @return GenericDbIterator|GenericIterator The driver-specific iterator for the query results
      */
-    public function getDriverIterator(mixed $statement, int $preFetch = 0, ?string $entityClass = null, ?PropertyHandlerInterface $entityTransformer = null): GenericDbIterator|GenericIterator;
+    public function getDriverIterator(mixed $statement, ?string $entityClass = null, ?PropertyHandlerInterface $entityTransformer = null): GenericDbIterator|GenericIterator;
 
     /**
      * Returns the column names of an executed statement, in lower case and in the order
