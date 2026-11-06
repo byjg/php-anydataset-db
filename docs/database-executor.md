@@ -71,10 +71,17 @@ use ByJG\AnyDataset\Db\SqlStatement;
 
 $sql = new SqlStatement('SELECT * FROM users WHERE role = :role');
 $iterator = $executor->getIterator($sql, ['role' => 'admin']);
-
-// With pre-fetch
-$iterator = $executor->getIterator('SELECT * FROM large_table', null, 100);
 ```
+
+The rows are fetched from the database one at a time, while they are read, and the iterator moves forward
+only (see [Iterators](https://github.com/byjg/php-anydataset/blob/master/docs/iterators.md#reading-forward-only)):
+
+- **Large results:** walk them with `foreach`, which keeps one row in memory; `toArray()` and `toEntities()` load
+  all the rows.
+- **Stopping early:** the cursor is released at the last row, or as soon as the iterator is dropped: after
+  `first()`, `exists()`, or a `foreach` with `break`, once the iterator goes out of scope. A partly read
+  iterator does not keep the cursor, nor the connection busy, until the garbage collector runs.
+- **Reading the rows again:** run the query again with a new `getIterator()`.
 
 #### getScalar()
 

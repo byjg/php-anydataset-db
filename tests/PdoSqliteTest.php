@@ -15,6 +15,9 @@ use PDO;
 use PHPUnit\Framework\TestCase;
 use Tests\Models\Info;
 use Tests\Models\InfoEntity;
+use Tests\Models\InfoNumbered;
+use Tests\Models\InfoWithObject;
+use Tests\Models\RecordingHydrator;
 use Tests\Models\UserEntity;
 use Tests\Models\UserTypedEntity;
 
@@ -711,6 +714,59 @@ class PdoSqliteTest extends TestCase
 
         $this->executor->execute('drop table info');
         $this->assertFalse($this->executor->getScalar("select name from sqlite_master where name = 'info'"));
+    }
+
+    /**
+     * The properties without a column take the values of a new entity read once per query (not one per row): a
+     * value the constructor sets for each instance is the same in every row
+     */
+    public function testPropertyWithoutColumnTakesTheValueOfOneNewEntityPerQuery()
+    {
+        $sql = (new SqlStatement('select * from info order by id'))->withEntityClass(InfoNumbered::class);
+
+        $entities = $this->executor->getIterator($sql)->toEntities();
+
+        $this->assertSame([1, 2, 3], array_map(fn(InfoNumbered $info) => (int)$info->id, $entities));
+        // Each row was a new entity (its own instance number), but took the instance of the one read for the query
+        $instances = array_map(fn(InfoNumbered $info) => $info->instance, $entities);
+        $this->assertCount(1, array_unique($instances));
+        $this->assertLessThan((new InfoNumbered())->instance - 3, $instances[0]);
+    }
+
+    /**
+     * A property without a column that the constructor sets to an object keeps an object (the defaults are read
+     * at the first level, not converted to arrays)
+     */
+    public function testPropertyWithoutColumnKeepsTheObjectOfTheConstructor()
+    {
+        $sql = (new SqlStatement('select * from info where id = 1'))->withEntityClass(InfoWithObject::class);
+
+        $entity = $this->executor->getIterator($sql)->first();
+
+        $this->assertSame(1, $entity->id);
+        $this->assertInstanceOf(\ArrayObject::class, $entity->getTags());
+        $this->assertSame(['new'], $entity->getTags()->getArrayCopy());
+    }
+
+    public function testEntityTransformerThatHydratesFillsTheEntity()
+    {
+        $hydrator = new RecordingHydrator();
+        $sql = (new SqlStatement('select * from info where id <= 2 order by id'))
+            ->withEntityClass(Info::class)
+            ->withEntityTransformer($hydrator);
+
+        $entities = $this->executor->getIterator($sql)->toEntities();
+
+        $this->assertSame([1, 2], array_map(fn(Info $info) => $info->id, $entities));
+        $this->assertSame(['hydrated:xxx', 'hydrated:ggg'], array_map(fn(Info $info) => $info->property, $entities));
+        $this->assertNull($entities[0]->iduser);
+
+        // Each row, a new Info, and the properties of a new Info read once
+        $defaults = ['id' => null, 'iduser' => null, 'number' => null, 'property' => null];
+        $this->assertEquals([
+            [['id' => 1, 'iduser' => 1, 'number' => 10.45, 'property' => 'xxx'], Info::class, $defaults],
+            [['id' => 2, 'iduser' => 1, 'number' => 3, 'property' => 'ggg'], Info::class, $defaults],
+        ], $hydrator->calls);
     }
 
     private function infoRows(): array
